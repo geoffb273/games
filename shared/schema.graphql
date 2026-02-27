@@ -1,0 +1,24 @@
+type HealthStatus {
+  status: String!
+  timestamp: String!
+}
+
+type NotFoundError {
+  message: String
+}
+
+type Query {
+  health: HealthStatus!
+}
+
+type UnauthorizedError {
+  message: String
+}
+
+type UnknownError {
+  message: String
+}
+
+type ValidationError {
+  message: String
+}
