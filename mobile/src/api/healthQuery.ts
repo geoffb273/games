@@ -1,7 +1,7 @@
-import { HealthQueryDocument } from '@/generated/gql/graphql';
-
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
+
+import { HealthQueryDocument } from '@/generated/gql/graphql';
 
 gql`
   query HealthQuery {
