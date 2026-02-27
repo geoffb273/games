@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 
 export default function HomeScreen() {
   return (
@@ -35,8 +35,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     alignItems: "center",
     gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    paddingBottom: 50 + Spacing.three,
   },
   heroSection: {
     alignItems: "center",
