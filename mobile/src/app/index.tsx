@@ -1,25 +1,19 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { Text } from '@/components/common/text';
 import { Spacing } from '@/constants/theme';
 
 export default function HomeScreen() {
   return (
-    <ThemedView style={styles.container}>
+    <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+        <View style={styles.heroSection}>
+          <Text type="h1">Welcome to&nbsp;Expo</Text>
+        </View>
+        <Text type="lead">get started</Text>
       </SafeAreaView>
-    </ThemedView>
+    </View>
   );
 }
 

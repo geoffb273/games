@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react';
+// eslint-disable-next-line no-restricted-imports
 import { StyleSheet, Text as RNText } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
@@ -29,6 +30,7 @@ type TextProps = {
   numberOfLines?: number;
   color?: 'text' | 'textSecondary';
   _colorOverride?: string;
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
 } & TextStyleProps;
 
 export function Text({
@@ -40,6 +42,7 @@ export function Text({
   type,
   color = 'text',
   _colorOverride,
+  textAlign = 'left',
 }: TextProps) {
   const theme = useTheme();
 
@@ -65,6 +68,7 @@ export function Text({
           lineHeight: LINE_HEIGHT[lineHeight] * sizeStyles[size].fontSize,
         },
         { color: textColor },
+        { textAlign },
       ]}
     >
       {children}
