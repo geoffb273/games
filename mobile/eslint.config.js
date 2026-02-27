@@ -9,7 +9,7 @@ module.exports = defineConfig([
   expoConfig,
   prettierPlugin,
   {
-    ignores: ['dist/*'],
+    ignores: ['dist/*', 'src/generated/gql/*'],
     plugins: {
       'simple-import-sort': simpleImportSort,
       'no-relative-import-paths': noRelativeImportPaths,
