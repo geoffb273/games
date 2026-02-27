@@ -10,6 +10,8 @@ module.exports = defineConfig([
   prettierPlugin,
   {
     ignores: ['dist/*', 'src/generated/gql/*'],
+  },
+  {
     plugins: {
       'simple-import-sort': simpleImportSort,
       'no-relative-import-paths': noRelativeImportPaths,
