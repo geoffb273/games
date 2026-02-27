@@ -20,9 +20,7 @@ module.exports = defineConfig([
         {
           groups: [
             ['^react', '^react-native'],
-            ['^expo', '^@expo'],
-            ['^@react-navigation'],
-            ['^@?\\w'],
+            ['^expo', '^@expo', '^@react-navigation', '^@?\\w'],
             ['^@/'],
             ['^\\.'],
           ],

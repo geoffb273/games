@@ -2,7 +2,6 @@ import React from 'react';
 import { useColorScheme } from 'react-native';
 
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-
 import { ApolloProvider } from '@apollo/client/react';
 
 import client from '@/client/apollo';
