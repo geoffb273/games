@@ -1,20 +1,14 @@
-import { useTheme } from "@/hooks/use-theme";
-import { ReactNode } from "react";
-import { Text as RNText, StyleSheet } from "react-native";
+import { type ReactNode } from 'react';
+import { StyleSheet, Text as RNText } from 'react-native';
 
-type FontWeight = "bold" | "semibold" | "medium" | "regular";
-type Size = "3xl" | "2xl" | "xl" | "lg" | "md" | "sm" | "xs";
+import { useTheme } from '@/hooks/use-theme';
 
-type SemanticType =
-  | "body"
-  | "emphasized_body"
-  | "caption"
-  | "h1"
-  | "h2"
-  | "h3"
-  | "lead";
+type FontWeight = 'bold' | 'semibold' | 'medium' | 'regular';
+type Size = '3xl' | '2xl' | 'xl' | 'lg' | 'md' | 'sm' | 'xs';
 
-type LineHeight = "tight" | "normal" | "relaxed";
+type SemanticType = 'body' | 'emphasized_body' | 'caption' | 'h1' | 'h2' | 'h3' | 'lead';
+
+type LineHeight = 'tight' | 'normal' | 'relaxed';
 
 type TextStyleProps =
   | {
@@ -33,7 +27,7 @@ type TextStyleProps =
 type TextProps = {
   children: ReactNode;
   numberOfLines?: number;
-  color?: "text" | "textSecondary";
+  color?: 'text' | 'textSecondary';
   _colorOverride?: string;
 } & TextStyleProps;
 
@@ -44,14 +38,14 @@ export function Text({
   size: passedSize,
   lineHeight: passedLineHeight,
   type,
-  color = "text",
+  color = 'text',
   _colorOverride,
 }: TextProps) {
   const theme = useTheme();
 
-  let fontWeight: FontWeight = passedFontWeight ?? "regular";
-  let size: Size = passedSize ?? "md";
-  let lineHeight: LineHeight = passedLineHeight ?? "normal";
+  let fontWeight: FontWeight = passedFontWeight ?? 'regular';
+  let size: Size = passedSize ?? 'md';
+  let lineHeight: LineHeight = passedLineHeight ?? 'normal';
 
   const textColor = _colorOverride ?? theme[color];
 
@@ -87,39 +81,39 @@ const semanticStyles: Record<
   }
 > = {
   body: {
-    fontWeight: "regular",
-    size: "md",
-    lineHeight: "normal",
+    fontWeight: 'regular',
+    size: 'md',
+    lineHeight: 'normal',
   },
   emphasized_body: {
-    fontWeight: "semibold",
-    size: "md",
-    lineHeight: "normal",
+    fontWeight: 'semibold',
+    size: 'md',
+    lineHeight: 'normal',
   },
   caption: {
-    fontWeight: "regular",
-    size: "sm",
-    lineHeight: "normal",
+    fontWeight: 'regular',
+    size: 'sm',
+    lineHeight: 'normal',
   },
   h1: {
-    fontWeight: "bold",
-    size: "3xl",
-    lineHeight: "tight",
+    fontWeight: 'bold',
+    size: '3xl',
+    lineHeight: 'tight',
   },
   h2: {
-    fontWeight: "semibold",
-    size: "2xl",
-    lineHeight: "tight",
+    fontWeight: 'semibold',
+    size: '2xl',
+    lineHeight: 'tight',
   },
   h3: {
-    fontWeight: "semibold",
-    size: "xl",
-    lineHeight: "normal",
+    fontWeight: 'semibold',
+    size: 'xl',
+    lineHeight: 'normal',
   },
   lead: {
-    fontWeight: "regular",
-    size: "lg",
-    lineHeight: "relaxed",
+    fontWeight: 'regular',
+    size: 'lg',
+    lineHeight: 'relaxed',
   },
 };
 
@@ -131,24 +125,24 @@ const LINE_HEIGHT: Record<LineHeight, number> = {
 
 const fontWeightStyles = StyleSheet.create({
   bold: {
-    fontWeight: "700",
+    fontWeight: '700',
   },
   semibold: {
-    fontWeight: "600",
+    fontWeight: '600',
   },
   medium: {
-    fontWeight: "500",
+    fontWeight: '500',
   },
   regular: {
-    fontWeight: "400",
+    fontWeight: '400',
   },
 });
 
 const sizeStyles = StyleSheet.create({
-  "3xl": {
+  '3xl': {
     fontSize: 40,
   },
-  "2xl": {
+  '2xl': {
     fontSize: 32,
   },
   xl: {
