@@ -49,6 +49,18 @@ module.exports = defineConfig([
       ],
       '@typescript-eslint/no-shadow': 'error',
       'no-shadow': 'off',
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'react-native',
+              importNames: ['Text'],
+              message: "Use '@/components/common/text' instead.",
+            },
+          ],
+        },
+      ],
       'no-console': 'error',
       'react/no-unstable-nested-components': 'error',
       'react/jsx-no-useless-fragment': 'warn',
