@@ -61,6 +61,7 @@ module.exports = defineConfig([
           ],
         },
       ],
+      'no-unused-expressions': ['error', { allowTaggedTemplates: true }],
       'no-console': 'error',
       'react/no-unstable-nested-components': 'error',
       'react/jsx-no-useless-fragment': 'warn',

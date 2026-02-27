@@ -3,13 +3,18 @@ import { useColorScheme } from 'react-native';
 
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 
+import client from '@/client/apollo';
 import AppTabs from '@/components/app-tabs';
+
+import { ApolloProvider } from '@apollo/client/react';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AppTabs />
-    </ThemeProvider>
+    <ApolloProvider client={client}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <AppTabs />
+      </ThemeProvider>
+    </ApolloProvider>
   );
 }
