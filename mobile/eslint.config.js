@@ -22,6 +22,7 @@ module.exports = defineConfig([
             ['^react', '^react-native'],
             ['^expo', '^@expo'],
             ['^@react-navigation'],
+            ['^@?\\w'],
             ['^@/'],
             ['^\\.'],
           ],
