@@ -36,6 +36,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Generate GraphQL types
+        run: pnpm generate
+
       - name: Lint
         run: pnpm lint
 
