@@ -9,7 +9,9 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.heroSection}>
-          <Text type="h1">Welcome to&nbsp;Expo</Text>
+          <Text type="h1" textAlign="center">
+            Welcome to&nbsp;Expo
+          </Text>
         </View>
         <Text type="lead">get started</Text>
       </SafeAreaView>
