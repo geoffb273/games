@@ -6,6 +6,7 @@
     "test": "jest --watchAll",
     "dev": "expo start",
     "ios": "expo run ios",
+    "tsc": "tsc --noEmit",
     "lint": "expo lint",
     "lint:fix": "expo lint --fix"
   },
