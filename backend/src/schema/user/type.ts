@@ -2,9 +2,9 @@ import { type User } from '@/generated/prisma/client';
 import { type AuthPayload } from '@/platform/user/resource/user';
 import { builder } from '@/schema/builder';
 
-export const UserRef = builder.objectRef<User>('User').implement({
+export const AuthenticatedUserRef = builder.objectRef<User>('AuthenticatedUser').implement({
   fields: (t) => ({
-    id: t.exposeID('id'),
+    id: t.exposeID('id', { nullable: false }),
   }),
 });
 

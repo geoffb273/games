@@ -2,13 +2,17 @@ import { type IncomingMessage } from 'http';
 
 import { type User } from '@/platform/user/resource/user';
 import { getUser } from '@/platform/user/service/userService';
-import { isNotFoundError } from '@/utils/errorUtils';
 import { verifyToken } from '@/utils/jwt';
 import { lazy } from '@/utils/LazyPromise';
 
-import { UnauthorizedError } from './errors';
+import { NotFoundError, UnauthorizedError } from './errors';
 
-export type Context = { user: PromiseLike<User | null>; expectUser: PromiseLike<User> };
+export type Context = {
+  /** Currently authenticated user or null if no token is provided (or user with token could not be found) */
+  user: PromiseLike<User | null>;
+  /** Currently authenticated user or throws UnauthorizedError if no token is provided (or user with token could not be found) */
+  expectUser: PromiseLike<User>;
+};
 
 export async function buildContext(req: IncomingMessage): Promise<Context> {
   const token = req.headers.authorization?.split(' ')[1];
@@ -34,8 +38,8 @@ export async function buildContext(req: IncomingMessage): Promise<Context> {
   const expectUser = lazy<User>(async () => {
     const payload = verifyToken(token);
     return getUser({ id: payload.userId }).catch((error) => {
-      if (isNotFoundError(error)) {
-        throw new UnauthorizedError('Invalid token');
+      if (error instanceof NotFoundError) {
+        throw new UnauthorizedError('Token was provided but user not found');
       }
       throw error;
     });

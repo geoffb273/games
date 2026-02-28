@@ -1,16 +1,28 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { useAuthenticateDevice } from '@/api/user/authenticateDeviceMutation';
+import { useCurrentUserQuery } from '@/api/user/currentUserQuer';
 import { AuthContext, type AuthContextType } from '@/context/AuthContext';
 import { getOrCreateDeviceId } from '@/store/device';
-import { loadToken, saveToken } from '@/store/token';
+import { loadToken, saveToken, useAuthToken } from '@/store/token';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [state] = useState<AuthContextType>({ isReady: false, userId: null });
-  const { authenticateDevice } = useAuthenticateDevice();
+  const { token } = useAuthToken();
+  const [isLoadingToken, setIsLoadingToken] = useState(false);
+  const {
+    authenticateDevice,
+    isLoading: isLoadingNewToken,
+    isError: isErrorNewToken,
+  } = useAuthenticateDevice();
+  const {
+    user,
+    isLoading: isLoadingUser,
+    isError: isErrorUser,
+  } = useCurrentUserQuery({ enabled: !!token });
 
+  //Loads token from storage or generates a new one if it doesn't exist
   useEffect(() => {
-    async function bootstrap() {
+    async function generateToken() {
       const existingToken = await loadToken();
 
       if (existingToken) {
@@ -19,17 +31,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const deviceId = await getOrCreateDeviceId();
 
-      const newToken = await authenticateDevice({
-        deviceId,
-      });
+      try {
+        const newToken = await authenticateDevice({
+          deviceId,
+        });
 
-      await saveToken(newToken);
+        await saveToken(newToken);
+      } catch {
+        // ERROR LOGGING
+      }
     }
-
-    bootstrap();
+    setIsLoadingToken(true);
+    generateToken().finally(() => {
+      setIsLoadingToken(false);
+    });
   }, [authenticateDevice]);
 
-  if (!state.isReady) return null;
+  const isLoading = isLoadingToken || isLoadingNewToken || isLoadingUser;
+  const isError = isErrorNewToken || isErrorUser;
 
-  return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
+  const value: AuthContextType = useMemo(() => {
+    if (isLoading) {
+      return {
+        user: null,
+        status: 'loading',
+      };
+    }
+
+    if (isError || user == null) {
+      return {
+        user: null,
+        status: 'error',
+      };
+    }
+
+    return {
+      user: user,
+      status: 'authenticated',
+    };
+  }, [user, isLoading, isError]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -1,21 +1,18 @@
-import { authenticateDevice, getUser } from '@/platform/user/service/userService';
+import { authenticateDevice } from '@/platform/user/service/userService';
 
 import { builder } from '../builder';
-import { NotFoundError } from '../errors';
-import { AuthPayloadRef, UserRef } from './type';
+import { UnauthorizedError } from '../errors';
+import { AuthenticatedUserRef, AuthPayloadRef } from './type';
 
-builder.queryField('user', (t) =>
-  t.fieldWithInput({
-    type: UserRef,
+builder.queryField('currentUser', (t) =>
+  t.field({
+    type: AuthenticatedUserRef,
     nullable: false,
     errors: {
-      types: [NotFoundError],
+      types: [UnauthorizedError],
     },
-    input: {
-      id: t.input.string({ required: true }),
-    },
-    resolve: async (_root, { input: { id } }) => {
-      return getUser({ id });
+    resolve: async (_root, _args, { expectUser }) => {
+      return await expectUser;
     },
   }),
 );
