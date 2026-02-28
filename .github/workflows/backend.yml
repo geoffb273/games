@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - "backend/**"
-      - "shared/**"
+      - 'backend/**'
+      - 'shared/**'
   pull_request:
     branches: [main]
     paths:
-      - "backend/**"
-      - "shared/**"
+      - 'backend/**'
+      - 'shared/**'
 
 defaults:
   run:
@@ -35,6 +35,9 @@ jobs:
           cache-dependency-path: backend/pnpm-lock.yaml
 
       - run: pnpm install --frozen-lockfile
+
+      - name: Generate prisma client
+        run: pnpm generate
 
       - name: Lint
         run: pnpm lint
