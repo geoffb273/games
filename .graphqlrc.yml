@@ -1,0 +1,2 @@
+schema: 'shared/schema.graphql'
+documents: 'mobile/src/**/*.{graphql,js,ts,jsx,tsx}'
