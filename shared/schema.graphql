@@ -2,6 +2,10 @@ type AuthPayload {
   token: String!
 }
 
+type AuthenticatedUser {
+  id: ID!
+}
+
 interface Error {
   message: String
 }
@@ -24,18 +28,14 @@ type NotFoundError implements Error {
 }
 
 type Query {
+  currentUser: QueryCurrentUserResult!
   health: HealthStatus!
-  user(input: QueryUserInput!): QueryUserResult!
 }
 
-input QueryUserInput {
-  id: String!
-}
+union QueryCurrentUserResult = QueryCurrentUserSuccess | UnauthorizedError
 
-union QueryUserResult = NotFoundError | QueryUserSuccess
-
-type QueryUserSuccess {
-  data: User!
+type QueryCurrentUserSuccess {
+  data: AuthenticatedUser!
 }
 
 type UnauthorizedError implements Error {
@@ -44,10 +44,6 @@ type UnauthorizedError implements Error {
 
 type UnknownError implements Error {
   message: String
-}
-
-type User {
-  id: ID
 }
 
 type ValidationError implements Error {

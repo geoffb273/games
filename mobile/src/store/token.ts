@@ -7,11 +7,13 @@ const AuthToken = proxy<{ token: string | null }>({ token: null });
 
 /**
  * Returns the token from the store
+ *
+ * @returns The token from the store or null if it doesn't exist
+ *
+ * @privateRemark This function should only be called after {@link loadToken} has been called,
+ * otherwise it will always return null
  */
 export function getToken(): string | null {
-  if (AuthToken.token == null) {
-    AuthToken.token = SecureStore.getItem(TOKEN_KEY);
-  }
   return AuthToken.token;
 }
 

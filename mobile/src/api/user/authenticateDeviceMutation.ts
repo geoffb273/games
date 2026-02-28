@@ -17,7 +17,9 @@ gql`
  * Returns a function used to authenticate a device and a boolean indicating if the mutation is loading
  */
 export function useAuthenticateDevice() {
-  const [authenticateDeviceMutation, { loading }] = useMutation(AuthenticateDeviceMutationDocument);
+  const [authenticateDeviceMutation, { loading, error }] = useMutation(
+    AuthenticateDeviceMutationDocument,
+  );
 
   /**
    * Authenticates a device and returns the token
@@ -26,13 +28,13 @@ export function useAuthenticateDevice() {
    */
   const authenticateDevice = useCallback(
     async ({ deviceId }: { deviceId: string }) => {
-      const { data, error } = await authenticateDeviceMutation({
+      const { data } = await authenticateDeviceMutation({
         variables: { input: { deviceId } },
       });
 
-      if (error != null || data == null) {
+      if (data == null) {
         // TODO: ERROR LOGGING
-        throw error ?? new Error('Unknown error');
+        throw new Error('Unknown error');
       }
 
       const {
@@ -44,5 +46,5 @@ export function useAuthenticateDevice() {
     [authenticateDeviceMutation],
   );
 
-  return { authenticateDevice, isLoading: loading };
+  return { authenticateDevice, isLoading: loading, isError: error != null };
 }
