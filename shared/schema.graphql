@@ -9,6 +9,17 @@ type NotFoundError {
 
 type Query {
   health: HealthStatus!
+  user(input: QueryUserInput!): QueryUserResult!
+}
+
+input QueryUserInput {
+  id: String!
+}
+
+union QueryUserResult = NotFoundError | QueryUserSuccess
+
+type QueryUserSuccess {
+  data: User!
 }
 
 type UnauthorizedError {
@@ -17,6 +28,10 @@ type UnauthorizedError {
 
 type UnknownError {
   message: String
+}
+
+type User {
+  id: ID
 }
 
 type ValidationError {

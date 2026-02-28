@@ -32,13 +32,19 @@ export default tseslint.config(
       '@typescript-eslint/no-shadow': 'error',
       'no-shadow': 'off',
       'no-console': 'warn',
+    },
+  },
+  {
+    files: ['src/**/*.ts'],
+    ignores: ['src/**/dao/**', 'src/**/service/**'],
+    rules: {
       'no-restricted-imports': [
-        'warn',
+        'error',
         {
           patterns: [
             {
-              group: ['../*'],
-              message: 'Use absolute imports with @/ prefix instead of relative parent imports.',
+              group: ['**/dao/*', '**/dao/**'],
+              message: 'DAO modules can only be imported from their corresponding service files.',
             },
           ],
         },

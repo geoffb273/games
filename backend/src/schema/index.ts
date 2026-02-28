@@ -1,6 +1,7 @@
+import { builder } from './builder';
+
 import './errors';
 import './health';
-
-import { builder } from './builder';
+import './user';
 
 export const schema = builder.toSchema();

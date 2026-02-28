@@ -26,6 +26,9 @@ importers:
       '@pothos/plugin-validation':
         specifier: ^4.2.0
         version: 4.2.0(@pothos/core@4.12.0(graphql@16.13.0))(graphql@16.13.0)
+      '@pothos/plugin-with-input':
+        specifier: ^4.1.4
+        version: 4.1.4(@pothos/core@4.12.0(graphql@16.13.0))(graphql@16.13.0)
       '@prisma/adapter-pg':
         specifier: ^7.4.2
         version: 7.4.2
@@ -454,6 +457,12 @@ packages:
 
   '@pothos/plugin-validation@4.2.0':
     resolution: {integrity: sha512-iqqlNzHGhTbWIf6dfouMjJfh72gOQEft7gp0Bl0vhW8WNWuOwVmrXrXtF+Lu3hyZuBY7WfQ44jQ41hXjYmqx0g==}
+    peerDependencies:
+      '@pothos/core': '*'
+      graphql: ^16.10.0
+
+  '@pothos/plugin-with-input@4.1.4':
+    resolution: {integrity: sha512-ov8Ufga6lU1PmE0lHt50jpt3G3ypJvHJ0YF2PmjcgWEvJMi/cDhRRKoU2IoB13juBBRE2yo9rS3QhSRUR35iAQ==}
     peerDependencies:
       '@pothos/core': '*'
       graphql: ^16.10.0
@@ -1851,6 +1860,11 @@ snapshots:
       graphql: 16.13.0
 
   '@pothos/plugin-validation@4.2.0(@pothos/core@4.12.0(graphql@16.13.0))(graphql@16.13.0)':
+    dependencies:
+      '@pothos/core': 4.12.0(graphql@16.13.0)
+      graphql: 16.13.0
+
+  '@pothos/plugin-with-input@4.1.4(@pothos/core@4.12.0(graphql@16.13.0))(graphql@16.13.0)':
     dependencies:
       '@pothos/core': 4.12.0(graphql@16.13.0)
       graphql: 16.13.0
