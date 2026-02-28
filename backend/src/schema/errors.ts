@@ -1,57 +1,62 @@
 import { builder } from './builder';
 
-export class NotFoundError extends Error {
+export class GraphQLError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+export class NotFoundError extends GraphQLError {
   constructor(message = 'Resource not found') {
     super(message);
     this.name = 'NotFoundError';
   }
 }
 
-export class UnauthorizedError extends Error {
+export class UnauthorizedError extends GraphQLError {
   constructor(message = 'Not authorized') {
     super(message);
     this.name = 'UnauthorizedError';
   }
 }
 
-export class UnknownError extends Error {
+export class UnknownError extends GraphQLError {
   constructor(message = 'An unknown error occurred') {
     super(message);
     this.name = 'UnknownError';
   }
 }
 
-export class ValidationError extends Error {
+export class ValidationError extends GraphQLError {
   constructor(message = 'Validation failed') {
     super(message);
     this.name = 'ValidationError';
   }
 }
 
-builder.objectType(NotFoundError, {
-  name: 'NotFoundError',
+builder.interfaceType(GraphQLError, {
+  name: 'Error',
   fields: (t) => ({
     message: t.exposeString('message'),
   }),
+});
+
+builder.objectType(NotFoundError, {
+  name: 'NotFoundError',
+  interfaces: [GraphQLError],
 });
 
 builder.objectType(UnauthorizedError, {
   name: 'UnauthorizedError',
-  fields: (t) => ({
-    message: t.exposeString('message'),
-  }),
+  interfaces: [GraphQLError],
 });
 
 builder.objectType(UnknownError, {
   name: 'UnknownError',
-  fields: (t) => ({
-    message: t.exposeString('message'),
-  }),
+  interfaces: [GraphQLError],
 });
 
 builder.objectType(ValidationError, {
   name: 'ValidationError',
-  fields: (t) => ({
-    message: t.exposeString('message'),
-  }),
+  interfaces: [GraphQLError],
 });

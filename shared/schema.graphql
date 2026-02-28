@@ -2,6 +2,10 @@ type AuthPayload {
   token: String!
 }
 
+interface Error {
+  message: String
+}
+
 type HealthStatus {
   status: String!
   timestamp: String!
@@ -15,7 +19,7 @@ input MutationAuthenticateDeviceInput {
   deviceId: String!
 }
 
-type NotFoundError {
+type NotFoundError implements Error {
   message: String
 }
 
@@ -34,11 +38,11 @@ type QueryUserSuccess {
   data: User!
 }
 
-type UnauthorizedError {
+type UnauthorizedError implements Error {
   message: String
 }
 
-type UnknownError {
+type UnknownError implements Error {
   message: String
 }
 
@@ -46,6 +50,6 @@ type User {
   id: ID
 }
 
-type ValidationError {
+type ValidationError implements Error {
   message: String
 }
