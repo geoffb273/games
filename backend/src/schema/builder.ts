@@ -5,12 +5,14 @@ import SimpleObjectsPlugin from '@pothos/plugin-simple-objects';
 import ValidationPlugin from '@pothos/plugin-validation';
 import WithInputPlugin from '@pothos/plugin-with-input';
 
+import { type Context } from './context';
+
 export const builder = new SchemaBuilder<{
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  Context: {};
+  Context: Context;
 }>({
   plugins: [ErrorsPlugin, RelayPlugin, SimpleObjectsPlugin, ValidationPlugin, WithInputPlugin],
   relay: {},
 });
 
 builder.queryType({});
+builder.mutationType({});
