@@ -1,6 +1,18 @@
+type AuthPayload {
+  token: String!
+}
+
 type HealthStatus {
   status: String!
   timestamp: String!
+}
+
+type Mutation {
+  authenticateDevice(input: MutationAuthenticateDeviceInput!): AuthPayload!
+}
+
+input MutationAuthenticateDeviceInput {
+  deviceId: String!
 }
 
 type NotFoundError {
