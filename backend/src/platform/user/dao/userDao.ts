@@ -5,12 +5,12 @@ import { isNotFoundError } from '@/utils/errorUtils';
 
 const USER_SELECT = {
   id: true,
+  deviceId: true,
 } satisfies Prisma.UserSelect;
 
 /**
  * Get a user by their ID.
  *
- * @returns {Promise<User>}
  * @throws {NotFoundError} if the user does not exist
  */
 export async function getUser({ id }: { id: string }): Promise<User> {
@@ -25,4 +25,16 @@ export async function getUser({ id }: { id: string }): Promise<User> {
       }
       throw error;
     });
+}
+
+/**
+ * Find an existing user by device ID, or create a new one with the provided device ID
+ */
+export async function findOrCreateByDeviceId({ deviceId }: { deviceId: string }): Promise<User> {
+  return prisma.user.upsert({
+    where: { deviceId },
+    update: {},
+    create: { deviceId },
+    select: USER_SELECT,
+  });
 }
