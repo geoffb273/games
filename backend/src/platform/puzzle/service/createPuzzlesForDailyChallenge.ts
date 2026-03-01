@@ -1,7 +1,8 @@
 import { generateHanjiPuzzleData } from '@/utils/puzzle/hanji';
 import { generateHashiPuzzleData } from '@/utils/puzzle/hashi';
+import { generateMinesweeperPuzzleData } from '@/utils/puzzle/minesweeper';
 
-import { createHanjiPuzzle, createHashiPuzzle } from '../dao/puzzleDao';
+import { createHanjiPuzzle, createHashiPuzzle, createMinesweeperPuzzle } from '../dao/puzzleDao';
 import { type Puzzle } from '../resource/puzzle';
 
 export async function createPuzzlesForDailyChallenge({
@@ -25,10 +26,18 @@ export async function createPuzzlesForDailyChallenge({
     islandCount: 25,
   });
 
-  const [hanjiPuzzle, hashiPuzzle] = await Promise.all([
+  const minesweeperData = generateMinesweeperPuzzleData({
+    width: 16,
+    height: 16,
+    mineCount: 40,
+    seed,
+  });
+
+  const [hanjiPuzzle, hashiPuzzle, minesweeperPuzzle] = await Promise.all([
     createHanjiPuzzle({ dailyChallengeId, data: hanjiData }),
     createHashiPuzzle({ dailyChallengeId, data: hashiData }),
+    createMinesweeperPuzzle({ dailyChallengeId, data: minesweeperData }),
   ]);
 
-  return [hanjiPuzzle, hashiPuzzle];
+  return [hanjiPuzzle, hashiPuzzle, minesweeperPuzzle];
 }

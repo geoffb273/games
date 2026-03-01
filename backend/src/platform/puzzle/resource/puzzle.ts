@@ -63,3 +63,34 @@ export const hashiPuzzleDataSchema = z
   });
 
 export type HashiPuzzleData = z.infer<typeof hashiPuzzleDataSchema>;
+
+const minesweeperRevealedCellSchema = z.object({
+  row: z.int().min(0),
+  col: z.int().min(0),
+  value: z.int().min(0).max(8),
+});
+
+export const minesweeperPuzzleDataSchema = z
+  .object({
+    width: z.int().min(1),
+    height: z.int().min(1),
+    mineCount: z.int().min(1),
+    revealedCells: z.array(minesweeperRevealedCellSchema).min(1),
+    solution: z.array(z.array(z.boolean())),
+  })
+  .refine((d) => d.mineCount < d.width * d.height, {
+    message: 'mineCount must be less than total cell count',
+  })
+  .refine((d) => d.solution.length === d.height && d.solution.every((r) => r.length === d.width), {
+    message: 'solution dimensions must match width x height',
+  })
+  .refine(
+    (d) => d.solution.flat().filter(Boolean).length === d.mineCount,
+    { message: 'number of mines in solution must match mineCount' },
+  )
+  .refine(
+    (d) => d.revealedCells.every((c) => c.row < d.height && c.col < d.width && !d.solution[c.row][c.col]),
+    { message: 'all revealed cells must be within bounds and not mines' },
+  );
+
+export type MinesweeperPuzzleData = z.infer<typeof minesweeperPuzzleDataSchema>;

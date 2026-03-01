@@ -9,6 +9,8 @@ import {
   hanjiPuzzleDataSchema,
   type HashiPuzzleData,
   hashiPuzzleDataSchema,
+  type MinesweeperPuzzleData,
+  minesweeperPuzzleDataSchema,
   type Puzzle,
   PuzzleType,
 } from '../resource/puzzle';
@@ -134,6 +136,27 @@ export async function createHashiPuzzle({
       data: {
         dailyChallengeId,
         type: PuzzleType.HASHI,
+        data: validatedData,
+      },
+      select: PUZZLE_SELECT,
+    })
+    .then(mapPuzzle);
+}
+
+export async function createMinesweeperPuzzle({
+  dailyChallengeId,
+  data,
+}: {
+  dailyChallengeId: string;
+  data: MinesweeperPuzzleData;
+}): Promise<Puzzle> {
+  const validatedData = minesweeperPuzzleDataSchema.parse(data);
+
+  return prisma.puzzle
+    .create({
+      data: {
+        dailyChallengeId,
+        type: PuzzleType.MINESWEEPER,
         data: validatedData,
       },
       select: PUZZLE_SELECT,
