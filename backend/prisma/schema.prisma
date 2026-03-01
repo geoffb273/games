@@ -10,10 +10,68 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider     = "postgresql"
+  relationMode = "prisma"
 }
 
 model User {
   id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   deviceId String @unique
+
+  attempts UserPuzzleAttempt[]
+}
+
+model PuzzleType {
+  type        String  @id @unique
+  name        String
+  description String?
+  active      Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  puzzles Puzzle[]
+}
+
+model DailyChallenge {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date      DateTime @unique @db.Date
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  puzzles Puzzle[]
+}
+
+model Puzzle {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  dailyChallengeId String         @db.Uuid
+  dailyChallenge   DailyChallenge @relation(fields: [dailyChallengeId], references: [id])
+  type             String         @db.Uuid
+  puzzleType       PuzzleType     @relation(fields: [type], references: [type])
+
+  attempts UserPuzzleAttempt[]
+
+  @@unique([dailyChallengeId, type])
+  @@index([type])
+}
+
+model UserPuzzleAttempt {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  durationMs  Int?
+
+  userId   String @db.Uuid
+  user     User   @relation(fields: [userId], references: [id])
+  puzzleId String @db.Uuid
+  puzzle   Puzzle @relation(fields: [puzzleId], references: [id])
+
+  @@unique([userId, puzzleId])
+  @@index([puzzleId])
 }
