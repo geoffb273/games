@@ -101,16 +101,41 @@ export async function getDailyChallengeToPuzzlesMap({
   }, new Map<string, Puzzle[]>());
 }
 
-export async function createHanjiPuzzle({
+export async function createPuzzles({
+  dailyChallengeId,
+  data: { hanji, hashi, minesweeper },
+}: {
+  dailyChallengeId: string;
+  data: {
+    hanji: HanjiPuzzleData;
+    hashi: HashiPuzzleData;
+    minesweeper: MinesweeperPuzzleData;
+  };
+}): Promise<Puzzle[]> {
+  return prisma.$transaction(async (tx) => {
+    const hanjiPuzzle = await createHanjiPuzzle({ dailyChallengeId, data: hanji, tx });
+    const hashiPuzzle = await createHashiPuzzle({ dailyChallengeId, data: hashi, tx });
+    const minesweeperPuzzle = await createMinesweeperPuzzle({
+      dailyChallengeId,
+      data: minesweeper,
+      tx,
+    });
+    return [hanjiPuzzle, hashiPuzzle, minesweeperPuzzle];
+  });
+}
+
+async function createHanjiPuzzle({
   dailyChallengeId,
   data,
+  tx,
 }: {
   dailyChallengeId: string;
   data: HanjiPuzzleData;
+  tx: Prisma.TransactionClient;
 }): Promise<Puzzle> {
   const validatedData = hanjiPuzzleDataSchema.parse(data);
 
-  return prisma.puzzle
+  return tx.puzzle
     .create({
       data: {
         dailyChallengeId,
@@ -122,16 +147,18 @@ export async function createHanjiPuzzle({
     .then(mapPuzzle);
 }
 
-export async function createHashiPuzzle({
+async function createHashiPuzzle({
   dailyChallengeId,
   data,
+  tx,
 }: {
   dailyChallengeId: string;
   data: HashiPuzzleData;
+  tx: Prisma.TransactionClient;
 }): Promise<Puzzle> {
   const validatedData = hashiPuzzleDataSchema.parse(data);
 
-  return prisma.puzzle
+  return tx.puzzle
     .create({
       data: {
         dailyChallengeId,
@@ -143,16 +170,18 @@ export async function createHashiPuzzle({
     .then(mapPuzzle);
 }
 
-export async function createMinesweeperPuzzle({
+async function createMinesweeperPuzzle({
   dailyChallengeId,
   data,
+  tx,
 }: {
   dailyChallengeId: string;
   data: MinesweeperPuzzleData;
+  tx: Prisma.TransactionClient;
 }): Promise<Puzzle> {
   const validatedData = minesweeperPuzzleDataSchema.parse(data);
 
-  return prisma.puzzle
+  return tx.puzzle
     .create({
       data: {
         dailyChallengeId,
