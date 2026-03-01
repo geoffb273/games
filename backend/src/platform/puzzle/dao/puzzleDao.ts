@@ -4,7 +4,12 @@ import { NotFoundError } from '@/schema/errors';
 import { parseEnum } from '@/utils/enumUtils';
 import { isNotFoundError } from '@/utils/errorUtils';
 
-import { type Puzzle, PuzzleType } from '../resource/puzzle';
+import {
+  type HanjiPuzzleData,
+  hanjiPuzzleDataSchema,
+  type Puzzle,
+  PuzzleType,
+} from '../resource/puzzle';
 
 const PUZZLE_SELECT = {
   id: true,
@@ -92,6 +97,28 @@ export async function getDailyChallengeToPuzzlesMap({
   }, new Map<string, Puzzle[]>());
 }
 
+export async function createHanjiPuzzle({
+  dailyChallengeId,
+  data,
+}: {
+  dailyChallengeId: string;
+  data: HanjiPuzzleData;
+}): Promise<Puzzle> {
+  const validatedData = hanjiPuzzleDataSchema.parse(data);
+
+  return prisma.puzzle
+    .create({
+      data: {
+        dailyChallengeId,
+        type: PuzzleType.HANJI,
+        data: validatedData,
+      },
+      select: PUZZLE_SELECT,
+    })
+    .then(mapPuzzle);
+}
+
+// HELPERS
 function mapPuzzle(puzzle: Prisma.PuzzleGetPayload<{ select: typeof PUZZLE_SELECT }>): Puzzle {
   return {
     id: puzzle.id,

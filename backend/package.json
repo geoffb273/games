@@ -11,6 +11,7 @@
     "check:schema": "tsx src/generate-schema.ts --check",
     "migrate:create": "prisma migrate dev --create-only",
     "migrate:deploy": "prisma migrate deploy",
+    "test": "vitest run",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "prepare": "cd .. && node backend/node_modules/husky/bin.js"
@@ -43,7 +44,8 @@
     "prisma": "^7.4.2",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.56.1"
+    "typescript-eslint": "^8.56.1",
+    "vitest": "^4.0.18"
   },
   "packageManager": "pnpm@10.30.3"
 }

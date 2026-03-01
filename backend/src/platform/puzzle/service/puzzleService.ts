@@ -4,6 +4,7 @@ import {
   getPuzzlesByDailyChallenge as getPuzzlesByDailyChallengeDao,
 } from '../dao/puzzleDao';
 import { type Puzzle } from '../resource/puzzle';
+import { createPuzzlesForDailyChallenge as createPuzzlesForDailyChallengeService } from './createPuzzlesForDailyChallenge';
 
 /**
  * Gets a puzzle by id
@@ -41,4 +42,18 @@ export async function getDailyChallengeToPuzzlesMap({
   dailyChallengeIds: string[];
 }): Promise<Map<string, Puzzle[]>> {
   return getDailyChallengeToPuzzlesMapDao({ dailyChallengeIds });
+}
+
+/**
+ * Creates puzzles for a daily challenge
+ *
+ * @throws {UnknownError} if the puzzle type is unknown
+ * @returns the created puzzle
+ */
+export async function createPuzzlesForDailyChallenge({
+  dailyChallengeId,
+}: {
+  dailyChallengeId: string;
+}): Promise<Puzzle[]> {
+  return createPuzzlesForDailyChallengeService({ dailyChallengeId });
 }
