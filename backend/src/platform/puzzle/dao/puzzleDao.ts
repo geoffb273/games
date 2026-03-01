@@ -7,6 +7,8 @@ import { isNotFoundError } from '@/utils/errorUtils';
 import {
   type HanjiPuzzleData,
   hanjiPuzzleDataSchema,
+  type HashiPuzzleData,
+  hashiPuzzleDataSchema,
   type Puzzle,
   PuzzleType,
 } from '../resource/puzzle';
@@ -111,6 +113,27 @@ export async function createHanjiPuzzle({
       data: {
         dailyChallengeId,
         type: PuzzleType.HANJI,
+        data: validatedData,
+      },
+      select: PUZZLE_SELECT,
+    })
+    .then(mapPuzzle);
+}
+
+export async function createHashiPuzzle({
+  dailyChallengeId,
+  data,
+}: {
+  dailyChallengeId: string;
+  data: HashiPuzzleData;
+}): Promise<Puzzle> {
+  const validatedData = hashiPuzzleDataSchema.parse(data);
+
+  return prisma.puzzle
+    .create({
+      data: {
+        dailyChallengeId,
+        type: PuzzleType.HASHI,
         data: validatedData,
       },
       select: PUZZLE_SELECT,
