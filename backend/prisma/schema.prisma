@@ -51,7 +51,7 @@ model Puzzle {
 
   dailyChallengeId String         @db.Uuid
   dailyChallenge   DailyChallenge @relation(fields: [dailyChallengeId], references: [id])
-  type             String         @db.Uuid
+  type             String
   puzzleType       PuzzleType     @relation(fields: [type], references: [type])
 
   attempts UserPuzzleAttempt[]
