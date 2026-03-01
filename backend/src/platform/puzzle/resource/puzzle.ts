@@ -38,3 +38,28 @@ export const hanjiPuzzleDataSchema = z
   });
 
 export type HanjiPuzzleData = z.infer<typeof hanjiPuzzleDataSchema>;
+
+const hashiIslandSchema = z.object({
+  row: z.int().min(0),
+  col: z.int().min(0),
+  requiredBridges: z.int().min(1).max(8),
+});
+
+const hashiBridgeSchema = z.object({
+  from: z.object({ row: z.int().min(0), col: z.int().min(0) }),
+  to: z.object({ row: z.int().min(0), col: z.int().min(0) }),
+  bridges: z.union([z.literal(1), z.literal(2)]),
+});
+
+export const hashiPuzzleDataSchema = z
+  .object({
+    width: z.int().min(1),
+    height: z.int().min(1),
+    islands: z.array(hashiIslandSchema).min(2),
+    solution: z.array(hashiBridgeSchema),
+  })
+  .refine((d) => d.islands.every((i) => i.row < d.height && i.col < d.width), {
+    message: 'all islands must be within grid bounds',
+  });
+
+export type HashiPuzzleData = z.infer<typeof hashiPuzzleDataSchema>;
