@@ -15,7 +15,20 @@ export type Puzzle = {
   type: PuzzleType;
   name: string;
   description: string | null | undefined;
-};
+} & (
+  | {
+      type: 'HANJI';
+      data: HanjiPuzzleData;
+    }
+  | {
+      type: 'HASHI';
+      data: HashiPuzzleData;
+    }
+  | {
+      type: 'MINESWEEPER';
+      data: MinesweeperPuzzleData;
+    }
+);
 
 const hanjiCellSchema = z.union([z.literal(0), z.literal(1)]);
 
@@ -84,12 +97,14 @@ export const minesweeperPuzzleDataSchema = z
   .refine((d) => d.solution.length === d.height && d.solution.every((r) => r.length === d.width), {
     message: 'solution dimensions must match width x height',
   })
+  .refine((d) => d.solution.flat().filter(Boolean).length === d.mineCount, {
+    message: 'number of mines in solution must match mineCount',
+  })
   .refine(
-    (d) => d.solution.flat().filter(Boolean).length === d.mineCount,
-    { message: 'number of mines in solution must match mineCount' },
-  )
-  .refine(
-    (d) => d.revealedCells.every((c) => c.row < d.height && c.col < d.width && !d.solution[c.row][c.col]),
+    (d) =>
+      d.revealedCells.every(
+        (c) => c.row < d.height && c.col < d.width && !d.solution[c.row][c.col],
+      ),
     { message: 'all revealed cells must be within bounds and not mines' },
   );
 
