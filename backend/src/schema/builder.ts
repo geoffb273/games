@@ -9,9 +9,26 @@ import { type Context } from './context';
 
 export const builder = new SchemaBuilder<{
   Context: Context;
+  Scalars: {
+    DateTime: {
+      Input: Date;
+      Output: Date;
+    };
+  };
 }>({
   plugins: [ErrorsPlugin, RelayPlugin, SimpleObjectsPlugin, ValidationPlugin, WithInputPlugin],
   relay: {},
+});
+
+builder.scalarType('DateTime', {
+  serialize: (value) => value.toISOString(),
+  parseValue: (value) => {
+    const date = new Date(value as string);
+    if (isNaN(date.getTime())) {
+      throw new TypeError('Invalid DateTime');
+    }
+    return date;
+  },
 });
 
 builder.queryType({});
