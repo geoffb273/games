@@ -6,13 +6,33 @@ type AuthenticatedUser {
   id: ID!
 }
 
+scalar DateTime
+
 interface Error {
   message: String
+}
+
+type HanjiPuzzle implements Puzzle {
+  description: String
+  id: ID
+  name: String
+}
+
+type HashiPuzzle implements Puzzle {
+  description: String
+  id: ID
+  name: String
 }
 
 type HealthStatus {
   status: String!
   timestamp: String!
+}
+
+type MinesweeperPuzzle implements Puzzle {
+  description: String
+  id: ID
+  name: String
 }
 
 type Mutation {
@@ -27,15 +47,43 @@ type NotFoundError implements Error {
   message: String
 }
 
+interface Puzzle {
+  description: String
+  id: ID
+  name: String
+}
+
 type Query {
   currentUser: QueryCurrentUserResult!
   health: HealthStatus!
+  puzzle(input: QueryPuzzleInput!): QueryPuzzleResult
+  puzzles(input: QueryPuzzlesInput!): QueryPuzzlesResult
 }
 
 union QueryCurrentUserResult = QueryCurrentUserSuccess | UnauthorizedError
 
 type QueryCurrentUserSuccess {
   data: AuthenticatedUser!
+}
+
+input QueryPuzzleInput {
+  id: ID!
+}
+
+union QueryPuzzleResult = NotFoundError | QueryPuzzleSuccess | UnknownError
+
+type QueryPuzzleSuccess {
+  data: Puzzle!
+}
+
+input QueryPuzzlesInput {
+  dailyChallengeId: String!
+}
+
+union QueryPuzzlesResult = QueryPuzzlesSuccess | UnknownError
+
+type QueryPuzzlesSuccess {
+  data: [Puzzle!]!
 }
 
 type UnauthorizedError implements Error {
