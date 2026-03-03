@@ -1,6 +1,6 @@
 import React from 'react';
 
-import AppTabs from '@/components/app-tabs';
+import { AppTabs } from '@/components/AppTabs';
 import { MainProvider } from '@/provider/MainProvider';
 
 export default function RootLayout() {
