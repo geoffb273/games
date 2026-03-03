@@ -5,21 +5,22 @@ import { getUser } from '@/platform/user/service/userService';
 import { verifyToken } from '@/utils/jwt';
 import { lazy } from '@/utils/LazyPromise';
 
-import { NotFoundError, UnauthorizedError } from './errors';
+import { NotFoundError, UnauthorizedError } from '../errors';
 
-export type Context = {
+export type Authorization = {
   /** Currently authenticated user or null if no token is provided (or user with token could not be found) */
   user: PromiseLike<User | null>;
   /** Currently authenticated user or throws UnauthorizedError if no token is provided (or user with token could not be found) */
   expectUser: PromiseLike<User>;
 };
 
-export async function buildContext(req: IncomingMessage): Promise<Context> {
+export function buildAuthorization(req: IncomingMessage): Authorization {
   const token = req.headers.authorization?.split(' ')[1];
 
   if (!token) {
+    const user = Promise.resolve(null);
     return {
-      user: Promise.resolve(null),
+      user,
       expectUser: lazy<User>(async () => {
         throw new UnauthorizedError('No token provided');
       }),
@@ -45,5 +46,8 @@ export async function buildContext(req: IncomingMessage): Promise<Context> {
     });
   });
 
-  return { user, expectUser };
+  return {
+    user,
+    expectUser,
+  };
 }

@@ -7,6 +7,7 @@ import { PuzzleRef } from './type';
 builder.queryField('puzzle', (t) =>
   t.fieldWithInput({
     type: PuzzleRef,
+    nullable: false,
     input: {
       id: t.input.id({ required: true }),
     },
@@ -22,6 +23,7 @@ builder.queryField('puzzle', (t) =>
 builder.queryField('puzzles', (t) =>
   t.fieldWithInput({
     type: [PuzzleRef],
+    nullable: false,
     input: {
       dailyChallengeId: t.input.string({ required: true }),
     },

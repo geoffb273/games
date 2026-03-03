@@ -1,6 +1,6 @@
 import { prisma } from '@/client/prisma';
 import { type Prisma } from '@/generated/prisma';
-import { NotFoundError } from '@/schema/errors';
+import { NotFoundError, UnknownError } from '@/schema/errors';
 import { parseEnum } from '@/utils/enumUtils';
 import { isNotFoundError } from '@/utils/errorUtils';
 
@@ -21,6 +21,7 @@ const PUZZLE_SELECT = {
   updatedAt: true,
   dailyChallengeId: true,
   type: true,
+  data: true,
   puzzleType: {
     select: {
       name: true,
@@ -194,14 +195,33 @@ async function createMinesweeperPuzzle({
 }
 
 // HELPERS
+/**
+ * Maps a puzzle from the database to the domain model
+ *
+ * @throws {UnknownError} if the puzzle type is unknown or the data is invalid
+ */
 function mapPuzzle(puzzle: Prisma.PuzzleGetPayload<{ select: typeof PUZZLE_SELECT }>): Puzzle {
-  return {
+  const base = {
     id: puzzle.id,
     createdAt: puzzle.createdAt,
     updatedAt: puzzle.updatedAt,
     dailyChallengeId: puzzle.dailyChallengeId,
-    type: parseEnum(PuzzleType, puzzle.type),
     name: puzzle.puzzleType.name,
     description: puzzle.puzzleType.description,
   };
+
+  try {
+    const type = parseEnum(PuzzleType, puzzle.type);
+
+    switch (type) {
+      case PuzzleType.HANJI:
+        return { ...base, type, data: hanjiPuzzleDataSchema.parse(puzzle.data) };
+      case PuzzleType.HASHI:
+        return { ...base, type, data: hashiPuzzleDataSchema.parse(puzzle.data) };
+      case PuzzleType.MINESWEEPER:
+        return { ...base, type, data: minesweeperPuzzleDataSchema.parse(puzzle.data) };
+    }
+  } catch (error) {
+    throw new UnknownError(`Failed to map puzzle: ${error}`);
+  }
 }
