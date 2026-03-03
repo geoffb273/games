@@ -1,6 +1,6 @@
 import { type IncomingMessage } from 'http';
 
-import { createDataloaders, type Dataloaders } from '@/dataloader';
+import { createDataloaders, type Dataloaders } from '@/schema/dataloader';
 
 import { type Authorization, buildAuthorization } from './authorization';
 
