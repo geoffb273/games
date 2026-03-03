@@ -2,7 +2,7 @@ import { prisma } from '@/client/prisma';
 import { type Prisma } from '@/generated/prisma';
 import { NotFoundError, UnknownError } from '@/schema/errors';
 import { parseEnum } from '@/utils/enumUtils';
-import { isNotFoundError } from '@/utils/errorUtils';
+import { isForeignKeyViolationError, isNotFoundError } from '@/utils/errorUtils';
 
 import {
   type HanjiPuzzleData,
@@ -102,6 +102,12 @@ export async function getDailyChallengeToPuzzlesMap({
   }, new Map<string, Puzzle[]>());
 }
 
+/**
+ * Creates puzzles for a daily challenge
+ *
+ * @throws {UnknownError} if the puzzles data is invalid
+ * @throws {UnknownError} if the foreign key violation error is thrown
+ */
 export async function createPuzzles({
   dailyChallengeId,
   data: { hanji, hashi, minesweeper },
@@ -145,7 +151,13 @@ async function createHanjiPuzzle({
       },
       select: PUZZLE_SELECT,
     })
-    .then(mapPuzzle);
+    .then(mapPuzzle)
+    .catch((error) => {
+      if (isForeignKeyViolationError(error)) {
+        throw new UnknownError(`Daily challenge not found with id: ${dailyChallengeId}`);
+      }
+      throw error;
+    });
 }
 
 async function createHashiPuzzle({
@@ -168,7 +180,13 @@ async function createHashiPuzzle({
       },
       select: PUZZLE_SELECT,
     })
-    .then(mapPuzzle);
+    .then(mapPuzzle)
+    .catch((error) => {
+      if (isForeignKeyViolationError(error)) {
+        throw new UnknownError(`Daily challenge not found with id: ${dailyChallengeId}`);
+      }
+      throw error;
+    });
 }
 
 async function createMinesweeperPuzzle({
@@ -191,7 +209,13 @@ async function createMinesweeperPuzzle({
       },
       select: PUZZLE_SELECT,
     })
-    .then(mapPuzzle);
+    .then(mapPuzzle)
+    .catch((error) => {
+      if (isForeignKeyViolationError(error)) {
+        throw new UnknownError(`Daily challenge not found with id: ${dailyChallengeId}`);
+      }
+      throw error;
+    });
 }
 
 // HELPERS
