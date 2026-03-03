@@ -2,7 +2,7 @@ import { type ReactNode } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { StyleSheet, Text as RNText } from 'react-native';
 
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/hooks/useTheme';
 
 type FontWeight = 'bold' | 'semibold' | 'medium' | 'regular';
 type Size = '3xl' | '2xl' | 'xl' | 'lg' | 'md' | 'sm' | 'xs';

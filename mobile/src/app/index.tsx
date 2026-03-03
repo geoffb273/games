@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Text } from '@/components/common/text';
+import { Text } from '@/components/common/Text';
 import { Spacing } from '@/constants/theme';
 
 export default function HomeScreen() {
