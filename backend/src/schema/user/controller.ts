@@ -11,7 +11,7 @@ builder.queryField('currentUser', (t) =>
     errors: {
       types: [UnauthorizedError],
     },
-    resolve: async (_root, _args, { expectUser }) => {
+    resolve: async (_root, _args, { authorization: { expectUser } }) => {
       return await expectUser;
     },
   }),

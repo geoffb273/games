@@ -3,9 +3,10 @@ import {
   getPuzzle as getPuzzleDao,
   getPuzzlesByDailyChallenge as getPuzzlesByDailyChallengeDao,
 } from '../dao/puzzleDao';
+import { getUserPuzzleAttemptsByPuzzleIds as getUserPuzzleAttemptsByPuzzleIdsDao } from '../dao/userPuzzleAttemptDao';
 import { type Puzzle } from '../resource/puzzle';
+import { type UserPuzzleAttempt } from '../resource/userPuzzleAttempt';
 import { createPuzzlesForDailyChallenge as createPuzzlesForDailyChallengeService } from './createPuzzlesForDailyChallenge';
-
 /**
  * Gets a puzzle by id
  *
@@ -42,6 +43,16 @@ export async function getDailyChallengeToPuzzlesMap({
   dailyChallengeIds: string[];
 }): Promise<Map<string, Puzzle[]>> {
   return getDailyChallengeToPuzzlesMapDao({ dailyChallengeIds });
+}
+
+export async function getUserPuzzleAttemptsByPuzzleIds({
+  userId,
+  puzzleIds,
+}: {
+  userId: string;
+  puzzleIds: readonly string[];
+}): Promise<Map<string, UserPuzzleAttempt>> {
+  return getUserPuzzleAttemptsByPuzzleIdsDao({ userId, puzzleIds });
 }
 
 /**

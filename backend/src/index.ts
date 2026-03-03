@@ -3,7 +3,7 @@ import { startStandaloneServer } from '@apollo/server/standalone';
 
 import { schema } from '@/schema';
 
-import { buildContext, type Context } from './schema/context';
+import { buildContext, type Context } from './schema/context/context';
 
 const PORT = Number(process.env.PORT) || 4000;
 
