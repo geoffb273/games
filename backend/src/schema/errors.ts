@@ -34,6 +34,13 @@ export class ValidationError extends GraphQLError {
   }
 }
 
+export class AlreadyExistsError extends GraphQLError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AlreadyExistsError';
+  }
+}
+
 builder.interfaceType(GraphQLError, {
   name: 'Error',
   fields: (t) => ({
@@ -58,5 +65,10 @@ builder.objectType(UnknownError, {
 
 builder.objectType(ValidationError, {
   name: 'ValidationError',
+  interfaces: [GraphQLError],
+});
+
+builder.objectType(AlreadyExistsError, {
+  name: 'AlreadyExistsError',
   interfaces: [GraphQLError],
 });
