@@ -13,15 +13,17 @@ interface Error {
 }
 
 type HanjiPuzzle implements Puzzle {
+  attempt: PuzzleAttempt
   description: String
-  id: ID
-  name: String
+  id: ID!
+  name: String!
 }
 
 type HashiPuzzle implements Puzzle {
+  attempt: PuzzleAttempt
   description: String
-  id: ID
-  name: String
+  id: ID!
+  name: String!
 }
 
 type HealthStatus {
@@ -30,9 +32,10 @@ type HealthStatus {
 }
 
 type MinesweeperPuzzle implements Puzzle {
+  attempt: PuzzleAttempt
   description: String
-  id: ID
-  name: String
+  id: ID!
+  name: String!
 }
 
 type Mutation {
@@ -48,16 +51,24 @@ type NotFoundError implements Error {
 }
 
 interface Puzzle {
+  attempt: PuzzleAttempt
   description: String
-  id: ID
-  name: String
+  id: ID!
+  name: String!
+}
+
+type PuzzleAttempt {
+  completedAt: DateTime
+  durationMs: Int
+  id: ID!
+  startedAt: DateTime!
 }
 
 type Query {
   currentUser: QueryCurrentUserResult!
   health: HealthStatus!
-  puzzle(input: QueryPuzzleInput!): QueryPuzzleResult
-  puzzles(input: QueryPuzzlesInput!): QueryPuzzlesResult
+  puzzle(input: QueryPuzzleInput!): QueryPuzzleResult!
+  puzzles(input: QueryPuzzlesInput!): QueryPuzzlesResult!
 }
 
 union QueryCurrentUserResult = QueryCurrentUserSuccess | UnauthorizedError
