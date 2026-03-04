@@ -140,10 +140,13 @@ type QueryPuzzleSuccess {
 }
 
 input QueryPuzzlesInput {
-  dailyChallengeId: String!
+  """
+  The ID of the daily challenge to get puzzles for. If not provided, the latest daily challenge will be used.
+  """
+  dailyChallengeId: String
 }
 
-union QueryPuzzlesResult = QueryPuzzlesSuccess | UnknownError
+union QueryPuzzlesResult = NotFoundError | QueryPuzzlesSuccess | UnknownError
 
 type QueryPuzzlesSuccess {
   data: [Puzzle!]!

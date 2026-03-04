@@ -1,5 +1,6 @@
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
 import { SetContextLink } from '@apollo/client/link/context';
+import { relayStylePagination } from '@apollo/client/utilities';
 
 import { getToken } from '@/store/token';
 
@@ -19,7 +20,15 @@ const authLink = new SetContextLink(({ headers }) => {
 });
 
 const client = new ApolloClient({
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          dailyChallenges: relayStylePagination(),
+        },
+      },
+    },
+  }),
   link: authLink.concat(httpLink),
 });
 

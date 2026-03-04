@@ -1,3 +1,4 @@
+import { getLatestDailyChallenge } from '@/platform/dailyChallenge/service/dailyChallengeService';
 import { getPuzzle, getPuzzlesByDailyChallenge } from '@/platform/puzzle/service/puzzleService';
 
 import { builder } from '../builder';
@@ -25,13 +26,21 @@ builder.queryField('puzzles', (t) =>
     type: [PuzzleRef],
     nullable: false,
     input: {
-      dailyChallengeId: t.input.string({ required: true }),
+      dailyChallengeId: t.input.string({
+        required: false,
+        description:
+          'The ID of the daily challenge to get puzzles for. If not provided, the latest daily challenge will be used.',
+      }),
     },
     errors: {
-      types: [UnknownError],
+      types: [UnknownError, NotFoundError],
     },
     resolve: async (_, { input: { dailyChallengeId } }) => {
-      return getPuzzlesByDailyChallenge({ dailyChallengeId });
+      const id = dailyChallengeId ?? (await getLatestDailyChallenge()).id;
+
+      return getPuzzlesByDailyChallenge({
+        dailyChallengeId: id,
+      });
     },
   }),
 );

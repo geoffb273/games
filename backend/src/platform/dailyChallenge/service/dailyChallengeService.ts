@@ -4,10 +4,20 @@ import { type CursorArgs } from '@/utils/paginationUtils';
 import {
   createDailyChallenge as createDailyChallengeDao,
   getCompletedPuzzleCountsByDailyChallengeIds as getCompletedPuzzleCountsByDailyChallengeIdsDao,
+  getLatestDailyChallenge as getLatestDailyChallengeDao,
   getPuzzleCountsByDailyChallengeIds as getPuzzleCountsByDailyChallengeIdsDao,
   listDailyChallenges as listDailyChallengesDao,
 } from '../dao/dailyChallengeDao';
 import { type DailyChallenge } from '../resource/dailyChallenge';
+
+/**
+ * Gets the latest daily challenge
+ *
+ * @throws {NotFoundError} if no daily challenge is found
+ */
+export async function getLatestDailyChallenge(): Promise<DailyChallenge> {
+  return getLatestDailyChallengeDao();
+}
 
 /**
  * Creates a daily challenge for the given date and generates its puzzles.
