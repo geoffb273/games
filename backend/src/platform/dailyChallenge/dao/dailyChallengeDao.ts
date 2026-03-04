@@ -1,7 +1,7 @@
 import { prisma } from '@/client/prisma';
 import { type Prisma } from '@/generated/prisma';
-import { AlreadyExistsError } from '@/schema/errors';
-import { isAlreadyExistsError } from '@/utils/errorUtils';
+import { AlreadyExistsError, NotFoundError } from '@/schema/errors';
+import { isAlreadyExistsError, isNotFoundError } from '@/utils/errorUtils';
 import { type CursorArgs } from '@/utils/paginationUtils';
 
 import { type DailyChallenge } from '../resource/dailyChallenge';
@@ -12,6 +12,25 @@ const DAILY_CHALLENGE_SELECT = {
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.DailyChallengeSelect;
+
+/**
+ * Gets the latest daily challenge
+ *
+ * @throws {NotFoundError} if no daily challenge is found
+ */
+export async function getLatestDailyChallenge(): Promise<DailyChallenge> {
+  return prisma.dailyChallenge
+    .findFirstOrThrow({
+      orderBy: { date: 'desc' },
+      select: DAILY_CHALLENGE_SELECT,
+    })
+    .catch((error) => {
+      if (isNotFoundError(error)) {
+        throw new NotFoundError('No daily challenge found');
+      }
+      throw error;
+    });
+}
 
 /**
  * Creates a daily challenge for the given date and generates its puzzles.

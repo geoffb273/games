@@ -103,6 +103,9 @@ export type MinesweeperPuzzle = PuzzleBase & {
 
 export type Puzzle = HanjiPuzzle | HashiPuzzle | MinesweeperPuzzle;
 
+/**
+ * Maps the graphql puzzle fragment type to the expected {@link Puzzle} type
+ */
 export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>): Puzzle {
   const puzzle = getFragmentData(PuzzleFragmentFragmentDoc, data);
   const { id, name, description, attempt: puzzleAttempt, __typename } = puzzle;
@@ -166,4 +169,9 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
       };
     }
   }
+}
+
+/** @see {@link mapToPuzzle} */
+export function mapToPuzzles(data: FragmentType<typeof PuzzleFragmentFragmentDoc>[]): Puzzle[] {
+  return data.map(mapToPuzzle);
 }
