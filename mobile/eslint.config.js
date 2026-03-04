@@ -4,6 +4,7 @@ const expoConfig = require('eslint-config-expo/flat');
 const simpleImportSort = require('eslint-plugin-simple-import-sort');
 const noRelativeImportPaths = require('eslint-plugin-no-relative-import-paths');
 const prettierPlugin = require('eslint-plugin-prettier/recommended');
+const reactNativePlugin = require('eslint-plugin-react-native');
 
 module.exports = defineConfig([
   expoConfig,
@@ -15,6 +16,7 @@ module.exports = defineConfig([
     plugins: {
       'simple-import-sort': simpleImportSort,
       'no-relative-import-paths': noRelativeImportPaths,
+      'react-native': reactNativePlugin,
     },
     rules: {
       'simple-import-sort/imports': [
@@ -68,6 +70,7 @@ module.exports = defineConfig([
       'react/jsx-no-useless-fragment': 'warn',
       'react/self-closing-comp': 'warn',
       'react/jsx-curly-brace-presence': ['warn', { props: 'never', children: 'never' }],
+      'react-native/no-unused-styles': 'error',
     },
   },
 ]);

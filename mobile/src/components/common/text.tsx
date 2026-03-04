@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-unused-styles */
 import { type ReactNode } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { StyleSheet, Text as RNText } from 'react-native';
