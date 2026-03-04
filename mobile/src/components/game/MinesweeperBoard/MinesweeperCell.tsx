@@ -1,0 +1,177 @@
+import { memo, useCallback } from 'react';
+import { StyleSheet } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  FadeIn,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+  ZoomIn,
+} from 'react-native-reanimated';
+
+import { Spacing } from '@/constants/theme';
+
+const NUMBER_COLORS: Record<number, string> = {
+  1: '#3B82F6',
+  2: '#16A34A',
+  3: '#EF4444',
+  4: '#8B5CF6',
+  5: '#F59E0B',
+  6: '#0D9488',
+  7: '#EC4899',
+  8: '#94A3B8',
+};
+
+type CellProps = {
+  row: number;
+  col: number;
+  size: number;
+  isRevealed: boolean;
+  isFlagged: boolean;
+  value: number | null;
+  onTap: (row: number, col: number) => void;
+  onLongPress: (row: number, col: number) => void;
+  hiddenBg: string;
+  revealedBg: string;
+  flaggedBg: string;
+  textColor: string;
+};
+
+export const MinesweeperCell = memo(function MinesweeperCell({
+  row,
+  col,
+  size,
+  isRevealed,
+  isFlagged,
+  value,
+  onTap,
+  onLongPress,
+  hiddenBg,
+  revealedBg,
+  flaggedBg,
+  textColor,
+}: CellProps) {
+  const scale = useSharedValue(1);
+
+  const handleTap = useCallback(() => {
+    onTap(row, col);
+  }, [onTap, row, col]);
+
+  const handleLongPress = useCallback(() => {
+    onLongPress(row, col);
+  }, [onLongPress, row, col]);
+
+  const tap = Gesture.Tap()
+    .enabled(!isRevealed)
+    .onBegin(() => {
+      'worklet';
+      scale.value = withSpring(0.9, { damping: 15, stiffness: 400 });
+    })
+    .onEnd(() => {
+      'worklet';
+      runOnJS(handleTap)();
+    })
+    .onFinalize(() => {
+      'worklet';
+      scale.value = withSpring(1, { damping: 12, stiffness: 200 });
+    });
+
+  const longPressGesture = Gesture.LongPress()
+    .enabled(!isRevealed)
+    .minDuration(350)
+    .onStart(() => {
+      'worklet';
+      scale.value = withSequence(
+        withTiming(0.85, { duration: 60 }),
+        withSpring(1, { damping: 12 }),
+      );
+      runOnJS(handleLongPress)();
+    });
+
+  const gesture = Gesture.Exclusive(longPressGesture, tap);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const bg = isRevealed ? revealedBg : isFlagged ? flaggedBg : hiddenBg;
+  const fontSize = size > 36 ? 18 : size > 30 ? 15 : 12;
+
+  return (
+    <GestureDetector gesture={gesture}>
+      <Animated.View
+        style={[
+          styles.cell,
+          {
+            width: size,
+            height: size,
+            borderRadius: size > 36 ? 6 : 4,
+            backgroundColor: bg,
+          },
+          !isRevealed && styles.cellRaised,
+          animatedStyle,
+        ]}
+      >
+        {isRevealed && value != null && value > 0 ? (
+          <Animated.Text
+            entering={FadeIn.duration(200).delay(Math.min(20 * (row + col), 600))}
+            style={[styles.cellNumber, { fontSize, color: NUMBER_COLORS[value] ?? textColor }]}
+          >
+            {value}
+          </Animated.Text>
+        ) : isFlagged ? (
+          <Animated.Text entering={ZoomIn.duration(200)} style={[styles.flagMarker, { fontSize }]}>
+            ▲
+          </Animated.Text>
+        ) : null}
+      </Animated.View>
+    </GestureDetector>
+  );
+});
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    gap: Spacing.four,
+    paddingTop: Spacing.four,
+  },
+  toolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  toolbarItem: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.two,
+  },
+  board: {
+    alignItems: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+  },
+  cell: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cellRaised: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 1,
+    elevation: 2,
+  },
+  cellNumber: {
+    fontWeight: '700',
+    fontFamily: 'ui-rounded',
+  },
+  flagMarker: {
+    fontWeight: '800',
+    color: '#EF4444',
+  },
+});

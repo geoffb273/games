@@ -7,7 +7,7 @@ import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { Text } from '@/components/common/Text';
 import { HanjiBoard } from '@/components/game/HanjiBoard';
 import { HashiBoard } from '@/components/game/HashiBoard';
-import { MinesweeperBoard } from '@/components/game/MinesweeperBoard';
+import { MinesweeperBoard } from '@/components/game/MinesweeperBoard/MinesweeperBoard';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
