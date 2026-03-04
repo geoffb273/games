@@ -25,16 +25,29 @@ interface Error {
 
 type HanjiPuzzle implements Puzzle {
   attempt: PuzzleAttempt
+  colClues: [[Int!]!]!
   description: String
+  height: Int!
   id: ID!
   name: String!
+  rowClues: [[Int!]!]!
+  width: Int!
+}
+
+type HashiIsland {
+  col: Int!
+  requiredBridges: Int!
+  row: Int!
 }
 
 type HashiPuzzle implements Puzzle {
   attempt: PuzzleAttempt
   description: String
+  height: Int!
   id: ID!
+  islands: [HashiIsland!]!
   name: String!
+  width: Int!
 }
 
 type HealthStatus {
@@ -45,8 +58,18 @@ type HealthStatus {
 type MinesweeperPuzzle implements Puzzle {
   attempt: PuzzleAttempt
   description: String
+  height: Int!
   id: ID!
+  mineCount: Int!
   name: String!
+  revealedCells: [MinesweeperRevealedCell!]!
+  width: Int!
+}
+
+type MinesweeperRevealedCell {
+  col: Int!
+  row: Int!
+  value: Int!
 }
 
 type Mutation {
