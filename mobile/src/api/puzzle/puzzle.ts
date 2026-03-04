@@ -1,8 +1,44 @@
 import { gql } from '@apollo/client';
 
-import { type PuzzleFragmentFragment } from '@/generated/gql/graphql';
+import { type FragmentType, useFragment } from '@/generated/gql';
+import {
+  HanjiPuzzleFragmentFragmentDoc,
+  HashiPuzzleFragmentFragmentDoc,
+  MinesweeperPuzzleFragmentFragmentDoc,
+  PuzzleFragmentFragmentDoc,
+} from '@/generated/gql/graphql';
+
+const getFragmentData = useFragment;
 
 gql`
+  fragment HanjiPuzzleFragment on HanjiPuzzle {
+    width
+    height
+    rowClues
+    colClues
+  }
+
+  fragment HashiPuzzleFragment on HashiPuzzle {
+    width
+    height
+    islands {
+      row
+      col
+      requiredBridges
+    }
+  }
+
+  fragment MinesweeperPuzzleFragment on MinesweeperPuzzle {
+    width
+    height
+    mineCount
+    revealedCells {
+      col
+      row
+      value
+    }
+  }
+
   fragment PuzzleFragment on Puzzle {
     id
     name
@@ -15,12 +51,15 @@ gql`
     }
     ... on HanjiPuzzle {
       __typename
+      ...HanjiPuzzleFragment
     }
     ... on HashiPuzzle {
       __typename
+      ...HashiPuzzleFragment
     }
     ... on MinesweeperPuzzle {
       __typename
+      ...MinesweeperPuzzleFragment
     }
   }
 `;
@@ -41,22 +80,32 @@ export type PuzzleBase = {
 
 export type HanjiPuzzle = PuzzleBase & {
   type: 'HANJI';
+  height: number;
+  width: number;
+  rowClues: number[][];
+  colClues: number[][];
 };
 
 export type HashiPuzzle = PuzzleBase & {
   type: 'HASHI';
+  height: number;
+  width: number;
+  islands: { row: number; col: number; requiredBridges: number }[];
 };
 
 export type MinesweeperPuzzle = PuzzleBase & {
   type: 'MINESWEEPER';
+  height: number;
+  width: number;
+  mineCount: number;
+  revealedCells: { col: number; row: number; value: number }[];
 };
 
 export type Puzzle = HanjiPuzzle | HashiPuzzle | MinesweeperPuzzle;
 
-export function mapToPuzzle(data: PuzzleFragmentFragment | null): Puzzle | null {
-  if (data == null) return null;
-
-  const { id, name, description, attempt: puzzleAttempt, __typename } = data;
+export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>): Puzzle {
+  const puzzle = getFragmentData(PuzzleFragmentFragmentDoc, data);
+  const { id, name, description, attempt: puzzleAttempt, __typename } = puzzle;
 
   const attempt: PuzzleAttempt | null =
     puzzleAttempt != null
@@ -76,20 +125,45 @@ export function mapToPuzzle(data: PuzzleFragmentFragment | null): Puzzle | null 
   };
 
   switch (__typename) {
-    case 'HanjiPuzzle':
+    case 'HanjiPuzzle': {
+      const hanji = getFragmentData(HanjiPuzzleFragmentFragmentDoc, puzzle);
       return {
         ...shared,
         type: 'HANJI',
+        height: hanji.height,
+        width: hanji.width,
+        rowClues: hanji.rowClues,
+        colClues: hanji.colClues,
       };
-    case 'HashiPuzzle':
+    }
+    case 'HashiPuzzle': {
+      const hashi = getFragmentData(HashiPuzzleFragmentFragmentDoc, puzzle);
       return {
         ...shared,
         type: 'HASHI',
+        height: hashi.height,
+        width: hashi.width,
+        islands: hashi.islands.map((i) => ({
+          row: i.row,
+          col: i.col,
+          requiredBridges: i.requiredBridges,
+        })),
       };
-    case 'MinesweeperPuzzle':
+    }
+    case 'MinesweeperPuzzle': {
+      const minesweeper = getFragmentData(MinesweeperPuzzleFragmentFragmentDoc, puzzle);
       return {
         ...shared,
         type: 'MINESWEEPER',
+        height: minesweeper.height,
+        width: minesweeper.width,
+        mineCount: minesweeper.mineCount,
+        revealedCells: minesweeper.revealedCells.map((c) => ({
+          col: c.col,
+          row: c.row,
+          value: c.value,
+        })),
       };
+    }
   }
 }
