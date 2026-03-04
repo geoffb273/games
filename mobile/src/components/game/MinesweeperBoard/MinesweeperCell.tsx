@@ -13,6 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 
 const NUMBER_COLORS: Record<number, string> = {
   1: '#3B82F6',
@@ -34,10 +35,6 @@ type CellProps = {
   value: number | null;
   onTap: (row: number, col: number) => void;
   onLongPress: (row: number, col: number) => void;
-  hiddenBg: string;
-  revealedBg: string;
-  flaggedBg: string;
-  textColor: string;
 };
 
 export const MinesweeperCell = memo(function MinesweeperCell({
@@ -49,11 +46,8 @@ export const MinesweeperCell = memo(function MinesweeperCell({
   value,
   onTap,
   onLongPress,
-  hiddenBg,
-  revealedBg,
-  flaggedBg,
-  textColor,
 }: CellProps) {
+  const theme = useTheme();
   const scale = useSharedValue(1);
 
   const handleTap = useCallback(() => {
@@ -97,7 +91,11 @@ export const MinesweeperCell = memo(function MinesweeperCell({
     transform: [{ scale: scale.value }],
   }));
 
-  const bg = isRevealed ? revealedBg : isFlagged ? flaggedBg : hiddenBg;
+  const bg = isRevealed
+    ? theme.background
+    : isFlagged
+      ? theme.backgroundSelected
+      : theme.backgroundElement;
   const fontSize = size > 36 ? 18 : size > 30 ? 15 : 12;
 
   return (
@@ -118,7 +116,7 @@ export const MinesweeperCell = memo(function MinesweeperCell({
         {isRevealed && value != null && value > 0 ? (
           <Animated.Text
             entering={FadeIn.duration(200).delay(Math.min(20 * (row + col), 600))}
-            style={[styles.cellNumber, { fontSize, color: NUMBER_COLORS[value] ?? textColor }]}
+            style={[styles.cellNumber, { fontSize, color: NUMBER_COLORS[value] ?? theme.text }]}
           >
             {value}
           </Animated.Text>
