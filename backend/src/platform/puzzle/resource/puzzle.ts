@@ -7,7 +7,7 @@ export const PuzzleType = {
 } as const;
 export type PuzzleType = (typeof PuzzleType)[keyof typeof PuzzleType];
 
-export type Puzzle = {
+type BasePuzzle = {
   id: string;
   createdAt: Date;
   updatedAt: Date;
@@ -15,20 +15,24 @@ export type Puzzle = {
   type: PuzzleType;
   name: string;
   description: string | null | undefined;
-} & (
-  | {
-      type: 'HANJI';
-      data: HanjiPuzzleData;
-    }
-  | {
-      type: 'HASHI';
-      data: HashiPuzzleData;
-    }
-  | {
-      type: 'MINESWEEPER';
-      data: MinesweeperPuzzleData;
-    }
-);
+};
+
+export type HanjiPuzzle = BasePuzzle & {
+  type: 'HANJI';
+  data: HanjiPuzzleData;
+};
+
+export type HashiPuzzle = BasePuzzle & {
+  type: 'HASHI';
+  data: HashiPuzzleData;
+};
+
+export type MinesweeperPuzzle = BasePuzzle & {
+  type: 'MINESWEEPER';
+  data: MinesweeperPuzzleData;
+};
+
+export type Puzzle = HanjiPuzzle | HashiPuzzle | MinesweeperPuzzle;
 
 const hanjiCellSchema = z.union([z.literal(0), z.literal(1)]);
 
