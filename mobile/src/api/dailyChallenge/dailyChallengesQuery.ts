@@ -24,7 +24,7 @@ gql`
 
 const PAGE_SIZE = 10;
 
-type DailyChallenge = {
+export type DailyChallenge = {
   id: string;
   date: Date;
   completedPuzzleCount: number;
