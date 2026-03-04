@@ -142,10 +142,6 @@ export function MinesweeperBoard({ puzzle }: MinesweeperBoardProps) {
                   value={revealedValue ?? null}
                   onTap={onCellTap}
                   onLongPress={onCellLongPress}
-                  hiddenBg={theme.backgroundElement}
-                  revealedBg={theme.background}
-                  flaggedBg={theme.backgroundSelected}
-                  textColor={theme.text}
                 />
               );
             })}
