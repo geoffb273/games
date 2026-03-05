@@ -13,23 +13,23 @@ export async function createPuzzlesForDailyChallenge({
   const seed = dailyChallengeId;
 
   const hanji = generateHanjiPuzzleData({
-    width: 25,
-    height: 25,
+    width: 8,
+    height: 8,
     seed,
     fillProbability: 0.5,
   });
 
   const hashi = generateHashiPuzzleData({
-    width: 13,
-    height: 13,
+    width: 10,
+    height: 10,
     seed,
-    islandCount: 25,
+    islandCount: 20,
   });
 
   const minesweeper = generateMinesweeperPuzzleData({
-    width: 16,
-    height: 16,
-    mineCount: 40,
+    width: 12,
+    height: 12,
+    mineCount: 36,
     seed,
   });
 
