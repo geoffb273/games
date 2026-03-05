@@ -55,12 +55,26 @@ type HealthStatus {
   timestamp: String!
 }
 
+enum MinesweeperCellValue {
+  EIGHT
+  FIVE
+  FOUR
+  MINE
+  ONE
+  SEVEN
+  SIX
+  THREE
+  TWO
+  ZERO
+}
+
 type MinesweeperPuzzle implements Puzzle {
   attempt: PuzzleAttempt
   description: String
   height: Int!
   id: ID!
   mineCount: Int!
+  mineField: [[MinesweeperCellValue!]!]!
   name: String!
   revealedCells: [MinesweeperRevealedCell!]!
   width: Int!

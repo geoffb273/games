@@ -5,6 +5,7 @@ import { type FragmentType, useFragment } from '@/generated/gql';
 import {
   HanjiPuzzleFragmentFragmentDoc,
   HashiPuzzleFragmentFragmentDoc,
+  MinesweeperCellValue,
   MinesweeperPuzzleFragmentFragmentDoc,
   PuzzleFragmentFragmentDoc,
 } from '@/generated/gql/graphql';
@@ -33,6 +34,7 @@ gql`
     width
     height
     mineCount
+    mineField
     revealedCells {
       col
       row
@@ -99,11 +101,28 @@ export type HashiPuzzle = PuzzleBase & {
   islands: { row: number; col: number; requiredBridges: number }[];
 };
 
+/** 0-8 for adjacency count, or 'MINE' */
+export type MinesweeperCellValueDisplay = number | 'MINE';
+
+const MINESWEEPER_ENUM_TO_VALUE: Record<MinesweeperCellValue, MinesweeperCellValueDisplay> = {
+  [MinesweeperCellValue.Zero]: 0,
+  [MinesweeperCellValue.One]: 1,
+  [MinesweeperCellValue.Two]: 2,
+  [MinesweeperCellValue.Three]: 3,
+  [MinesweeperCellValue.Four]: 4,
+  [MinesweeperCellValue.Five]: 5,
+  [MinesweeperCellValue.Six]: 6,
+  [MinesweeperCellValue.Seven]: 7,
+  [MinesweeperCellValue.Eight]: 8,
+  [MinesweeperCellValue.Mine]: 'MINE',
+};
+
 export type MinesweeperPuzzle = PuzzleBase & {
   type: 'MINESWEEPER';
   height: number;
   width: number;
   mineCount: number;
+  mineField: MinesweeperCellValueDisplay[][];
   revealedCells: { col: number; row: number; value: number }[];
 };
 
@@ -152,7 +171,7 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
         type: 'HASHI',
         height: hashi.height,
         width: hashi.width,
-        islands: (hashi.islands ?? []).map((i) => ({
+        islands: hashi.islands.map((i) => ({
           row: i.row,
           col: i.col,
           requiredBridges: i.requiredBridges,
@@ -161,13 +180,17 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
     }
     case 'MinesweeperPuzzle': {
       const minesweeper = getFragmentData(MinesweeperPuzzleFragmentFragmentDoc, puzzle);
+      const mineField = minesweeper.mineField.map((row) =>
+        row.map((cell) => MINESWEEPER_ENUM_TO_VALUE[cell]),
+      );
       return {
         ...shared,
         type: 'MINESWEEPER',
         height: minesweeper.height,
         width: minesweeper.width,
         mineCount: minesweeper.mineCount,
-        revealedCells: (minesweeper.revealedCells ?? []).map((c) => ({
+        mineField,
+        revealedCells: minesweeper.revealedCells.map((c) => ({
           col: c.col,
           row: c.row,
           value: c.value,
