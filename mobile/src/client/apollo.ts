@@ -1,8 +1,12 @@
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
+import { createFragmentRegistry } from '@apollo/client/cache';
 import { SetContextLink } from '@apollo/client/link/context';
 import { relayStylePagination } from '@apollo/client/utilities';
 
+import introspectionResult from '@/generated/apollo/fragment-matcher';
 import { getToken } from '@/store/token';
+
+export const fragmentRegistry = createFragmentRegistry();
 
 // TODO: replace with your actual GraphQL endpoint
 const API_URL = 'http://localhost:4000/graphql';
@@ -21,6 +25,7 @@ const authLink = new SetContextLink(({ headers }) => {
 
 const client = new ApolloClient({
   cache: new InMemoryCache({
+    possibleTypes: introspectionResult.possibleTypes,
     typePolicies: {
       Query: {
         fields: {
@@ -28,6 +33,7 @@ const client = new ApolloClient({
         },
       },
     },
+    fragments: fragmentRegistry,
   }),
   link: authLink.concat(httpLink),
 });
