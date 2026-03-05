@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client';
 
+import { fragmentRegistry } from '@/client/apollo';
 import { type FragmentType, useFragment } from '@/generated/gql';
 import {
   HanjiPuzzleFragmentFragmentDoc,
@@ -63,6 +64,11 @@ gql`
     }
   }
 `;
+
+fragmentRegistry.register(PuzzleFragmentFragmentDoc);
+fragmentRegistry.register(HanjiPuzzleFragmentFragmentDoc);
+fragmentRegistry.register(HashiPuzzleFragmentFragmentDoc);
+fragmentRegistry.register(MinesweeperPuzzleFragmentFragmentDoc);
 
 export type PuzzleAttempt = {
   id: string;
@@ -146,7 +152,7 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
         type: 'HASHI',
         height: hashi.height,
         width: hashi.width,
-        islands: hashi.islands.map((i) => ({
+        islands: (hashi.islands ?? []).map((i) => ({
           row: i.row,
           col: i.col,
           requiredBridges: i.requiredBridges,
@@ -161,7 +167,7 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
         height: minesweeper.height,
         width: minesweeper.width,
         mineCount: minesweeper.mineCount,
-        revealedCells: minesweeper.revealedCells.map((c) => ({
+        revealedCells: (minesweeper.revealedCells ?? []).map((c) => ({
           col: c.col,
           row: c.row,
           value: c.value,

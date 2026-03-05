@@ -7,6 +7,12 @@ const config: CodegenConfig = {
     './src/generated/gql/': {
       preset: 'client',
     },
+    './src/generated/apollo/fragment-matcher.ts': {
+      plugins: ['fragment-matcher'],
+      config: {
+        apolloClientVersion: 3,
+      },
+    },
   },
   ignoreNoDocuments: true,
 };

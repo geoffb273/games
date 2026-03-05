@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { ApolloProvider } from '@apollo/client/react';
@@ -11,12 +12,14 @@ import { AuthProvider } from './AuthProvider';
 export function MainProvider({ children }: { children: ReactNode }) {
   const colorScheme = useColorScheme();
   return (
-    <ApolloProvider client={client}>
-      <AuthProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          {children}
-        </ThemeProvider>
-      </AuthProvider>
-    </ApolloProvider>
+    <GestureHandlerRootView>
+      <ApolloProvider client={client}>
+        <AuthProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            {children}
+          </ThemeProvider>
+        </AuthProvider>
+      </ApolloProvider>
+    </GestureHandlerRootView>
   );
 }
