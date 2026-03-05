@@ -347,12 +347,17 @@ function placeIslands(
 /**
  * Generates a random valid bridge assignment by building a spanning tree
  * (ensuring connectivity) then optionally adding extra bridges for variety.
+ *
+ * @param doubleBridgeProb - probability that a spanning tree edge gets 2 bridges (vs 1)
+ * @param extraBridgeProb - probability of adding a bridge on each unused non-conflicting connection
  */
 function generateRandomSolution(
   islands: { row: number; col: number }[],
   connections: Connection[],
   conflicts: Set<number>[],
   random: () => number,
+  doubleBridgeProb: number,
+  extraBridgeProb: number,
 ): number[] | null {
   const bridgeCounts = new Array<number>(connections.length).fill(0);
   const blockedByConflict = new Set<number>();
@@ -391,7 +396,7 @@ function generateRandomSolution(
     if (blockedByConflict.has(ci)) continue;
     const { a, b } = connections[ci];
     if (union(a, b)) {
-      bridgeCounts[ci] = random() < 0.5 ? 1 : 2;
+      bridgeCounts[ci] = random() < doubleBridgeProb ? 2 : 1;
       for (const conflictIdx of conflicts[ci]) {
         blockedByConflict.add(conflictIdx);
       }
@@ -402,17 +407,69 @@ function generateRandomSolution(
 
   if (edgesAdded < islands.length - 1) return null;
 
-  for (const ci of shuffledIndices) {
-    if (bridgeCounts[ci] > 0 || blockedByConflict.has(ci)) continue;
-    if (random() < 0.5) {
-      bridgeCounts[ci] = random() < 0.5 ? 1 : 2;
-      for (const conflictIdx of conflicts[ci]) {
-        blockedByConflict.add(conflictIdx);
+  if (extraBridgeProb > 0) {
+    for (const ci of shuffledIndices) {
+      if (bridgeCounts[ci] > 0 || blockedByConflict.has(ci)) continue;
+      if (random() < extraBridgeProb) {
+        bridgeCounts[ci] = random() < doubleBridgeProb ? 2 : 1;
+        for (const conflictIdx of conflicts[ci]) {
+          blockedByConflict.add(conflictIdx);
+        }
       }
     }
   }
 
   return bridgeCounts;
+}
+
+/**
+ * When a solution isn't unique, compares two solutions to find where they differ,
+ * then tries reducing or removing those specific bridges. Much cheaper than
+ * trying all bridges since typically only 2-5 connections differ.
+ */
+function tryFixAmbiguity(
+  positions: { row: number; col: number }[],
+  connections: Connection[],
+  conflicts: Set<number>[],
+  bridgeCounts: number[],
+  altSolution: number[],
+  random: () => number,
+): number[] | null {
+  const diffIndices: number[] = [];
+  for (let ci = 0; ci < bridgeCounts.length; ci++) {
+    if (bridgeCounts[ci] !== altSolution[ci]) diffIndices.push(ci);
+  }
+
+  const shuffled = shuffleArray(diffIndices, random);
+
+  for (const ci of shuffled) {
+    const candidates: number[] = [];
+    if (bridgeCounts[ci] === 2) candidates.push(1);
+    if (bridgeCounts[ci] > 0) candidates.push(0);
+
+    for (const newVal of candidates) {
+      const modified = [...bridgeCounts];
+      modified[ci] = newVal;
+
+      if (!isConnected(positions.length, connections, modified)) continue;
+
+      const islands: Island[] = positions.map((pos, i) => {
+        let total = 0;
+        for (let cj = 0; cj < connections.length; cj++) {
+          if (connections[cj].a === i || connections[cj].b === i) {
+            total += modified[cj];
+          }
+        }
+        return { ...pos, requiredBridges: total };
+      });
+      if (islands.some((isl) => isl.requiredBridges === 0)) continue;
+
+      const solutions = solveHashiCore(islands, connections, conflicts, 2);
+      if (solutions.length === 1) return modified;
+    }
+  }
+
+  return null;
 }
 
 // --- Main export ---
@@ -426,13 +483,16 @@ type GenerateHashiPuzzleDataOptions = {
   islandCount?: number;
 };
 
-const MAX_GENERATION_ATTEMPTS = 200;
+const ATTEMPTS_PER_TIER = 3000;
+const MAX_ISLAND_REDUCTIONS = 6;
 
 /**
  * Generates Hashi (bridges) puzzle data guaranteed to have a unique solution.
  *
- * Places islands on a grid, connects them with random bridges via a spanning tree,
- * and verifies unique solvability with a constraint-propagation + backtracking solver.
+ * For each attempt: places islands, generates a random spanning-tree-based bridge
+ * assignment, and checks unique solvability. The double-bridge probability and
+ * extra-bridge probability are randomized per attempt to maximise diversity.
+ * Progressively reduces the island count if the target density is too hard.
  */
 export function generateHashiPuzzleData({
   width,
@@ -442,62 +502,99 @@ export function generateHashiPuzzleData({
 }: GenerateHashiPuzzleDataOptions): HashiPuzzleData {
   const targetIslands = islandCount ?? Math.max(4, Math.floor(width * height * 0.15));
 
-  for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
-    const effectiveSeed = `${seed ?? Date.now()}-${attempt}`;
-    const numericSeed = stringToSeed(effectiveSeed);
-    const random = createSeededRandom(numericSeed);
+  for (let reduction = 0; reduction <= MAX_ISLAND_REDUCTIONS; reduction++) {
+    const currentCount = targetIslands - reduction;
+    if (currentCount < 4) break;
 
-    const positions = placeIslands(width, height, targetIslands, random);
-    if (positions.length < 2) continue;
+    for (let attempt = 0; attempt < ATTEMPTS_PER_TIER; attempt++) {
+      const effectiveSeed = `${seed ?? Date.now()}-n${currentCount}-${attempt}`;
+      const numericSeed = stringToSeed(effectiveSeed);
+      const random = createSeededRandom(numericSeed);
 
-    const connections = findConnections(positions);
-    if (connections.length === 0) continue;
+      const doubleBridgeProb = 0.3 + random() * 0.4;
+      const extraBridgeProb = random() < 0.7 ? 0 : random() * 0.2;
 
-    const conflicts = buildConflictGraph(positions, connections);
+      const positions = placeIslands(width, height, currentCount, random);
+      if (positions.length < 2) continue;
 
-    const bridgeCounts = generateRandomSolution(positions, connections, conflicts, random);
-    if (bridgeCounts === null) continue;
+      const connections = findConnections(positions);
+      if (connections.length === 0) continue;
 
-    const islands: Island[] = positions.map((pos, i) => {
-      let total = 0;
+      const conflicts = buildConflictGraph(positions, connections);
+
+      const initialBridges = generateRandomSolution(
+        positions,
+        connections,
+        conflicts,
+        random,
+        doubleBridgeProb,
+        extraBridgeProb,
+      );
+      if (initialBridges === null) continue;
+
+      const toIslands = (bc: number[]): Island[] =>
+        positions.map((pos, i) => {
+          let total = 0;
+          for (let ci = 0; ci < connections.length; ci++) {
+            if (connections[ci].a === i || connections[ci].b === i) {
+              total += bc[ci];
+            }
+          }
+          return { ...pos, requiredBridges: total };
+        });
+
+      let bridgeCounts = initialBridges;
+      let islands = toIslands(bridgeCounts);
+
+      if (islands.some((isl) => isl.requiredBridges === 0)) continue;
+
+      const solutions = solveHashiCore(islands, connections, conflicts, 2);
+      if (solutions.length === 0) continue;
+      if (solutions.length > 1) {
+        const altSolution =
+          solutions.find((s) => s.some((v, i) => v !== bridgeCounts[i])) ?? solutions[1];
+        const fixed = tryFixAmbiguity(
+          positions,
+          connections,
+          conflicts,
+          bridgeCounts,
+          altSolution,
+          random,
+        );
+        if (fixed === null) continue;
+        bridgeCounts = fixed;
+        islands = toIslands(bridgeCounts);
+      }
+
+      const solutionBridges: HashiPuzzleData['solution'] = [];
       for (let ci = 0; ci < connections.length; ci++) {
-        if (connections[ci].a === i || connections[ci].b === i) {
-          total += bridgeCounts[ci];
+        if (bridgeCounts[ci] > 0) {
+          const conn = connections[ci];
+          solutionBridges.push({
+            from: { row: islands[conn.a].row, col: islands[conn.a].col },
+            to: { row: islands[conn.b].row, col: islands[conn.b].col },
+            bridges: bridgeCounts[ci] as 1 | 2,
+          });
         }
       }
-      return { ...pos, requiredBridges: total };
-    });
 
-    if (islands.some((isl) => isl.requiredBridges === 0)) continue;
-
-    const solutions = solveHashiCore(islands, connections, conflicts, 2);
-    if (solutions.length !== 1) continue;
-
-    const solutionBridges: HashiPuzzleData['solution'] = [];
-    for (let ci = 0; ci < connections.length; ci++) {
-      if (bridgeCounts[ci] > 0) {
-        const conn = connections[ci];
-        solutionBridges.push({
-          from: { row: islands[conn.a].row, col: islands[conn.a].col },
-          to: { row: islands[conn.b].row, col: islands[conn.b].col },
-          bridges: bridgeCounts[ci] as 1 | 2,
-        });
-      }
+      return {
+        width,
+        height,
+        islands: islands.map((i) => ({
+          row: i.row,
+          col: i.col,
+          requiredBridges: i.requiredBridges,
+        })),
+        solution: solutionBridges,
+      };
     }
-
-    return {
-      width,
-      height,
-      islands: islands.map((i) => ({
-        row: i.row,
-        col: i.col,
-        requiredBridges: i.requiredBridges,
-      })),
-      solution: solutionBridges,
-    };
   }
 
+  const minIslands = Math.max(4, targetIslands - MAX_ISLAND_REDUCTIONS);
+  const totalAttempts = (targetIslands - minIslands + 1) * ATTEMPTS_PER_TIER;
   throw new Error(
-    `Failed to generate a uniquely solvable Hashi puzzle after ${MAX_GENERATION_ATTEMPTS} attempts`,
+    `Failed to generate a uniquely solvable Hashi puzzle after ${totalAttempts} attempts ` +
+      `(tried ${targetIslands} down to ${minIslands} islands)`,
   );
 }
