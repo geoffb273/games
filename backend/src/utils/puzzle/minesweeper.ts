@@ -15,6 +15,21 @@ const NEIGHBORS = [
   [1, 1],
 ] as const;
 
+export const MINESWEEPER_CELL_VALUES = [
+  '0',
+  '1',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  'MINE',
+] as const;
+
+export type MinesweeperCellValue = (typeof MINESWEEPER_CELL_VALUES)[number];
+
 function getNeighbors(
   row: number,
   col: number,
@@ -49,6 +64,22 @@ export function computeAdjacencyCounts(
     }
   }
   return counts;
+}
+
+export function computeSolutionCells(
+  mines: boolean[][],
+  width: number,
+  height: number,
+): MinesweeperCellValue[][] {
+  const adjacency = computeAdjacencyCounts(mines, width, height);
+
+  return Array.from<undefined, MinesweeperCellValue[]>({ length: height }, (_rowIndex, row) => {
+    return Array.from<undefined, MinesweeperCellValue>({ length: width }, (_colIndex, col) => {
+      return mines[row][col]
+        ? ('MINE' as const)
+        : (String(adjacency[row][col]) as MinesweeperCellValue);
+    });
+  });
 }
 
 // --- Solver ---

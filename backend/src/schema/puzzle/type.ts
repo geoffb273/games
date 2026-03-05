@@ -6,6 +6,7 @@ import {
   PuzzleType,
 } from '@/platform/puzzle/resource/puzzle';
 import { type UserPuzzleAttempt } from '@/platform/puzzle/resource/userPuzzleAttempt';
+import { computeSolutionCells } from '@/utils/puzzle/minesweeper';
 
 import { builder } from '../builder';
 
@@ -81,6 +82,21 @@ export const HashiPuzzleRef = builder.objectRef<HashiPuzzle>('HashiPuzzle').impl
 
 // --- Minesweeper types ---
 
+export const MinesweeperCellValueEnum = builder.enumType('MinesweeperCellValue', {
+  values: {
+    ZERO: { value: '0' },
+    ONE: { value: '1' },
+    TWO: { value: '2' },
+    THREE: { value: '3' },
+    FOUR: { value: '4' },
+    FIVE: { value: '5' },
+    SIX: { value: '6' },
+    SEVEN: { value: '7' },
+    EIGHT: { value: '8' },
+    MINE: { value: 'MINE' },
+  } as const,
+});
+
 const MinesweeperRevealedCellRef = builder.simpleObject('MinesweeperRevealedCell', {
   fields: (t) => ({
     row: t.int({ nullable: false }),
@@ -103,6 +119,14 @@ export const MinesweeperPuzzleRef = builder
         type: [MinesweeperRevealedCellRef],
         nullable: false,
         resolve: (puzzle) => puzzle.data.revealedCells,
+      }),
+      mineField: t.field({
+        type: [t.listRef(MinesweeperCellValueEnum)],
+        nullable: false,
+        resolve: (puzzle) => {
+          const { width, height, solution } = puzzle.data;
+          return computeSolutionCells(solution, width, height);
+        },
       }),
     }),
   });

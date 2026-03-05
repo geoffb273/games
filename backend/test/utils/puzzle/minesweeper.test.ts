@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   computeAdjacencyCounts,
+  computeSolutionCells,
   generateMinesweeperPuzzleData,
   isSolvableByPropagation,
+  MINESWEEPER_CELL_VALUES,
 } from '../../../src/utils/puzzle/minesweeper';
 
 /**
@@ -126,5 +128,22 @@ describe('generateMinesweeperPuzzleData', () => {
       puzzleData.mineCount,
     );
     expect(result).toBe(true);
+  });
+
+  it('computes solution cells with correct CellValue grid', () => {
+    const mines: boolean[][] = [
+      [true, false],
+      [false, false],
+    ];
+    const cells = computeSolutionCells(mines, 2, 2);
+
+    expect(cells).toEqual([
+      ['MINE', '1'],
+      ['1', '1'],
+    ]);
+  });
+
+  it('exposes all valid CellValue enum values', () => {
+    expect(MINESWEEPER_CELL_VALUES).toEqual(['0', '1', '2', '3', '4', '5', '6', '7', '8', 'MINE']);
   });
 });
