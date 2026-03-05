@@ -32,7 +32,11 @@ function getNeighbors(
   return result;
 }
 
-function computeAdjacencyCounts(mines: boolean[][], width: number, height: number): number[][] {
+export function computeAdjacencyCounts(
+  mines: boolean[][],
+  width: number,
+  height: number,
+): number[][] {
   const counts: number[][] = Array.from({ length: height }, () => new Array<number>(width).fill(0));
   for (let r = 0; r < height; r++) {
     for (let c = 0; c < width; c++) {
@@ -95,132 +99,18 @@ function propagateConstraints(
 }
 
 /**
- * Checks whether the current state is consistent with all constraint cells.
+ * Checks if a puzzle is solvable by iterative constraint propagation with
+ * progressive reveal — matching actual gameplay where clicking a safe cell
+ * reveals its adjacency number. If propagation alone resolves every cell,
+ * uniqueness is guaranteed (each step is a forced deduction).
  */
-function isConsistent(
-  state: CellState[][],
-  constraints: Map<string, number>,
-  width: number,
-  height: number,
-): boolean {
-  for (const [key, value] of constraints) {
-    const [r, c] = key.split(',').map(Number);
-    const neighbors = getNeighbors(r, c, width, height);
-
-    let mineCount = 0;
-    let unknownCount = 0;
-
-    for (const n of neighbors) {
-      if (state[n.row][n.col] === 'mine') mineCount++;
-      else if (state[n.row][n.col] === 'unknown') unknownCount++;
-    }
-
-    if (mineCount > value) return false;
-    if (mineCount + unknownCount < value) return false;
-  }
-
-  return true;
-}
-
-function cloneGrid<T>(grid: T[][]): T[][] {
-  return grid.map((row) => [...row]);
-}
-
-/**
- * Counts solutions using constraint propagation + backtracking.
- * Stops early once maxSolutions is reached.
- */
-function countSolutions(
-  state: CellState[][],
-  constraints: Map<string, number>,
-  width: number,
-  height: number,
-  totalMines: number,
-  maxSolutions: number,
-): number {
-  const s = cloneGrid(state);
-
-  let propagated = true;
-  while (propagated) {
-    propagated = propagateConstraints(s, constraints, width, height);
-  }
-
-  if (!isConsistent(s, constraints, width, height)) return 0;
-
-  let mineCount = 0;
-  const unknowns: { row: number; col: number }[] = [];
-  for (let r = 0; r < height; r++) {
-    for (let c = 0; c < width; c++) {
-      if (s[r][c] === 'mine') mineCount++;
-      else if (s[r][c] === 'unknown') unknowns.push({ row: r, col: c });
-    }
-  }
-
-  if (mineCount > totalMines) return 0;
-  if (unknowns.length === 0) {
-    return mineCount === totalMines ? 1 : 0;
-  }
-
-  const minesLeft = totalMines - mineCount;
-  if (minesLeft > unknowns.length) return 0;
-
-  if (minesLeft === 0) {
-    for (const u of unknowns) {
-      s[u.row][u.col] = 'safe';
-    }
-    return isConsistent(s, constraints, width, height) ? 1 : 0;
-  }
-
-  if (minesLeft === unknowns.length) {
-    for (const u of unknowns) {
-      s[u.row][u.col] = 'mine';
-    }
-    return isConsistent(s, constraints, width, height) ? 1 : 0;
-  }
-
-  // Pick the unknown cell most constrained by revealed neighbors (MRV)
-  let bestIdx = 0;
-  let bestConstraint = -1;
-  for (let i = 0; i < unknowns.length; i++) {
-    const u = unknowns[i];
-    let constraint = 0;
-    for (const n of getNeighbors(u.row, u.col, width, height)) {
-      if (constraints.has(`${n.row},${n.col}`)) constraint++;
-    }
-    if (constraint > bestConstraint) {
-      bestConstraint = constraint;
-      bestIdx = i;
-    }
-  }
-
-  const cell = unknowns[bestIdx];
-  let total = 0;
-
-  const sMine = cloneGrid(s);
-  sMine[cell.row][cell.col] = 'mine';
-  total += countSolutions(sMine, constraints, width, height, totalMines, maxSolutions);
-  if (total >= maxSolutions) return total;
-
-  const sSafe = cloneGrid(s);
-  sSafe[cell.row][cell.col] = 'safe';
-  total += countSolutions(sSafe, constraints, width, height, totalMines, maxSolutions - total);
-
-  return total;
-}
-
-/**
- * Determines if a Minesweeper puzzle has exactly one solution given the revealed cells.
- *
- * Uses constraint propagation on revealed cell values plus the total mine count,
- * with backtracking (MRV heuristic) for undetermined cells.
- */
-export function solveMinesweeper(
-  mines: boolean[][],
+export function isSolvableByPropagation(
+  adjacency: number[][],
   revealedCells: { row: number; col: number; value: number }[],
   width: number,
   height: number,
   mineCount: number,
-): { solvable: boolean } {
+): boolean {
   const state: CellState[][] = Array.from({ length: height }, () =>
     new Array<CellState>(width).fill('unknown'),
   );
@@ -231,8 +121,52 @@ export function solveMinesweeper(
     constraints.set(`${cell.row},${cell.col}`, cell.value);
   }
 
-  const solutions = countSolutions(state, constraints, width, height, mineCount, 2);
-  return { solvable: solutions === 1 };
+  let changed = true;
+  while (changed) {
+    changed = propagateConstraints(state, constraints, width, height);
+
+    for (let r = 0; r < height; r++) {
+      for (let c = 0; c < width; c++) {
+        const key = `${r},${c}`;
+        if (state[r][c] === 'safe' && !constraints.has(key)) {
+          constraints.set(key, adjacency[r][c]);
+          changed = true;
+        }
+      }
+    }
+
+    let mines = 0;
+    let unknownCount = 0;
+    const unknowns: { row: number; col: number }[] = [];
+    for (let r = 0; r < height; r++) {
+      for (let c = 0; c < width; c++) {
+        if (state[r][c] === 'mine') mines++;
+        else if (state[r][c] === 'unknown') {
+          unknownCount++;
+          unknowns.push({ row: r, col: c });
+        }
+      }
+    }
+
+    if (mines === mineCount && unknownCount > 0) {
+      for (const u of unknowns) {
+        state[u.row][u.col] = 'safe';
+      }
+      changed = true;
+    } else if (mines + unknownCount === mineCount && unknownCount > 0) {
+      for (const u of unknowns) {
+        state[u.row][u.col] = 'mine';
+      }
+      changed = true;
+    }
+  }
+
+  for (let r = 0; r < height; r++) {
+    for (let c = 0; c < width; c++) {
+      if (state[r][c] === 'unknown') return false;
+    }
+  }
+  return true;
 }
 
 // --- Generation helpers ---
@@ -336,7 +270,7 @@ function selectRevealedCells(
 
   const totalSafe = safeCells.length;
   const targetMin = Math.floor(totalSafe * 0.25);
-  const targetMax = Math.floor(totalSafe * 0.35);
+  const targetMax = Math.floor(totalSafe * 0.4);
 
   const startCell = zeroCells[Math.floor(random() * zeroCells.length)];
   const revealedKeys = floodFillReveal(startCell, adjacency, mines, width, height);
@@ -377,15 +311,17 @@ type GenerateMinesweeperPuzzleDataOptions = {
   seed?: string | number;
 };
 
-const MAX_GENERATION_ATTEMPTS = 200;
+const MAX_LAYOUT_ATTEMPTS = 50;
+const REVEAL_ATTEMPTS_PER_LAYOUT = 10;
 
 /**
  * Generates Minesweeper puzzle data guaranteed to have a unique solution
  * solvable through pure logic (no guessing).
  *
- * Places mines randomly, computes adjacency numbers, selects an initial
- * set of revealed cells (~25-35% of safe cells via flood-fill + extras),
- * then verifies unique solvability with a constraint-propagation + backtracking solver.
+ * Places mines randomly, computes adjacency numbers, then tries multiple
+ * reveal sets per layout (~25-40% of safe cells via flood-fill + extras)
+ * and verifies solvability via iterative constraint propagation with
+ * progressive reveal (matching actual gameplay).
  */
 export function generateMinesweeperPuzzleData({
   width,
@@ -393,30 +329,35 @@ export function generateMinesweeperPuzzleData({
   mineCount,
   seed,
 }: GenerateMinesweeperPuzzleDataOptions): MinesweeperPuzzleData {
-  for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
-    const effectiveSeed = `${seed ?? Date.now()}-${attempt}`;
-    const numericSeed = stringToSeed(effectiveSeed);
-    const random = createSeededRandom(numericSeed);
+  for (let layout = 0; layout < MAX_LAYOUT_ATTEMPTS; layout++) {
+    const layoutSeed = `${seed ?? Date.now()}-${layout}`;
+    const layoutNumericSeed = stringToSeed(layoutSeed);
+    const layoutRandom = createSeededRandom(layoutNumericSeed);
 
-    const mines = placeMines(width, height, mineCount, random);
+    const mines = placeMines(width, height, mineCount, layoutRandom);
     const adjacency = computeAdjacencyCounts(mines, width, height);
 
-    const revealedCells = selectRevealedCells(mines, adjacency, width, height, random);
-    if (revealedCells === null) continue;
+    for (let reveal = 0; reveal < REVEAL_ATTEMPTS_PER_LAYOUT; reveal++) {
+      const revealSeed = `${layoutSeed}-r${reveal}`;
+      const revealNumericSeed = stringToSeed(revealSeed);
+      const revealRandom = createSeededRandom(revealNumericSeed);
 
-    const result = solveMinesweeper(mines, revealedCells, width, height, mineCount);
-    if (result.solvable) {
-      return {
-        width,
-        height,
-        mineCount,
-        revealedCells,
-        solution: mines,
-      };
+      const revealedCells = selectRevealedCells(mines, adjacency, width, height, revealRandom);
+      if (revealedCells === null) continue;
+
+      if (isSolvableByPropagation(adjacency, revealedCells, width, height, mineCount)) {
+        return {
+          width,
+          height,
+          mineCount,
+          revealedCells,
+          solution: mines,
+        };
+      }
     }
   }
 
   throw new Error(
-    `Failed to generate a uniquely solvable Minesweeper puzzle after ${MAX_GENERATION_ATTEMPTS} attempts`,
+    `Failed to generate a uniquely solvable Minesweeper puzzle after ${MAX_LAYOUT_ATTEMPTS * REVEAL_ATTEMPTS_PER_LAYOUT} attempts`,
   );
 }

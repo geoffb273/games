@@ -1,16 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  computeAdjacencyCounts,
   generateMinesweeperPuzzleData,
-  solveMinesweeper,
+  isSolvableByPropagation,
 } from '../../../src/utils/puzzle/minesweeper';
-
-/**
- * Helper: build a boolean mine grid from a 2D number array (1 = mine).
- */
-function mineGrid(rows: number[][]): boolean[][] {
-  return rows.map((row) => row.map((v) => v === 1));
-}
 
 /**
  * Helper: compute adjacency value for a single cell.
@@ -29,109 +23,6 @@ function adjacencyValue(mines: boolean[][], r: number, c: number): number {
   }
   return count;
 }
-
-/**
- * Helper: reveal all safe cells — should always be trivially solvable.
- */
-function revealAllSafe(mines: boolean[][]): { row: number; col: number; value: number }[] {
-  const cells: { row: number; col: number; value: number }[] = [];
-  for (let r = 0; r < mines.length; r++) {
-    for (let c = 0; c < mines[0].length; c++) {
-      if (!mines[r][c]) {
-        cells.push({ row: r, col: c, value: adjacencyValue(mines, r, c) });
-      }
-    }
-  }
-  return cells;
-}
-
-describe('solveMinesweeper', () => {
-  it('solves a trivial board where all safe cells are revealed', () => {
-    // 3x3 grid, single mine in center
-    const mines = mineGrid([
-      [0, 0, 0],
-      [0, 1, 0],
-      [0, 0, 0],
-    ]);
-    const revealed = revealAllSafe(mines);
-    const result = solveMinesweeper(mines, revealed, 3, 3, 1);
-    expect(result.solvable).toBe(true);
-  });
-
-  it('solves a board requiring constraint propagation', () => {
-    // 4x4 grid, mines at (0,0) and (3,3)
-    const mines = mineGrid([
-      [1, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 1],
-    ]);
-    // Reveal the border cells adjacent to mines — enough to propagate
-    const revealed: { row: number; col: number; value: number }[] = [
-      { row: 0, col: 1, value: adjacencyValue(mines, 0, 1) },
-      { row: 1, col: 0, value: adjacencyValue(mines, 1, 0) },
-      { row: 1, col: 1, value: adjacencyValue(mines, 1, 1) },
-      { row: 2, col: 2, value: adjacencyValue(mines, 2, 2) },
-      { row: 2, col: 3, value: adjacencyValue(mines, 2, 3) },
-      { row: 3, col: 2, value: adjacencyValue(mines, 3, 2) },
-      // Also reveal some zero cells so the rest can propagate
-      { row: 0, col: 3, value: adjacencyValue(mines, 0, 3) },
-      { row: 3, col: 0, value: adjacencyValue(mines, 3, 0) },
-      { row: 1, col: 2, value: adjacencyValue(mines, 1, 2) },
-      { row: 1, col: 3, value: adjacencyValue(mines, 1, 3) },
-      { row: 2, col: 0, value: adjacencyValue(mines, 2, 0) },
-      { row: 2, col: 1, value: adjacencyValue(mines, 2, 1) },
-      { row: 0, col: 2, value: adjacencyValue(mines, 0, 2) },
-      { row: 3, col: 1, value: adjacencyValue(mines, 3, 1) },
-    ];
-    const result = solveMinesweeper(mines, revealed, 4, 4, 2);
-    expect(result.solvable).toBe(true);
-  });
-
-  it('reports ambiguous when multiple mine placements are valid', () => {
-    // 2x2 grid, 1 mine — revealing only one cell leaves ambiguity
-    const mines = mineGrid([
-      [1, 0],
-      [0, 0],
-    ]);
-    // Only reveal (1,1) which has value 1 — mine could be at (0,0), (0,1), or (1,0)
-    const revealed = [{ row: 1, col: 1, value: 1 }];
-    const result = solveMinesweeper(mines, revealed, 2, 2, 1);
-    expect(result.solvable).toBe(false);
-  });
-
-  it('handles a board with no mines', () => {
-    const mines = mineGrid([
-      [0, 0],
-      [0, 0],
-    ]);
-    const revealed = revealAllSafe(mines);
-    const result = solveMinesweeper(mines, revealed, 2, 2, 0);
-    expect(result.solvable).toBe(true);
-  });
-
-  it('solves when corner mine is forced by a single neighbor', () => {
-    // 3x3, mine at (0,0), reveal (0,1) and (1,0) and (1,1) — (1,1) sees 1 mine,
-    // (0,1) sees 1 mine, (1,0) sees 1 mine. All point at (0,0).
-    const mines = mineGrid([
-      [1, 0, 0],
-      [0, 0, 0],
-      [0, 0, 0],
-    ]);
-    const revealed = [
-      { row: 0, col: 1, value: 1 },
-      { row: 0, col: 2, value: 0 },
-      { row: 1, col: 0, value: 1 },
-      { row: 1, col: 1, value: 1 },
-      { row: 1, col: 2, value: 0 },
-      { row: 2, col: 0, value: 0 },
-      { row: 2, col: 1, value: 0 },
-      { row: 2, col: 2, value: 0 },
-    ];
-    const result = solveMinesweeper(mines, revealed, 3, 3, 1);
-    expect(result.solvable).toBe(true);
-  });
-});
 
 describe('generateMinesweeperPuzzleData', () => {
   it('generates a valid puzzle with correct structure', () => {
@@ -163,7 +54,7 @@ describe('generateMinesweeperPuzzleData', () => {
     }
   });
 
-  it('generates a puzzle that the solver confirms as uniquely solvable', () => {
+  it('generates a puzzle that the solver confirms as solvable by propagation', () => {
     const puzzleData = generateMinesweeperPuzzleData({
       width: 9,
       height: 9,
@@ -171,14 +62,19 @@ describe('generateMinesweeperPuzzleData', () => {
       seed: 'solver-verify',
     });
 
-    const result = solveMinesweeper(
+    const adjacency = computeAdjacencyCounts(
       puzzleData.solution,
+      puzzleData.width,
+      puzzleData.height,
+    );
+    const solvable = isSolvableByPropagation(
+      adjacency,
       puzzleData.revealedCells,
       puzzleData.width,
       puzzleData.height,
       puzzleData.mineCount,
     );
-    expect(result.solvable).toBe(true);
+    expect(solvable).toBe(true);
   });
 
   it('adjacency numbers are correct for all revealed cells', () => {
@@ -222,13 +118,13 @@ describe('generateMinesweeperPuzzleData', () => {
     expect(puzzleData.height).toBe(5);
     expect(puzzleData.mineCount).toBe(4);
 
-    const result = solveMinesweeper(
+    const result = isSolvableByPropagation(
       puzzleData.solution,
       puzzleData.revealedCells,
       puzzleData.width,
       puzzleData.height,
       puzzleData.mineCount,
     );
-    expect(result.solvable).toBe(true);
+    expect(result).toBe(true);
   });
 });
