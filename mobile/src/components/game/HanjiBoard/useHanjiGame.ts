@@ -1,6 +1,7 @@
-import { useMemo, useReducer } from 'react';
+import { useEffect, useMemo, useReducer, useRef } from 'react';
 
-import { type HanjiPuzzle } from '@/api/puzzle/puzzle';
+import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { type HanjiCellState, isPuzzleComplete } from '@/utils/hanji/lineValidation';
 
@@ -42,16 +43,40 @@ export type HanjiGame = {
   onCellLongPress: (row: number, col: number) => void;
 };
 
+function cellsToHanjiSolution(cells: GameState): number[][] {
+  return cells.map((row) => row.map((c) => (c === 'filled' ? 1 : 0)));
+}
+
 export function useHanjiGame(puzzle: HanjiPuzzle): HanjiGame {
-  const { width, height, rowClues, colClues } = puzzle;
+  const { width, height, rowClues, colClues, id: puzzleId } = puzzle;
   const [cells, dispatch] = useReducer(gameReducer, { width, height }, ({ width: w, height: h }) =>
     createInitialState(w, h),
   );
+  const { solvePuzzle } = useSolvePuzzle();
+  const startedAtRef = useRef<Date>(puzzle.attempt?.startedAt ?? new Date());
+  const submittedRef = useRef(false);
 
   const isComplete = useMemo(
     () => isPuzzleComplete(cells, rowClues, colClues, width, height),
     [cells, rowClues, colClues, width, height],
   );
+
+  useEffect(() => {
+    if (!isComplete || submittedRef.current) return;
+    submittedRef.current = true;
+    const completedAt = new Date();
+    const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
+    solvePuzzle({
+      puzzleId,
+      puzzleType: PuzzleType.Hanji,
+      startedAt: startedAtRef.current,
+      completedAt,
+      durationMs,
+      hanjiSolution: cellsToHanjiSolution(cells),
+    }).catch(() => {
+      submittedRef.current = false;
+    });
+  }, [isComplete, cells, puzzleId, solvePuzzle]);
 
   const onCellTap = useStableCallback((row: number, col: number) => {
     const current = cells[row][col];

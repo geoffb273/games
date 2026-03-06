@@ -8,7 +8,7 @@ import {
   MinesweeperCellValue,
   MinesweeperPuzzleFragmentFragmentDoc,
   PuzzleFragmentFragmentDoc,
-  type PuzzleType as PuzzleTypeGraphql,
+  PuzzleType as PuzzleTypeGraphql,
 } from '@/generated/gql/graphql';
 
 const getFragmentData = useFragment;

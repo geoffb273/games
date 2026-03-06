@@ -1,6 +1,7 @@
-import { useMemo, useReducer } from 'react';
+import { useEffect, useMemo, useReducer, useRef } from 'react';
 
-import { type HashiPuzzle } from '@/api/puzzle/puzzle';
+import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { findConnections } from '@/utils/hashi/connections';
 import { isHashiComplete } from '@/utils/hashi/validation';
@@ -37,14 +38,49 @@ export type HashiGame = {
   onConnectionTap: (connectionIndex: number) => void;
 };
 
+function buildHashiSolution(
+  connections: ReturnType<typeof findConnections>,
+  bridgeCounts: number[],
+  islands: { row: number; col: number }[],
+) {
+  return connections
+    .map((conn, i) => ({
+      bridges: bridgeCounts[i],
+      from: { row: islands[conn.a].row, col: islands[conn.a].col },
+      to: { row: islands[conn.b].row, col: islands[conn.b].col },
+    }))
+    .filter((s) => s.bridges > 0);
+}
+
 export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
+  const { id: puzzleId, islands } = puzzle;
   const connections = useMemo(() => findConnections(puzzle.islands), [puzzle.islands]);
   const [bridgeCounts, dispatch] = useReducer(gameReducer, connections.length, createInitialState);
+  const { solvePuzzle } = useSolvePuzzle();
+  const startedAtRef = useRef<Date>(puzzle.attempt?.startedAt ?? new Date());
+  const submittedRef = useRef(false);
 
   const isComplete = useMemo(
     () => isHashiComplete(puzzle.islands, connections, bridgeCounts),
     [puzzle.islands, connections, bridgeCounts],
   );
+
+  useEffect(() => {
+    if (!isComplete || submittedRef.current) return;
+    submittedRef.current = true;
+    const completedAt = new Date();
+    const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
+    solvePuzzle({
+      puzzleId,
+      puzzleType: PuzzleType.Hashi,
+      startedAt: startedAtRef.current,
+      completedAt,
+      durationMs,
+      hashiSolution: buildHashiSolution(connections, bridgeCounts, islands),
+    }).catch(() => {
+      submittedRef.current = false;
+    });
+  }, [isComplete, puzzleId, connections, bridgeCounts, islands, solvePuzzle]);
 
   const onConnectionTap = useStableCallback((connectionIndex: number) => {
     dispatch({ type: 'CYCLE_CONNECTION', connectionIndex });
