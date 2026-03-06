@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { usePuzzlesQuery } from '@/api/puzzle/puzzlesQuery';
+import { ErrorView } from '@/components/common/ErrorView';
 import { Text } from '@/components/common/Text';
 import { DailyChallengesList } from '@/components/DailyChallengesList';
 import { PuzzleList } from '@/components/PuzzleList';
@@ -42,12 +43,7 @@ export default function HomeScreen() {
   if (isChallengesError) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.background }]}>
-        <Text type="h3" textAlign="center">
-          Something went wrong
-        </Text>
-        <Text type="body" color="textSecondary" textAlign="center">
-          Unable to load daily challenges
-        </Text>
+        <ErrorView message="Unable to load daily challenges" />
       </View>
     );
   }
@@ -56,9 +52,11 @@ export default function HomeScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
-          <Text type="h2">Daily Challenges</Text>
+          <Text type="h2">Puzzle Book</Text>
+          <Text type="caption" color="textSecondary">
+            Pick a day, then work through each puzzle page.
+          </Text>
         </View>
-
         <DailyChallengesList
           dailyChallenges={dailyChallenges}
           activeChallengeId={activeChallengeId}
@@ -66,20 +64,7 @@ export default function HomeScreen() {
           hasNextPage={hasNextPage}
           onEndReached={fetchMore}
         />
-
-        {isPuzzlesLoading ? (
-          <View style={styles.puzzlesLoading}>
-            <ActivityIndicator size="small" color={theme.text} />
-          </View>
-        ) : isPuzzlesError || puzzles == null ? (
-          <View style={styles.puzzlesLoading}>
-            <Text type="body" color="textSecondary" textAlign="center">
-              Unable to load puzzles
-            </Text>
-          </View>
-        ) : (
-          <PuzzleList puzzles={puzzles} />
-        )}
+        <PuzzleList puzzles={puzzles} isLoading={isPuzzlesLoading} isError={isPuzzlesError} />
       </SafeAreaView>
     </View>
   );
@@ -92,22 +77,16 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
+  header: {
+    paddingHorizontal: Spacing.four,
+    gap: Spacing.half,
+    paddingBottom: Spacing.two,
+  },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.two,
     paddingHorizontal: Spacing.four,
-  },
-  header: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
-    paddingBottom: Spacing.two,
-  },
-  puzzlesLoading: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.six,
   },
 });

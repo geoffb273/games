@@ -1,10 +1,10 @@
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import { useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
-import { Text } from '@/components/common/Text';
+import { ErrorView } from '@/components/common/ErrorView';
 import { HanjiBoard } from '@/components/game/HanjiBoard/HanjiBoard';
 import { HashiBoard } from '@/components/game/HashiBoard/HashiBoard';
 import { MinesweeperBoard } from '@/components/game/MinesweeperBoard/MinesweeperBoard';
@@ -20,6 +20,7 @@ export default function GameScreen() {
   if (isLoading) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.background }]}>
+        <Stack.Screen options={{ title: 'Puzzle', headerBackTitle: 'Book' }} />
         <ActivityIndicator size="large" color={theme.text} />
       </View>
     );
@@ -28,9 +29,8 @@ export default function GameScreen() {
   if (isNotFound) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.background }]}>
-        <Text type="h3" textAlign="center">
-          Puzzle not found
-        </Text>
+        <Stack.Screen options={{ title: 'Puzzle', headerBackTitle: 'Book' }} />
+        <ErrorView title="Puzzle not found" />
       </View>
     );
   }
@@ -38,12 +38,8 @@ export default function GameScreen() {
   if (isError || puzzle == null) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.background }]}>
-        <Text type="h3" textAlign="center">
-          Something went wrong
-        </Text>
-        <Text type="body" color="textSecondary" textAlign="center">
-          Unable to load puzzle
-        </Text>
+        <Stack.Screen options={{ title: 'Puzzle', headerBackTitle: 'Book' }} />
+        <ErrorView message="Unable to load puzzle" />
       </View>
     );
   }
@@ -51,9 +47,9 @@ export default function GameScreen() {
   if (puzzle.attempt != null) {
     return (
       <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <Stack.Screen options={{ title: puzzle.name, headerBackTitle: 'Book' }} />
         <PuzzleCompletedView
           puzzleType={puzzle.type}
-          puzzleName={puzzle.name}
           solved={puzzle.attempt.completedAt != null}
           durationMs={puzzle.attempt.durationMs}
         />
@@ -63,6 +59,7 @@ export default function GameScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Stack.Screen options={{ title: puzzle.name, headerBackTitle: 'Book' }} />
       <PuzzleBoard puzzle={puzzle} />
     </View>
   );

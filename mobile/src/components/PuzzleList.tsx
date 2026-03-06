@@ -1,43 +1,61 @@
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { router } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
-import { Spacing } from '@/constants/theme';
+import { Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
-const PUZZLE_TYPE_LABELS: Record<Puzzle['type'], string> = {
-  HANJI: 'Hanji',
-  HASHI: 'Hashi',
-  MINESWEEPER: 'Minesweeper',
+import { ErrorView } from './common/ErrorView';
+
+const PUZZLE_TYPE_ICONS: Record<Puzzle['type'], keyof typeof MaterialCommunityIcons.glyphMap> = {
+  HANJI: 'grid-large',
+  HASHI: 'bridge',
+  MINESWEEPER: 'bomb',
 };
 
 type PuzzleListProps = {
-  puzzles: Puzzle[];
+  puzzles: Puzzle[] | null;
+  isLoading: boolean;
+  isError: boolean;
 };
 
-export function PuzzleList({ puzzles }: PuzzleListProps) {
+export function PuzzleList({ puzzles, isLoading, isError }: PuzzleListProps) {
   return (
     <FlatList
       data={puzzles}
       keyExtractor={(item) => item.id}
       contentContainerStyle={styles.puzzleList}
       renderItem={({ item }) => <PuzzleCard puzzle={item} />}
-      ListEmptyComponent={
-        <View style={styles.emptyState}>
-          <Text type="body" color="textSecondary" textAlign="center">
-            No puzzles available
-          </Text>
-        </View>
-      }
+      ListEmptyComponent={<EmptyState isLoading={isLoading} isError={isError} />}
     />
+  );
+}
+
+function EmptyState({ isLoading, isError }: { isLoading?: boolean; isError?: boolean }) {
+  const theme = useTheme();
+
+  return (
+    <View style={styles.emptyState}>
+      {isLoading ? (
+        <ActivityIndicator size="small" color={theme.text} />
+      ) : isError ? (
+        <ErrorView title="Unable to load puzzles" message={null} />
+      ) : (
+        <Text type="body" color="textSecondary" textAlign="center">
+          No puzzles available
+        </Text>
+      )}
+    </View>
   );
 }
 
 function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
   const theme = useTheme();
-  const isCompleted = puzzle.attempt?.completedAt != null;
+  const isCompleted = puzzle.attempt != null;
+  const isSolved = isCompleted && puzzle.attempt?.completedAt != null;
 
   return (
     <Pressable
@@ -45,29 +63,41 @@ function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
       style={({ pressed }) => [
         styles.puzzleCard,
         {
-          backgroundColor: theme.backgroundElement,
-          opacity: pressed ? 0.7 : 1,
+          backgroundColor: pressed ? theme.highlightWash : theme.backgroundElement,
+          borderColor: theme.borderSubtle,
         },
       ]}
     >
       <View style={styles.puzzleCardContent}>
+        <View style={styles.puzzleLeading}>
+          <MaterialCommunityIcons
+            name={PUZZLE_TYPE_ICONS[puzzle.type]}
+            size={22}
+            color={theme.accentInk}
+          />
+        </View>
         <View style={styles.puzzleInfo}>
-          <Text type="emphasized_body">{puzzle.name}</Text>
-          <View style={styles.puzzleMeta}>
-            <View style={[styles.typeBadge, { backgroundColor: theme.backgroundSelected }]}>
-              <Text type="caption">{PUZZLE_TYPE_LABELS[puzzle.type]}</Text>
-            </View>
-            {puzzle.description && (
-              <Text type="caption" color="textSecondary" numberOfLines={1}>
-                {puzzle.description}
-              </Text>
-            )}
-          </View>
+          <Text type="h3" numberOfLines={1}>
+            {puzzle.name}
+          </Text>
+          {puzzle.description && (
+            <Text type="caption" color="textSecondary" numberOfLines={2}>
+              {puzzle.description}
+            </Text>
+          )}
         </View>
         {isCompleted && (
-          <View style={styles.completedBadge}>
-            <Text type="caption" _colorOverride="#34C759">
-              Done
+          <View
+            style={[
+              styles.completedBadge,
+              {
+                borderColor: isSolved ? theme.success : theme.warning,
+                backgroundColor: isSolved ? theme.successSurface : theme.warningSurface,
+              },
+            ]}
+          >
+            <Text type="caption" color={isSolved ? 'success' : 'warning'}>
+              {isSolved ? 'Solved' : 'Attempted'}
             </Text>
           </View>
         )}
@@ -79,34 +109,36 @@ function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
 const styles = StyleSheet.create({
   puzzleList: {
     paddingHorizontal: Spacing.four,
-    gap: Spacing.two,
+    rowGap: Spacing.one,
     paddingBottom: Spacing.five,
   },
   puzzleCard: {
-    borderRadius: 14,
+    borderRadius: Radii.md,
     padding: Spacing.three,
+    borderWidth: 1,
   },
   puzzleCardContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: Spacing.three,
+  },
+  puzzleLeading: {
+    width: 34,
+    height: 34,
+    borderRadius: Radii.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Spacing.half,
   },
   puzzleInfo: {
     flex: 1,
     gap: Spacing.one,
   },
-  puzzleMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  typeBadge: {
+  completedBadge: {
+    borderRadius: Radii.pill,
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.half,
-    borderRadius: 6,
-  },
-  completedBadge: {
-    marginLeft: Spacing.two,
+    borderWidth: 1,
   },
   emptyState: {
     alignItems: 'center',

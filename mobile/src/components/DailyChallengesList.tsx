@@ -3,7 +3,7 @@ import { FlatList, Pressable, StyleSheet } from 'react-native';
 
 import { type DailyChallenge as DailyChallengeType } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { Text } from '@/components/common/Text';
-import { Spacing } from '@/constants/theme';
+import { Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
 function formatDate(date: Date): string {
@@ -40,6 +40,8 @@ export function DailyChallengesList({
   return (
     <FlatList
       horizontal
+      style={styles.list}
+      inverted
       data={dailyChallenges}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
@@ -67,32 +69,36 @@ function DailyChallenge({ challenge, isSelected, onPress }: DailyChallengeProps)
       style={[
         styles.challengeChip,
         {
-          backgroundColor: isSelected ? theme.backgroundSelected : theme.backgroundElement,
-          borderColor: isSelected ? theme.text : 'transparent',
+          backgroundColor: isSelected ? theme.highlightWash : theme.background,
+          borderColor: isSelected ? theme.accentInk : theme.borderSubtle,
         },
       ]}
     >
-      <Text type="emphasized_body">{formatDate(challenge.date)}</Text>
+      <Text type="body">{formatDate(challenge.date)}</Text>
       <Text type="caption" color="textSecondary">
-        {challenge.completedPuzzleCount}/{challenge.puzzleCount}
-        {isComplete ? ' ✓' : ''}
+        {isComplete
+          ? `All ${challenge.puzzleCount} puzzles complete`
+          : `${challenge.completedPuzzleCount}/${challenge.puzzleCount} complete`}
       </Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  list: {
+    flexGrow: 0,
+  },
   container: {
     paddingHorizontal: Spacing.four,
-    gap: Spacing.two,
+    gap: Spacing.one,
     paddingBottom: Spacing.three,
   },
   challengeChip: {
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    borderRadius: 12,
-    borderWidth: 2,
+    borderRadius: Radii.sm,
+    borderWidth: 1,
     alignItems: 'center',
-    minWidth: 100,
+    minWidth: 130,
   },
 });
