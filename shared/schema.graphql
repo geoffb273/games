@@ -34,6 +34,17 @@ type HanjiPuzzle implements Puzzle {
   width: Int!
 }
 
+input HashiBridgeInput {
+  bridges: Int!
+  from: HashiCoordinateInput!
+  to: HashiCoordinateInput!
+}
+
+input HashiCoordinateInput {
+  col: Int!
+  row: Int!
+}
+
 type HashiIsland {
   col: Int!
   requiredBridges: Int!
@@ -88,10 +99,51 @@ type MinesweeperRevealedCell {
 
 type Mutation {
   authenticateDevice(input: MutationAuthenticateDeviceInput!): AuthPayload!
+
+  """Solves a puzzle for the logged in user"""
+  solvePuzzle(input: MutationSolvePuzzleInput!): MutationSolvePuzzleResult!
 }
 
 input MutationAuthenticateDeviceInput {
   deviceId: String!
+}
+
+input MutationSolvePuzzleInput {
+  """
+  The time the user completed the puzzle, if they completed it successfully
+  """
+  completedAt: DateTime
+
+  """
+  The duration of the puzzle in milliseconds, if they completed it successfully
+  """
+  durationMs: Int
+
+  """
+  The solution to the Hanji puzzle. Should only be provided if the puzzle type is HANJI.
+  """
+  hanjiSolution: [[Int!]!]
+
+  """
+  The solution to the Hashi puzzle. Should only be provided if the puzzle type is HASHI.
+  """
+  hashiSolution: [HashiBridgeInput!]
+
+  """
+  The solution to the Minesweeper puzzle. Should only be provided if the puzzle type is MINESWEEPER.
+  """
+  minesweeperSolution: [[Boolean!]!]
+  puzzleId: ID!
+  puzzleType: PuzzleType!
+
+  """The time the user started the puzzle"""
+  startedAt: DateTime!
+}
+
+union MutationSolvePuzzleResult = AlreadyExistsError | MutationSolvePuzzleSuccess | NotFoundError | UnauthorizedError | UnknownError | ValidationError
+
+type MutationSolvePuzzleSuccess {
+  data: PuzzleAttempt!
 }
 
 type NotFoundError implements Error {
@@ -117,6 +169,12 @@ type PuzzleAttempt {
   durationMs: Int
   id: ID!
   startedAt: DateTime!
+}
+
+enum PuzzleType {
+  HANJI
+  HASHI
+  MINESWEEPER
 }
 
 type Query {

@@ -1,3 +1,5 @@
+import { type HanjiPuzzleData, type HashiPuzzleData, type MinesweeperPuzzleData } from './puzzle';
+
 export type UserPuzzleAttempt = {
   id: string;
   startedAt: Date;
@@ -6,3 +8,27 @@ export type UserPuzzleAttempt = {
   userId: string;
   puzzleId: string;
 };
+
+type BaseSolvePuzzleInput = {
+  puzzleId: string;
+  userId: string;
+  startedAt: Date;
+  /** Timestamp of completion. Only persisted if the solution is correct. */
+  completedAt?: Date | null;
+  /** Duration in milliseconds the user took to solve. Only persisted if the solution is correct. */
+  durationMs?: number | null;
+};
+
+export type SolvePuzzleInput =
+  | (BaseSolvePuzzleInput & {
+      puzzleType: 'HANJI';
+      solution?: HanjiPuzzleData['solution'] | null;
+    })
+  | (BaseSolvePuzzleInput & {
+      puzzleType: 'HASHI';
+      solution?: HashiPuzzleData['solution'] | null;
+    })
+  | (BaseSolvePuzzleInput & {
+      puzzleType: 'MINESWEEPER';
+      solution?: MinesweeperPuzzleData['solution'] | null;
+    });

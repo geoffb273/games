@@ -19,6 +19,10 @@ export const PuzzleAttemptRef = builder.objectRef<UserPuzzleAttempt>('PuzzleAtte
   }),
 });
 
+export const PuzzleTypeEnum = builder.enumType('PuzzleType', {
+  values: Object.values(PuzzleType),
+});
+
 export const PuzzleRef = builder.interfaceRef<Puzzle>('Puzzle').implement({
   fields: (t) => ({
     id: t.exposeID('id', { nullable: false }),
@@ -77,6 +81,22 @@ export const HashiPuzzleRef = builder.objectRef<HashiPuzzle>('HashiPuzzle').impl
       nullable: false,
       resolve: (puzzle) => puzzle.data.islands,
     }),
+  }),
+});
+
+// --- Hashi input types ---
+export const HashiCoordinateInput = builder.inputType('HashiCoordinateInput', {
+  fields: (t) => ({
+    row: t.int({ required: true }),
+    col: t.int({ required: true }),
+  }),
+});
+
+export const HashiBridgeInput = builder.inputType('HashiBridgeInput', {
+  fields: (t) => ({
+    from: t.field({ type: HashiCoordinateInput, required: true }),
+    to: t.field({ type: HashiCoordinateInput, required: true }),
+    bridges: t.int({ required: true }),
   }),
 });
 
