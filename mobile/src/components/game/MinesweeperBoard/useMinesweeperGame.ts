@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useReducer, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
-import { type MinesweeperPuzzle } from '@/api/puzzle/puzzle';
+import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { getCellsToReveal } from '@/utils/minesweeper/reveal';
 
@@ -76,9 +77,17 @@ export type MinesweeperGame = {
   toggleMode: () => void;
 };
 
+function buildMinesweeperSolution(mineField: (number | 'MINE')[][]): boolean[][] {
+  return mineField.map((row) => row.map((cell) => cell === 'MINE'));
+}
+
 export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
+  const { id: puzzleId, width, height, mineCount, mineField } = puzzle;
   const [state, dispatch] = useReducer(gameReducer, puzzle, createInitialState);
   const [mode, setMode] = useState<InteractionMode>('flag');
+  const { solvePuzzle } = useSolvePuzzle();
+  const startedAtRef = useRef<Date>(puzzle.attempt?.startedAt ?? new Date());
+  const submittedRef = useRef(false);
 
   const revealedMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -92,6 +101,26 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
   }, [puzzle.revealedCells, state.userRevealedCells]);
 
   const remaining = puzzle.mineCount - state.flagCount;
+
+  const isWin = !state.gameOver && revealedMap.size === width * height - mineCount;
+
+  useEffect(() => {
+    if (!state.gameOver && !isWin) return;
+    if (submittedRef.current) return;
+    submittedRef.current = true;
+    const completedAt = new Date();
+    const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
+    const success = isWin;
+    solvePuzzle({
+      puzzleId,
+      puzzleType: PuzzleType.Minesweeper,
+      startedAt: startedAtRef.current,
+      ...(success && { completedAt, durationMs }),
+      minesweeperSolution: buildMinesweeperSolution(mineField),
+    }).catch(() => {
+      submittedRef.current = false;
+    });
+  }, [state.gameOver, isWin, puzzleId, mineField, solvePuzzle]);
 
   const onCellTap = useStableCallback((row: number, col: number) => {
     if (state.gameOver) return;
