@@ -5,10 +5,10 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { type MinesweeperPuzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { Spacing } from '@/constants/theme';
+import { useMinesweeperGame } from '@/hooks/game/useMinesweeperGame';
 import { useTheme } from '@/hooks/useTheme';
 
 import { MinesweeperCell } from './MinesweeperCell';
-import { useMinesweeperGame } from './useMinesweeperGame';
 
 const CELL_GAP = 2;
 const MAX_CELL_SIZE = 44;

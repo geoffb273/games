@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useReducer, useRef } from 'react';
 
 import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { findConnections } from '@/utils/hashi/connections';
@@ -57,6 +58,8 @@ export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
   const connections = useMemo(() => findConnections(puzzle.islands), [puzzle.islands]);
   const [bridgeCounts, dispatch] = useReducer(gameReducer, connections.length, createInitialState);
   const { solvePuzzle } = useSolvePuzzle();
+  const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzleId });
+
   const startedAtRef = useRef<Date>(puzzle.attempt?.startedAt ?? new Date());
   const submittedRef = useRef(false);
 
@@ -67,9 +70,16 @@ export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
 
   useEffect(() => {
     if (!isComplete || submittedRef.current) return;
+
     submittedRef.current = true;
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
+    updateOptimisticallyPuzzleAttempt({
+      startedAt: startedAtRef.current,
+      completedAt,
+      durationMs,
+    });
+
     solvePuzzle({
       puzzleId,
       puzzleType: PuzzleType.Hashi,
@@ -80,7 +90,15 @@ export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
     }).catch(() => {
       submittedRef.current = false;
     });
-  }, [isComplete, puzzleId, connections, bridgeCounts, islands, solvePuzzle]);
+  }, [
+    isComplete,
+    puzzleId,
+    connections,
+    bridgeCounts,
+    islands,
+    solvePuzzle,
+    updateOptimisticallyPuzzleAttempt,
+  ]);
 
   const onConnectionTap = useStableCallback((connectionIndex: number) => {
     dispatch({ type: 'CYCLE_CONNECTION', connectionIndex });

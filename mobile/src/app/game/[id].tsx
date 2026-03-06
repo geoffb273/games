@@ -8,6 +8,7 @@ import { Text } from '@/components/common/Text';
 import { HanjiBoard } from '@/components/game/HanjiBoard/HanjiBoard';
 import { HashiBoard } from '@/components/game/HashiBoard/HashiBoard';
 import { MinesweeperBoard } from '@/components/game/MinesweeperBoard/MinesweeperBoard';
+import { PuzzleCompletedView } from '@/components/game/PuzzleCompletedView';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -43,6 +44,19 @@ export default function GameScreen() {
         <Text type="body" color="textSecondary" textAlign="center">
           Unable to load puzzle
         </Text>
+      </View>
+    );
+  }
+
+  if (puzzle.attempt != null) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <PuzzleCompletedView
+          puzzleType={puzzle.type}
+          puzzleName={puzzle.name}
+          solved={puzzle.attempt.completedAt != null}
+          durationMs={puzzle.attempt.durationMs}
+        />
       </View>
     );
   }

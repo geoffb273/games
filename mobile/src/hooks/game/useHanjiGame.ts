@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useReducer, useRef } from 'react';
 
 import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { type HanjiCellState, isPuzzleComplete } from '@/utils/hanji/lineValidation';
@@ -53,6 +54,7 @@ export function useHanjiGame(puzzle: HanjiPuzzle): HanjiGame {
     createInitialState(w, h),
   );
   const { solvePuzzle } = useSolvePuzzle();
+  const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzleId });
   const startedAtRef = useRef<Date>(puzzle.attempt?.startedAt ?? new Date());
   const submittedRef = useRef(false);
 
@@ -66,6 +68,11 @@ export function useHanjiGame(puzzle: HanjiPuzzle): HanjiGame {
     submittedRef.current = true;
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
+    updateOptimisticallyPuzzleAttempt({
+      startedAt: startedAtRef.current,
+      completedAt,
+      durationMs,
+    });
     solvePuzzle({
       puzzleId,
       puzzleType: PuzzleType.Hanji,
@@ -76,7 +83,7 @@ export function useHanjiGame(puzzle: HanjiPuzzle): HanjiGame {
     }).catch(() => {
       submittedRef.current = false;
     });
-  }, [isComplete, cells, puzzleId, solvePuzzle]);
+  }, [isComplete, cells, puzzleId, solvePuzzle, updateOptimisticallyPuzzleAttempt]);
 
   const onCellTap = useStableCallback((row: number, col: number) => {
     const current = cells[row][col];
