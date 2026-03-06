@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { useTheme } from '@/hooks/useTheme';
 
@@ -51,6 +51,7 @@ export const HashiBridge = memo(function HashiBridge({
         <Animated.View
           entering={FadeIn.duration(180)}
           exiting={FadeOut.duration(120)}
+          layout={LinearTransition.duration(180)}
           style={[
             styles.bridgeLine,
             {
