@@ -61,11 +61,6 @@ type HashiPuzzle implements Puzzle {
   width: Int!
 }
 
-type HealthStatus {
-  status: String!
-  timestamp: String!
-}
-
 enum MinesweeperCellValue {
   EIGHT
   FIVE
@@ -180,7 +175,6 @@ enum PuzzleType {
 type Query {
   currentUser: QueryCurrentUserResult!
   dailyChallenges(after: String, before: String, first: Int, last: Int): QueryDailyChallengesConnection
-  health: HealthStatus!
   puzzle(input: QueryPuzzleInput!): QueryPuzzleResult!
   puzzles(input: QueryPuzzlesInput!): QueryPuzzlesResult!
 }
