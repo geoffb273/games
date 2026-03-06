@@ -6,7 +6,9 @@ import {
 import { getUserPuzzleAttemptsByPuzzleIds as getUserPuzzleAttemptsByPuzzleIdsDao } from '../dao/userPuzzleAttemptDao';
 import { type Puzzle } from '../resource/puzzle';
 import { type UserPuzzleAttempt } from '../resource/userPuzzleAttempt';
-import { createPuzzlesForDailyChallenge as createPuzzlesForDailyChallengeService } from './createPuzzlesForDailyChallenge';
+import { type SolvePuzzleInput } from '../resource/userPuzzleAttempt';
+import { createPuzzlesForDailyChallenge as createPuzzlesForDailyChallengeCommand } from './createPuzzlesForDailyChallenge';
+import { solvePuzzle as solvePuzzleCommand } from './solvePuzzle';
 /**
  * Gets a puzzle by id
  *
@@ -66,5 +68,12 @@ export async function createPuzzlesForDailyChallenge({
 }: {
   dailyChallengeId: string;
 }): Promise<Puzzle[]> {
-  return createPuzzlesForDailyChallengeService({ dailyChallengeId });
+  return createPuzzlesForDailyChallengeCommand({ dailyChallengeId });
+}
+
+/**
+ * @see {@link solvePuzzleCommand}
+ */
+export async function solvePuzzle(input: SolvePuzzleInput): Promise<UserPuzzleAttempt> {
+  return solvePuzzleCommand(input);
 }
