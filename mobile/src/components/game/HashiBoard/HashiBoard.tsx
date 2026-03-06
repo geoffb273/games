@@ -5,10 +5,10 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { type HashiPuzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { Spacing } from '@/constants/theme';
+import { useHashiGame } from '@/hooks/game/useHashiGame';
 
 import { HashiBridge } from './HashiBridge';
 import { HashiIsland } from './HashiIsland';
-import { useHashiGame } from './useHashiGame';
 
 const CELL_GAP = 2;
 const MAX_CELL_SIZE = 44;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { getCellsToReveal } from '@/utils/minesweeper/reveal';
@@ -86,6 +87,8 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
   const [state, dispatch] = useReducer(gameReducer, puzzle, createInitialState);
   const [mode, setMode] = useState<InteractionMode>('flag');
   const { solvePuzzle } = useSolvePuzzle();
+  const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzleId });
+
   const startedAtRef = useRef<Date>(puzzle.attempt?.startedAt ?? new Date());
   const submittedRef = useRef(false);
 
@@ -111,6 +114,10 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
     const success = isWin;
+    updateOptimisticallyPuzzleAttempt({
+      startedAt: startedAtRef.current,
+      ...(success && { completedAt, durationMs }),
+    });
     solvePuzzle({
       puzzleId,
       puzzleType: PuzzleType.Minesweeper,
@@ -120,7 +127,7 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     }).catch(() => {
       submittedRef.current = false;
     });
-  }, [state.gameOver, isWin, puzzleId, mineField, solvePuzzle]);
+  }, [state.gameOver, isWin, puzzleId, mineField, solvePuzzle, updateOptimisticallyPuzzleAttempt]);
 
   const onCellTap = useStableCallback((row: number, col: number) => {
     if (state.gameOver) return;

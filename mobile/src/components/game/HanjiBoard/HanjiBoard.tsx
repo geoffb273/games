@@ -5,10 +5,10 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { type HanjiPuzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { Spacing } from '@/constants/theme';
+import { useHanjiGame } from '@/hooks/game/useHanjiGame';
 import { useTheme } from '@/hooks/useTheme';
 
 import { HanjiCell } from './HanjiCell';
-import { useHanjiGame } from './useHanjiGame';
 
 const CELL_GAP = 2;
 const MAX_CELL_SIZE = 44;

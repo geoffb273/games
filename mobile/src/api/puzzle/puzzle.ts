@@ -8,6 +8,7 @@ import {
   MinesweeperCellValue,
   MinesweeperPuzzleFragmentFragmentDoc,
   PuzzleFragmentFragmentDoc,
+  type PuzzleQueryQuery,
   PuzzleType as PuzzleTypeGraphql,
 } from '@/generated/gql/graphql';
 
@@ -44,25 +45,22 @@ gql`
   }
 
   fragment PuzzleFragment on Puzzle {
+    __typename
     id
     name
     description
     attempt {
-      id
       startedAt
       completedAt
       durationMs
     }
     ... on HanjiPuzzle {
-      __typename
       ...HanjiPuzzleFragment
     }
     ... on HashiPuzzle {
-      __typename
       ...HashiPuzzleFragment
     }
     ... on MinesweeperPuzzle {
-      __typename
       ...MinesweeperPuzzleFragment
     }
   }
@@ -76,7 +74,6 @@ fragmentRegistry.register(MinesweeperPuzzleFragmentFragmentDoc);
 export { PuzzleTypeGraphql as PuzzleType };
 
 export type PuzzleAttempt = {
-  id: string;
   startedAt: Date;
   completedAt?: Date | null;
   durationMs?: number | null;
@@ -141,7 +138,6 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
   const attempt: PuzzleAttempt | null =
     puzzleAttempt != null
       ? {
-          id: puzzleAttempt.id,
           startedAt: puzzleAttempt.startedAt,
           completedAt: puzzleAttempt.completedAt ?? null,
           durationMs: puzzleAttempt.durationMs ?? null,
@@ -199,6 +195,47 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
           value: c.value,
         })),
       };
+    }
+  }
+}
+
+/** Type for the puzzle `data` field in QueryPuzzleSuccess (used for cache updates). */
+type PuzzleQueryData = Extract<
+  PuzzleQueryQuery['puzzle'],
+  { __typename: 'QueryPuzzleSuccess' }
+>['data'];
+
+/**
+ * Maps the {@link Puzzle} type to the expected type in the {@link PuzzleQueryQuery}
+ */
+export function mapToPuzzleFragment(puzzle: Puzzle): PuzzleQueryData {
+  switch (puzzle.type) {
+    case 'HANJI': {
+      const __typename = 'HanjiPuzzle' as const;
+      return {
+        __typename,
+        ' $fragmentRefs': {
+          PuzzleFragment_HanjiPuzzle_Fragment: { ...puzzle, __typename },
+        },
+      };
+    }
+    case 'HASHI': {
+      const __typename = 'HashiPuzzle' as const;
+      return {
+        __typename,
+        ' $fragmentRefs': {
+          PuzzleFragment_HashiPuzzle_Fragment: { ...puzzle, __typename },
+        },
+      };
+    }
+    case 'MINESWEEPER': {
+      const __typename = 'MinesweeperPuzzle' as const;
+      return {
+        __typename,
+        ' $fragmentRefs': {
+          PuzzleFragment_MinesweeperPuzzle_Fragment: { ...puzzle, __typename },
+        },
+      } as PuzzleQueryData;
     }
   }
 }
