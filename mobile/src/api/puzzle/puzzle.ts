@@ -8,6 +8,7 @@ import {
   MinesweeperCellValue,
   MinesweeperPuzzleFragmentFragmentDoc,
   PuzzleFragmentFragmentDoc,
+  type PuzzleType as PuzzleTypeGraphql,
 } from '@/generated/gql/graphql';
 
 const getFragmentData = useFragment;
@@ -72,11 +73,13 @@ fragmentRegistry.register(HanjiPuzzleFragmentFragmentDoc);
 fragmentRegistry.register(HashiPuzzleFragmentFragmentDoc);
 fragmentRegistry.register(MinesweeperPuzzleFragmentFragmentDoc);
 
+export { PuzzleTypeGraphql as PuzzleType };
+
 export type PuzzleAttempt = {
   id: string;
-  startedAt: string;
-  completedAt: string | null;
-  durationMs: number | null;
+  startedAt: Date;
+  completedAt?: Date | null;
+  durationMs?: number | null;
 };
 
 export type PuzzleBase = {
