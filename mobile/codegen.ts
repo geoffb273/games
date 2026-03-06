@@ -6,6 +6,11 @@ const config: CodegenConfig = {
   generates: {
     './src/generated/gql/': {
       preset: 'client',
+      config: {
+        scalars: {
+          DateTime: 'Date',
+        },
+      },
     },
     './src/generated/apollo/fragment-matcher.ts': {
       plugins: ['fragment-matcher'],
