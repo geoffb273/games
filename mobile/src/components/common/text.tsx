@@ -3,6 +3,7 @@ import { type ReactNode } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { StyleSheet, Text as RNText } from 'react-native';
 
+import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
 type FontWeight = 'bold' | 'semibold' | 'medium' | 'regular';
@@ -11,6 +12,7 @@ type Size = '3xl' | '2xl' | 'xl' | 'lg' | 'md' | 'sm' | 'xs';
 type SemanticType = 'body' | 'emphasized_body' | 'caption' | 'h1' | 'h2' | 'h3' | 'lead';
 
 type LineHeight = 'tight' | 'normal' | 'relaxed';
+type FontFamily = 'sans' | 'serif';
 
 type TextStyleProps =
   | {
@@ -29,7 +31,7 @@ type TextStyleProps =
 type TextProps = {
   children: ReactNode;
   numberOfLines?: number;
-  color?: 'text' | 'textSecondary';
+  color?: 'text' | 'textSecondary' | 'success' | 'warning';
   _colorOverride?: string;
   textAlign?: 'left' | 'center' | 'right' | 'justify';
 } & TextStyleProps;
@@ -50,6 +52,7 @@ export function Text({
   let fontWeight: FontWeight = passedFontWeight ?? 'regular';
   let size: Size = passedSize ?? 'md';
   let lineHeight: LineHeight = passedLineHeight ?? 'normal';
+  let fontFamily: FontFamily = 'sans';
 
   const textColor = _colorOverride ?? theme[color];
 
@@ -57,6 +60,7 @@ export function Text({
     fontWeight = semanticStyles[type].fontWeight;
     size = semanticStyles[type].size;
     lineHeight = semanticStyles[type].lineHeight;
+    fontFamily = semanticStyles[type].fontFamily;
   }
 
   return (
@@ -68,6 +72,7 @@ export function Text({
         {
           lineHeight: LINE_HEIGHT[lineHeight] * sizeStyles[size].fontSize,
         },
+        fontFamilyStyles[fontFamily],
         { color: textColor },
         { textAlign },
       ]}
@@ -83,49 +88,57 @@ const semanticStyles: Record<
     fontWeight: FontWeight;
     size: Size;
     lineHeight: LineHeight;
+    fontFamily: FontFamily;
   }
 > = {
   body: {
     fontWeight: 'regular',
     size: 'md',
     lineHeight: 'normal',
+    fontFamily: 'sans',
   },
   emphasized_body: {
     fontWeight: 'semibold',
     size: 'md',
     lineHeight: 'normal',
+    fontFamily: 'sans',
   },
   caption: {
     fontWeight: 'regular',
     size: 'sm',
     lineHeight: 'normal',
+    fontFamily: 'sans',
   },
   h1: {
     fontWeight: 'bold',
     size: '3xl',
     lineHeight: 'tight',
+    fontFamily: 'serif',
   },
   h2: {
     fontWeight: 'semibold',
     size: '2xl',
     lineHeight: 'tight',
+    fontFamily: 'serif',
   },
   h3: {
     fontWeight: 'semibold',
     size: 'xl',
     lineHeight: 'normal',
+    fontFamily: 'serif',
   },
   lead: {
     fontWeight: 'regular',
     size: 'lg',
     lineHeight: 'relaxed',
+    fontFamily: 'serif',
   },
 };
 
 const LINE_HEIGHT: Record<LineHeight, number> = {
   tight: 1.1,
-  normal: 1.2,
-  relaxed: 1.5,
+  normal: 1.3,
+  relaxed: 1.6,
 };
 
 const fontWeightStyles = StyleSheet.create({
@@ -164,5 +177,14 @@ const sizeStyles = StyleSheet.create({
   },
   xs: {
     fontSize: 12,
+  },
+});
+
+const fontFamilyStyles = StyleSheet.create({
+  sans: {
+    fontFamily: Fonts.sans,
+  },
+  serif: {
+    fontFamily: Fonts.serif,
   },
 });

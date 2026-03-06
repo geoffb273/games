@@ -6,16 +6,32 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { ApolloProvider } from '@apollo/client/react';
 
 import client from '@/client/apollo';
+import { Colors } from '@/constants/theme';
 
 import { AuthProvider } from './AuthProvider';
 
 export function MainProvider({ children }: { children: ReactNode }) {
   const colorScheme = useColorScheme();
+  const appColors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const navigationTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
+
   return (
     <GestureHandlerRootView>
       <ApolloProvider client={client}>
         <AuthProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <ThemeProvider
+            value={{
+              ...navigationTheme,
+              colors: {
+                ...navigationTheme.colors,
+                background: appColors.background,
+                card: appColors.background,
+                text: appColors.text,
+                border: appColors.borderSubtle,
+                primary: appColors.accentInk,
+              },
+            }}
+          >
             {children}
           </ThemeProvider>
         </AuthProvider>
