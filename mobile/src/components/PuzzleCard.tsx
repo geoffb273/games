@@ -1,4 +1,4 @@
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -16,25 +16,13 @@ const PUZZLE_TYPE_ICONS: Record<Puzzle['type'], keyof typeof MaterialCommunityIc
   MINESWEEPER: 'bomb',
 };
 
-type PuzzleListProps = {
-  puzzles: Puzzle[] | null;
-  isLoading: boolean;
-  isError: boolean;
-};
-
-export function PuzzleList({ puzzles, isLoading, isError }: PuzzleListProps) {
-  return (
-    <FlatList
-      data={puzzles}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={styles.puzzleList}
-      renderItem={({ item }) => <PuzzleCard puzzle={item} />}
-      ListEmptyComponent={<EmptyState isLoading={isLoading} isError={isError} />}
-    />
-  );
-}
-
-function EmptyState({ isLoading, isError }: { isLoading?: boolean; isError?: boolean }) {
+export function PuzzleListEmptyState({
+  isLoading,
+  isError,
+}: {
+  isLoading?: boolean;
+  isError?: boolean;
+}) {
   const theme = useTheme();
 
   return (
@@ -52,7 +40,7 @@ function EmptyState({ isLoading, isError }: { isLoading?: boolean; isError?: boo
   );
 }
 
-function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
+export function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
   const theme = useTheme();
   const isCompleted = puzzle.attempt != null;
   const isSolved = isCompleted && puzzle.attempt?.completedAt != null;
@@ -107,11 +95,6 @@ function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
 }
 
 const styles = StyleSheet.create({
-  puzzleList: {
-    paddingHorizontal: Spacing.four,
-    rowGap: Spacing.one,
-    paddingBottom: Spacing.five,
-  },
   puzzleCard: {
     borderRadius: Radii.md,
     padding: Spacing.three,
