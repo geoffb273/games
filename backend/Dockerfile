@@ -9,7 +9,7 @@ FROM base AS deps
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod=false
+RUN pnpm install --frozen-lockfile --prod=false --ignore-scripts
 
 COPY prisma ./prisma/
 COPY src ./src
