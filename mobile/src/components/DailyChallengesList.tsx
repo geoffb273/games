@@ -89,7 +89,6 @@ const styles = StyleSheet.create({
     flexGrow: 0,
   },
   container: {
-    paddingHorizontal: Spacing.four,
     gap: Spacing.one,
     paddingBottom: Spacing.three,
   },
