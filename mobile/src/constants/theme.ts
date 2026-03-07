@@ -42,6 +42,8 @@ export const Fonts = {
   rounded: 'ui-rounded',
   /** iOS `UIFontDescriptorSystemDesignMonospaced` */
   mono: 'ui-monospace',
+  /** Kaushan Script – display/logo (loaded via expo-font in app.json) */
+  display: 'KaushanScript_400Regular',
 };
 
 export const Spacing = {

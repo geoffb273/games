@@ -11,5 +11,6 @@ export type Context = {
 
 export async function buildContext(req: IncomingMessage): Promise<Context> {
   const authorization = buildAuthorization(req);
+
   return { authorization, dataloaders: createDataloaders(authorization) };
 }

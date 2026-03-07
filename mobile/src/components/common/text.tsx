@@ -1,7 +1,7 @@
 /* eslint-disable react-native/no-unused-styles */
 import { type ReactNode } from 'react';
 // eslint-disable-next-line no-restricted-imports
-import { StyleSheet, Text as RNText } from 'react-native';
+import { type StyleProp, StyleSheet, Text as RNText, type TextStyle } from 'react-native';
 
 import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
@@ -12,19 +12,21 @@ type Size = '3xl' | '2xl' | 'xl' | 'lg' | 'md' | 'sm' | 'xs';
 type SemanticType = 'body' | 'emphasized_body' | 'caption' | 'h1' | 'h2' | 'h3' | 'lead';
 
 type LineHeight = 'tight' | 'normal' | 'relaxed';
-type FontFamily = 'sans' | 'serif';
+type FontFamily = 'sans' | 'serif' | 'display';
 
 type TextStyleProps =
   | {
       fontWeight?: FontWeight;
       size?: Size;
       lineHeight?: LineHeight;
+      fontFamily?: FontFamily;
       type?: never;
     }
   | {
       fontWeight?: never;
       size?: never;
       lineHeight?: never;
+      fontFamily?: FontFamily;
       type: SemanticType;
     };
 
@@ -34,7 +36,10 @@ type TextProps = {
   color?: 'text' | 'textSecondary' | 'success' | 'warning';
   _colorOverride?: string;
   textAlign?: 'left' | 'center' | 'right' | 'justify';
+  style?: StyleProp<TextStyle>;
 } & TextStyleProps;
+
+export type { FontFamily, TextProps };
 
 export function Text({
   children,
@@ -42,17 +47,20 @@ export function Text({
   fontWeight: passedFontWeight,
   size: passedSize,
   lineHeight: passedLineHeight,
+  fontFamily: passedFontFamily,
   type,
   color = 'text',
   _colorOverride,
   textAlign = 'left',
+  style,
 }: TextProps) {
   const theme = useTheme();
 
   let fontWeight: FontWeight = passedFontWeight ?? 'regular';
   let size: Size = passedSize ?? 'md';
   let lineHeight: LineHeight = passedLineHeight ?? 'normal';
-  let fontFamily: FontFamily = 'sans';
+  let fontFamily: FontFamily =
+    passedFontFamily ?? (type != null ? semanticStyles[type].fontFamily : 'sans');
 
   const textColor = _colorOverride ?? theme[color];
 
@@ -60,7 +68,6 @@ export function Text({
     fontWeight = semanticStyles[type].fontWeight;
     size = semanticStyles[type].size;
     lineHeight = semanticStyles[type].lineHeight;
-    fontFamily = semanticStyles[type].fontFamily;
   }
 
   return (
@@ -75,6 +82,7 @@ export function Text({
         fontFamilyStyles[fontFamily],
         { color: textColor },
         { textAlign },
+        style,
       ]}
     >
       {children}
@@ -186,5 +194,8 @@ const fontFamilyStyles = StyleSheet.create({
   },
   serif: {
     fontFamily: Fonts.serif,
+  },
+  display: {
+    fontFamily: Fonts.display,
   },
 });
