@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 
 import { useAuthenticateDevice } from '@/api/user/authenticateDeviceMutation';
 import { useCurrentUserQuery } from '@/api/user/currentUserQuer';
+import { AppLoadingView } from '@/components/view/AppLoadingView';
 import { AuthContext, type AuthContextType } from '@/context/AuthContext';
 import { getOrCreateDeviceId } from '@/store/device';
 import { clearToken, loadToken, saveToken, useAuthToken } from '@/store/token';
@@ -11,6 +12,7 @@ const MAX_RETRIES = 3;
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { token } = useAuthToken();
   const [isLoadingToken, setIsLoadingToken] = useState(false);
+  const [showLoadingView, setShowLoadingView] = useState(true);
 
   const retryAttemptsRef = useRef(0);
   const isRetryingRef = useRef(false);
@@ -97,6 +99,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       status: 'authenticated',
     };
   }, [user, isLoading, isError]);
+
+  if (showLoadingView) {
+    return <AppLoadingView isLoading={isLoading} onHidden={() => setShowLoadingView(false)} />;
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

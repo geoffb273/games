@@ -39,6 +39,7 @@ module.exports = defineConfig([
         'error',
         {
           enableDangerousAutofixThisMayCauseInfiniteLoops: true,
+          additionalHooks: '(useTimeoutEffect)',
         },
       ],
       'no-unused-vars': 'off',
