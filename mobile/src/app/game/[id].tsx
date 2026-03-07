@@ -1,4 +1,4 @@
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Stack, useLocalSearchParams } from 'expo-router';
 
@@ -16,51 +16,30 @@ export default function GameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { puzzle, isLoading, isError, isNotFound } = usePuzzleQuery({ id });
   const theme = useTheme();
+  const isPuzzleMissing = !isLoading && puzzle == null;
+  const title = puzzle?.name ?? '';
 
-  if (isLoading) {
-    return (
-      <View style={[styles.centered, { backgroundColor: theme.background }]}>
-        <Stack.Screen options={{ title: 'Puzzle', headerBackTitle: 'Book' }} />
-        <ActivityIndicator size="large" color={theme.text} />
-      </View>
-    );
-  }
+  return (
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Stack.Screen options={{ title, headerBackButtonDisplayMode: 'minimal' }} />
 
-  if (isNotFound) {
-    return (
-      <View style={[styles.centered, { backgroundColor: theme.background }]}>
-        <Stack.Screen options={{ title: 'Puzzle', headerBackTitle: 'Book' }} />
-        <ErrorView title="Puzzle not found" />
-      </View>
-    );
-  }
-
-  if (isError || puzzle == null) {
-    return (
-      <View style={[styles.centered, { backgroundColor: theme.background }]}>
-        <Stack.Screen options={{ title: 'Puzzle', headerBackTitle: 'Book' }} />
-        <ErrorView message="Unable to load puzzle" />
-      </View>
-    );
-  }
-
-  if (puzzle.attempt != null) {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <Stack.Screen options={{ title: puzzle.name, headerBackTitle: 'Book' }} />
+      {isNotFound && !isLoading ? (
+        <View style={styles.centered}>
+          <ErrorView title="Puzzle not found" />
+        </View>
+      ) : isError || isPuzzleMissing ? (
+        <View style={styles.centered}>
+          <ErrorView message="Unable to load puzzle" />
+        </View>
+      ) : puzzle?.attempt != null ? (
         <PuzzleCompletedView
           puzzleType={puzzle.type}
           solved={puzzle.attempt.completedAt != null}
           durationMs={puzzle.attempt.durationMs}
         />
-      </View>
-    );
-  }
-
-  return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <Stack.Screen options={{ title: puzzle.name, headerBackTitle: 'Book' }} />
-      <PuzzleBoard puzzle={puzzle} />
+      ) : puzzle != null ? (
+        <PuzzleBoard puzzle={puzzle} />
+      ) : null}
     </View>
   );
 }
