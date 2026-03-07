@@ -1,0 +1,92 @@
+# Deploy Game Brain backend to EC2 (Pulumi). Builds Docker image, pushes to ECR, runs pulumi up.
+# Requires: PULUMI_ACCESS_TOKEN secret. For AWS: either OIDC (set AWS_ROLE_TO_ASSUME) or AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY.
+
+name: Deploy Backend
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'backend/deployment/**'
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: game-brain-backend
+  PULUMI_STACK: game-brain
+
+jobs:
+  deploy:
+    name: Build, Push ECR, Pulumi Up
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          cache-dependency-path: backend/pnpm-lock.yaml
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+        if: ${{ secrets.AWS_ROLE_TO_ASSUME != '' }}
+
+      - name: Configure AWS credentials (static keys)
+        run: |
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+          echo "AWS_REGION=${{ env.AWS_REGION }}" >> $GITHUB_ENV
+        if: ${{ secrets.AWS_ROLE_TO_ASSUME == '' && secrets.AWS_ACCESS_KEY_ID != '' }}
+
+      - name: Get AWS account ID
+        id: aws-account
+        run: |
+          ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+          echo "account_id=$ACCOUNT" >> $GITHUB_OUTPUT
+          echo "ecr_uri=$ACCOUNT.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest" >> $GITHUB_OUTPUT
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ steps.aws-account.outputs.ecr_uri }} ./backend
+          docker push ${{ steps.aws-account.outputs.ecr_uri }}
+
+      - name: Install deployment dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: backend/deployment
+
+      - name: Pulumi up
+        uses: pulumi/actions@v5
+        with:
+          command: up
+          stack-name: ${{ env.PULUMI_STACK }}
+          work-dir: backend/deployment
+          refresh: true
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - name: Output ec2OriginUrl
+        run: |
+          cd backend/deployment
+          pnpm exec pulumi stack select ${{ env.PULUMI_STACK }}
+          pnpm exec pulumi stack output ec2OriginUrl
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}

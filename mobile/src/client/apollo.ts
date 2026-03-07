@@ -8,8 +8,8 @@ import { getToken } from '@/store/token';
 
 export const fragmentRegistry = createFragmentRegistry();
 
-// TODO: replace with your actual GraphQL endpoint
-const API_URL = 'http://localhost:4000/graphql';
+// Set EXPO_PUBLIC_GRAPHQL_URL in EAS/build env for production (e.g. Cloudflare Worker URL).
+const API_URL = process.env.EXPO_PUBLIC_GRAPHQL_URL ?? 'http://localhost:4000/graphql';
 
 const httpLink = new HttpLink({ uri: API_URL });
 

@@ -1,0 +1,6 @@
+config:
+  aws:region: us-east-1
+  game-brain:databaseUrl: postgresql://postgres.mppwwfhgkegbhjivjooe:b55flH4dhuNOq76P@aws-1-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+  game-brain:directUrl: postgresql://postgres.mppwwfhgkegbhjivjooe:b55flH4dhuNOq76P@aws-1-us-east-1.pooler.supabase.com:5432/postgres
+  game-brain:jwtSecret:
+    secure: AAABAKG8JTS9mSg7s0Lulj25I8fEOs4FVLD9Bco7jkzs3XxHdlnofmU4KmaJw4cQd/wGJtw=
