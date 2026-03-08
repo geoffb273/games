@@ -9,7 +9,7 @@ import { getToken } from '@/store/token';
 export const fragmentRegistry = createFragmentRegistry();
 
 // Set EXPO_PUBLIC_GRAPHQL_URL in EAS/build env for production (e.g. Cloudflare Worker URL).
-const API_URL = process.env.EXPO_PUBLIC_GRAPHQL_URL ?? 'http://localhost:4000/graphql';
+const API_URL = 'https://api.game-brain.net/graphql';
 
 const httpLink = new HttpLink({ uri: API_URL });
 
