@@ -203,7 +203,7 @@ aws ec2 associate-address --instance-id "$INSTANCE_ID" --allocation-id ${allocat
 const launchTemplate = new aws.ec2.LaunchTemplate('backend', {
   namePrefix: 'game-brain-backend-',
   imageId: ecsAmi.then((a) => a.id),
-  instanceType: 't2.micro',
+  instanceType: 't3.micro',
   iamInstanceProfile: { arn: instanceProfile.arn },
   vpcSecurityGroupIds: [sg.id],
   userData: launchTemplateUserData,
