@@ -5,6 +5,8 @@ const config = new pulumi.Config();
 const databaseUrl = config.requireSecret('databaseUrl');
 const directUrl = config.requireSecret('directUrl');
 const jwtSecret = config.requireSecret('jwtSecret');
+/** Optional: EC2 key pair name for SSH (create in EC2 → Key Pairs, then set and redeploy). */
+const keyName = config.get('keyName');
 
 const awsConfig = new pulumi.Config('aws');
 const region = awsConfig.get('region') || 'us-east-1';
@@ -177,6 +179,11 @@ const instance = new aws.ec2.Instance('backend', {
   vpcSecurityGroupIds: [sg.id],
   iamInstanceProfile: instanceProfile.name,
   userData: userData,
+  ...(keyName ? { keyName } : {}),
+  rootBlockDevice: {
+    volumeSize: 10,
+    volumeType: 'gp3',
+  },
   tags: {
     Name: 'game-brain-backend',
   },

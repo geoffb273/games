@@ -33,6 +33,9 @@ pulumi config set --secret jwtSecret  'your-jwt-secret'
 
 # Optional: AWS region (defaults to us-east-1)
 pulumi config set aws:region us-east-1
+
+# Optional: EC2 key pair name for SSH (see "SSH access" below)
+pulumi config set keyName your-key-pair-name
 ```
 
 ## Deploy via GitHub Actions
@@ -82,6 +85,24 @@ All public API traffic should go through a Cloudflare Worker so that HTTPS is ha
    - With custom domain: `https://api.yourdomain.com/graphql`
    - With workers.dev: `https://game-brain-api.<your-subdomain>.workers.dev/graphql`
    Set this in EAS build environment variables (or in `.env` for local production builds) so the app uses the deployed API.
+
+## SSH access
+
+If EC2 Instance Connect and Session Manager don’t work, use key-based SSH:
+
+1. **Create a key pair** (once): In AWS Console → EC2 → Key Pairs → Create key pair. Name it (e.g. `game-brain-backend`), choose `.pem`, download and store the file securely (e.g. `chmod 400 game-brain-backend.pem`).
+
+2. **Configure Pulumi** and redeploy so the instance gets the key:
+   ```bash
+   pulumi config set keyName game-brain-backend
+   pulumi up
+   ```
+   Pulumi will replace the instance (new instance with the key; Elastic IP is reattached).
+
+3. **Connect** (use the Elastic IP from `pulumi stack output ec2OriginUrl`, e.g. `http://34.202.60.131:4000` → IP is `34.202.60.131`):
+   ```bash
+   ssh -i /path/to/game-brain-backend.pem ec2-user@34.202.60.131
+   ```
 
 ## Exports
 
