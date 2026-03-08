@@ -31,8 +31,9 @@ const ecrRepo = new aws.ecr.Repository('backend', {
 });
 
 const ecrRepoUrl = ecrRepo.repositoryUrl;
+const imageUri = pulumi.interpolate`${accountId}.dkr.ecr.${region}.amazonaws.com/${ecrRepo.name}:latest`;
 
-// SSM parameters for secrets (EC2 user data will fetch at boot)
+// SSM parameters for secrets
 const ssmPrefix = '/game-brain/backend';
 const dbParam = new aws.ssm.Parameter('databaseUrl', {
   name: `${ssmPrefix}/databaseUrl`,
@@ -50,50 +51,27 @@ const jwtParam = new aws.ssm.Parameter('jwtSecret', {
   value: jwtSecret,
 });
 
-// IAM role for EC2: allow ECR pull and SSM read
-const ec2Role = new aws.iam.Role('ec2Role', {
+// --- ECS task execution role (ECR pull + SSM read for task secrets) ---
+const taskExecutionRole = new aws.iam.Role('ecsTaskExecutionRole', {
   assumeRolePolicy: JSON.stringify({
     Version: '2012-10-17',
     Statement: [
       {
         Action: 'sts:AssumeRole',
         Effect: 'Allow',
-        Principal: { Service: 'ec2.amazonaws.com' },
+        Principal: { Service: 'ecs-tasks.amazonaws.com' },
       },
     ],
   }),
 });
 
-new aws.iam.RolePolicyAttachment('ec2RoleSSM', {
-  role: ec2Role.name,
-  policyArn: 'arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess',
+new aws.iam.RolePolicyAttachment('taskExecutionRoleECR', {
+  role: taskExecutionRole.name,
+  policyArn: 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy',
 });
 
-const _ecrPolicy = new aws.iam.RolePolicy('ec2EcrPull', {
-  role: ec2Role.id,
-  policy: pulumi.interpolate`{
-    "Version": "2012-10-17",
-    "Statement": [{
-      "Effect": "Allow",
-      "Action": [
-        "ecr:GetAuthorizationToken"
-      ],
-      "Resource": "*"
-    }, {
-      "Effect": "Allow",
-      "Action": [
-        "ecr:BatchCheckLayerAvailability",
-        "ecr:GetDownloadUrlForLayer",
-        "ecr:BatchGetImage"
-      ],
-      "Resource": "${ecrRepo.arn}"
-    }]
-  }`,
-});
-
-// Allow EC2 to read our SSM parameters
-const _ssmPolicy = new aws.iam.RolePolicy('ec2SsmParams', {
-  role: ec2Role.id,
+const _taskExecutionSsmPolicy = new aws.iam.RolePolicy('taskExecutionSsm', {
+  role: taskExecutionRole.id,
   policy: pulumi.all([dbParam.arn, directParam.arn, jwtParam.arn]).apply((arns) =>
     JSON.stringify({
       Version: '2012-10-17',
@@ -108,11 +86,66 @@ const _ssmPolicy = new aws.iam.RolePolicy('ec2SsmParams', {
   ),
 });
 
-const instanceProfile = new aws.iam.InstanceProfile('ec2Profile', {
-  role: ec2Role.name,
+// --- Instance role for ECS container instance (ECS for EC2 + ECR pull + SSM) ---
+const instanceRole = new aws.iam.Role('ecsInstanceRole', {
+  assumeRolePolicy: JSON.stringify({
+    Version: '2012-10-17',
+    Statement: [
+      {
+        Action: 'sts:AssumeRole',
+        Effect: 'Allow',
+        Principal: { Service: 'ec2.amazonaws.com' },
+      },
+    ],
+  }),
 });
 
-// Security group: SSH (optional), app port from anywhere (Cloudflare Worker or 0.0.0.0/0)
+new aws.iam.RolePolicyAttachment('instanceRoleEcs', {
+  role: instanceRole.name,
+  policyArn: 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role',
+});
+
+const _instanceEcrPolicy = new aws.iam.RolePolicy('instanceEcrPull', {
+  role: instanceRole.id,
+  policy: pulumi.interpolate`{
+    "Version": "2012-10-17",
+    "Statement": [{
+      "Effect": "Allow",
+      "Action": ["ecr:GetAuthorizationToken"],
+      "Resource": "*"
+    }, {
+      "Effect": "Allow",
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+      ],
+      "Resource": "${ecrRepo.arn}"
+    }]
+  }`,
+});
+
+const _instanceSsmPolicy = new aws.iam.RolePolicy('instanceSsmParams', {
+  role: instanceRole.id,
+  policy: pulumi.all([dbParam.arn, directParam.arn, jwtParam.arn]).apply((arns) =>
+    JSON.stringify({
+      Version: '2012-10-17',
+      Statement: [
+        {
+          Effect: 'Allow',
+          Action: ['ssm:GetParameter', 'ssm:GetParameters'],
+          Resource: arns,
+        },
+      ],
+    }),
+  ),
+});
+
+const instanceProfile = new aws.iam.InstanceProfile('ecsInstanceProfile', {
+  role: instanceRole.name,
+});
+
+// Security group: SSH (optional), app port from anywhere
 const sg = new aws.ec2.SecurityGroup('backendSg', {
   vpcId: vpcId,
   description: 'Game brain backend - port 4000 for Cloudflare Worker',
@@ -137,67 +170,141 @@ const sg = new aws.ec2.SecurityGroup('backendSg', {
   ],
 });
 
-const imageUri = pulumi.interpolate`${accountId}.dkr.ecr.${region}.amazonaws.com/${ecrRepo.name}:latest`;
-
-const userData = pulumi
-  .all([accountId, imageUri, dbParam.name, directParam.name, jwtParam.name])
-  .apply(([aid, img, dbName, directName, jwtName]) => {
-    return `#!/bin/bash
-set -e
-yum install -y docker
-systemctl enable docker
-systemctl start docker
-
-# Free space for new image (remove unused images/containers)
-docker system prune -af || true
-
-# Login to ECR and pull image
-aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${aid}.dkr.ecr.${region}.amazonaws.com
-docker pull ${img} || true
-
-# Fetch secrets from SSM
-export DATABASE_URL=$(aws ssm get-parameter --name "${dbName}" --with-decryption --query Parameter.Value --output text)
-export DIRECT_URL=$(aws ssm get-parameter --name "${directName}" --with-decryption --query Parameter.Value --output text)
-export JWT_SECRET=$(aws ssm get-parameter --name "${jwtName}" --with-decryption --query Parameter.Value --output text)
-export PORT=4000
-
-# Run backend (restart on failure)
-docker run -d --restart unless-stopped -p 4000:4000 \\
-  -e DATABASE_URL -e DIRECT_URL -e JWT_SECRET -e PORT \\
-  --name backend ${img}
-`;
-  });
-
-const ami = aws.ec2.getAmi({
-  mostRecent: true,
-  owners: ['amazon'],
-  filters: [{ name: 'name', values: ['al2023-ami-*-kernel-*-x86_64'] }],
-});
-
-const instance = new aws.ec2.Instance('backend', {
-  instanceType: 't2.micro',
-  ami: ami.then((a) => a.id),
-  subnetId: subnetId,
-  vpcSecurityGroupIds: [sg.id],
-  iamInstanceProfile: instanceProfile.name,
-  userData: userData,
-  ...(keyName ? { keyName } : {}),
-  rootBlockDevice: {
-    volumeSize: 20,
-    volumeType: 'gp3',
-  },
-  tags: {
-    Name: 'game-brain-backend',
-  },
-});
-
+// Elastic IP (allocated first; associated in instance user data)
 const eip = new aws.ec2.Eip('backendEip', {
-  instance: instance.id,
   domain: 'vpc',
 });
 
-// Export for Cloudflare Worker: origin URL (HTTP) to point at EC2
+// ECS cluster
+const cluster = new aws.ecs.Cluster('backend', {
+  name: 'game-brain-backend',
+});
+
+// ECS-optimized AMI (Amazon Linux 2)
+const ecsAmi = aws.ec2.getAmi({
+  mostRecent: true,
+  owners: ['amazon'],
+  filters: [{ name: 'name', values: ['amzn2-ami-ecs-hvm-2.0.*'] }],
+});
+
+const launchTemplateUserData = pulumi
+  .all([cluster.name, eip.allocationId])
+  .apply(([clusterName, allocationId]) => {
+    return Buffer.from(
+      `#!/bin/bash
+echo ECS_CLUSTER=${clusterName} >> /etc/ecs/ecs.config
+INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+aws ec2 associate-address --instance-id "$INSTANCE_ID" --allocation-id ${allocationId} --region ${region}
+`,
+      'utf-8',
+    ).toString('base64');
+  });
+
+const launchTemplate = new aws.ec2.LaunchTemplate('backend', {
+  namePrefix: 'game-brain-backend-',
+  imageId: ecsAmi.then((a) => a.id),
+  instanceType: 't2.micro',
+  iamInstanceProfile: { arn: instanceProfile.arn },
+  vpcSecurityGroupIds: [sg.id],
+  userData: launchTemplateUserData,
+  ...(keyName ? { keyName } : {}),
+  blockDeviceMappings: [
+    {
+      deviceName: '/dev/xvda',
+      ebs: {
+        volumeSize: 20,
+        volumeType: 'gp3',
+      },
+    },
+  ],
+  tagSpecifications: [
+    {
+      resourceType: 'instance',
+      tags: {
+        Name: 'game-brain-backend',
+      },
+    },
+  ],
+});
+
+const _asg = new aws.autoscaling.Group('backend', {
+  name: 'game-brain-backend',
+  minSize: 1,
+  maxSize: 1,
+  desiredCapacity: 1,
+  vpcZoneIdentifiers: [subnetId],
+  launchTemplate: {
+    id: launchTemplate.id,
+    version: '$Latest',
+  },
+  tags: [
+    {
+      key: 'Name',
+      value: 'game-brain-backend',
+      propagateAtLaunch: true,
+    },
+  ],
+});
+
+// CloudWatch log group for ECS task (must exist before task runs)
+const logGroup = new aws.cloudwatch.LogGroup('backendEcs', {
+  name: '/ecs/game-brain-backend',
+  retentionInDays: 7,
+});
+
+// Task definition: host network, image :latest, secrets from SSM
+const taskDefinition = new aws.ecs.TaskDefinition(
+  'backend',
+  {
+    family: 'game-brain-backend',
+    networkMode: 'host',
+    requiresCompatibilities: ['EC2'],
+    cpu: '256',
+    memory: '512',
+    executionRoleArn: taskExecutionRole.arn,
+    containerDefinitions: pulumi
+      .all([imageUri, dbParam.name, directParam.name, jwtParam.name])
+      .apply(([img, dbName, directName, jwtName]) =>
+        JSON.stringify([
+          {
+            name: 'backend',
+            image: img,
+            essential: true,
+            portMappings: [{ containerPort: 4000, hostPort: 4000, protocol: 'tcp' }],
+            environment: [{ name: 'PORT', value: '4000' }],
+            secrets: [
+              { name: 'DATABASE_URL', valueFrom: dbName },
+              { name: 'DIRECT_URL', valueFrom: directName },
+              { name: 'JWT_SECRET', valueFrom: jwtName },
+            ],
+            logConfiguration: {
+              logDriver: 'awslogs',
+              options: {
+                'awslogs-group': '/ecs/game-brain-backend',
+                'awslogs-region': region,
+                'awslogs-stream-prefix': 'ecs',
+              },
+            },
+          },
+        ]),
+      ),
+  },
+  { dependsOn: [logGroup] },
+);
+
+// ECS service: one task on EC2, no ALB
+const service = new aws.ecs.Service('backend', {
+  name: 'game-brain-backend',
+  cluster: cluster.arn,
+  taskDefinition: taskDefinition.arn,
+  desiredCount: 1,
+  launchType: 'EC2',
+  schedulingStrategy: 'REPLICA',
+});
+
+// Export for Cloudflare Worker: origin URL (HTTP) to point at EIP:4000
 export const ec2OriginUrl = pulumi.interpolate`http://${eip.publicIp}:4000`;
 export const ecrRepositoryUrl = ecrRepoUrl;
 export const ecrRepositoryName = ecrRepo.name;
-export const instanceId = instance.id;
+export const ecsClusterName = cluster.name;
+export const ecsServiceName = service.name;
