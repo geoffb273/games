@@ -75,6 +75,16 @@ jobs:
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
+      - name: Force ECS deployment (run latest image)
+        run: |
+          cd backend/deployment
+          pnpm exec pulumi stack select ${{ env.PULUMI_STACK }}
+          CLUSTER=$(pnpm exec pulumi stack output ecsClusterName)
+          SERVICE=$(pnpm exec pulumi stack output ecsServiceName)
+          aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment --region ${{ env.AWS_REGION }}
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
       - name: Get ec2OriginUrl
         id: origin
         run: |
