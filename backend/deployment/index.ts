@@ -212,7 +212,7 @@ const launchTemplate = new aws.ec2.LaunchTemplate('backend', {
     {
       deviceName: '/dev/xvda',
       ebs: {
-        volumeSize: 20,
+        volumeSize: 30,
         volumeType: 'gp3',
       },
     },
