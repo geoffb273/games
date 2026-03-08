@@ -180,11 +180,14 @@ const cluster = new aws.ecs.Cluster('backend', {
   name: 'game-brain-backend',
 });
 
-// ECS-optimized AMI (Amazon Linux 2)
+// ECS-optimized AMI (Amazon Linux 2, x86_64 to match t3.micro)
 const ecsAmi = aws.ec2.getAmi({
   mostRecent: true,
   owners: ['amazon'],
-  filters: [{ name: 'name', values: ['amzn2-ami-ecs-hvm-2.0.*'] }],
+  filters: [
+    { name: 'name', values: ['amzn2-ami-ecs-hvm-2.0.*'] },
+    { name: 'architecture', values: ['x86_64'] },
+  ],
 });
 
 const launchTemplateUserData = pulumi
