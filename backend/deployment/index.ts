@@ -144,10 +144,12 @@ const userData = pulumi
   .apply(([aid, img, dbName, directName, jwtName]) => {
     return `#!/bin/bash
 set -e
-yum update -y
 yum install -y docker
 systemctl enable docker
 systemctl start docker
+
+# Free space for new image (remove unused images/containers)
+docker system prune -af || true
 
 # Login to ECR and pull image
 aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${aid}.dkr.ecr.${region}.amazonaws.com
@@ -181,7 +183,7 @@ const instance = new aws.ec2.Instance('backend', {
   userData: userData,
   ...(keyName ? { keyName } : {}),
   rootBlockDevice: {
-    volumeSize: 10,
+    volumeSize: 20,
     volumeType: 'gp3',
   },
   tags: {
