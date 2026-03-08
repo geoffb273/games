@@ -75,10 +75,21 @@ jobs:
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
-      - name: Output ec2OriginUrl
+      - name: Get ec2OriginUrl
+        id: origin
         run: |
           cd backend/deployment
           pnpm exec pulumi stack select ${{ env.PULUMI_STACK }}
-          pnpm exec pulumi stack output ec2OriginUrl
+          ORIGIN=$(pnpm exec pulumi stack output ec2OriginUrl)
+          echo "::add-mask::$ORIGIN"
+          echo "url=$ORIGIN" >> $GITHUB_OUTPUT
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - name: Update Cloudflare Worker secret (EC2_ORIGIN_URL)
+        run: |
+          cd cloudflare-worker
+          pnpm install --frozen-lockfile
+          echo "${{ steps.origin.outputs.url }}" | pnpm exec wrangler secret put EC2_ORIGIN_URL
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
