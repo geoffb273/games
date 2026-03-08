@@ -246,51 +246,33 @@ const _asg = new aws.autoscaling.Group('backend', {
   ],
 });
 
-// CloudWatch log group for ECS task (must exist before task runs)
-const logGroup = new aws.cloudwatch.LogGroup('backendEcs', {
-  name: '/ecs/game-brain-backend',
-  retentionInDays: 7,
+// Task definition: host network, image :latest, secrets from SSM (no CloudWatch; logs on instance)
+const taskDefinition = new aws.ecs.TaskDefinition('backend', {
+  family: 'game-brain-backend',
+  networkMode: 'host',
+  requiresCompatibilities: ['EC2'],
+  cpu: '256',
+  memory: '512',
+  executionRoleArn: taskExecutionRole.arn,
+  containerDefinitions: pulumi
+    .all([imageUri, dbParam.name, directParam.name, jwtParam.name])
+    .apply(([img, dbName, directName, jwtName]) =>
+      JSON.stringify([
+        {
+          name: 'backend',
+          image: img,
+          essential: true,
+          portMappings: [{ containerPort: 4000, hostPort: 4000, protocol: 'tcp' }],
+          environment: [{ name: 'PORT', value: '4000' }],
+          secrets: [
+            { name: 'DATABASE_URL', valueFrom: dbName },
+            { name: 'DIRECT_URL', valueFrom: directName },
+            { name: 'JWT_SECRET', valueFrom: jwtName },
+          ],
+        },
+      ]),
+    ),
 });
-
-// Task definition: host network, image :latest, secrets from SSM
-const taskDefinition = new aws.ecs.TaskDefinition(
-  'backend',
-  {
-    family: 'game-brain-backend',
-    networkMode: 'host',
-    requiresCompatibilities: ['EC2'],
-    cpu: '256',
-    memory: '512',
-    executionRoleArn: taskExecutionRole.arn,
-    containerDefinitions: pulumi
-      .all([imageUri, dbParam.name, directParam.name, jwtParam.name])
-      .apply(([img, dbName, directName, jwtName]) =>
-        JSON.stringify([
-          {
-            name: 'backend',
-            image: img,
-            essential: true,
-            portMappings: [{ containerPort: 4000, hostPort: 4000, protocol: 'tcp' }],
-            environment: [{ name: 'PORT', value: '4000' }],
-            secrets: [
-              { name: 'DATABASE_URL', valueFrom: dbName },
-              { name: 'DIRECT_URL', valueFrom: directName },
-              { name: 'JWT_SECRET', valueFrom: jwtName },
-            ],
-            logConfiguration: {
-              logDriver: 'awslogs',
-              options: {
-                'awslogs-group': '/ecs/game-brain-backend',
-                'awslogs-region': region,
-                'awslogs-stream-prefix': 'ecs',
-              },
-            },
-          },
-        ]),
-      ),
-  },
-  { dependsOn: [logGroup] },
-);
 
 // ECS service: one task on EC2, no ALB
 const service = new aws.ecs.Service('backend', {
