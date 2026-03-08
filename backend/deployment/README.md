@@ -42,12 +42,14 @@ pulumi config set aws:region us-east-1
    - **AWS** (choose one):
      - **OIDC:** Configure an IAM role with trust for GitHub OIDC and permissions for ECR, EC2, SSM, IAM (for the deployment). Add the role ARN as `AWS_ROLE_TO_ASSUME`.
      - **Static keys:** `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` for a user with the same permissions.
+   - **Optional – auto-update Cloudflare Worker:** `CLOUDFLARE_API_TOKEN` – Cloudflare API token with “Edit Cloudflare Workers” (or “Workers Scripts” edit). If set, the workflow will update the Worker secret `EC2_ORIGIN_URL` from the Pulumi output after each deploy.
 
 2. **Trigger:** Push to `main` (when `backend/**` or `backend/deployment/**` change) or run the **“Deploy Backend”** workflow manually.
 
 3. The workflow will:
    - Build the backend Docker image and push it to ECR
    - Run `pulumi up` in `backend/deployment`
+   - If `CLOUDFLARE_API_TOKEN` is set: update the Cloudflare Worker secret `EC2_ORIGIN_URL` to the new `ec2OriginUrl`
    - Print the exported `ec2OriginUrl` (e.g. `http://<elastic-ip>:4000`)
 
 ## Deploy locally (optional)
