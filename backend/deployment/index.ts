@@ -170,7 +170,7 @@ const sg = new aws.ec2.SecurityGroup('backendSg', {
   ],
 });
 
-// Elastic IP (allocated first; associated in instance user data)
+// Elastic IP (associated with instance via EipAssociation below)
 const eip = new aws.ec2.Eip('backendEip', {
   domain: 'vpc',
 });
@@ -190,63 +190,33 @@ const ecsAmi = aws.ec2.getAmi({
   ],
 });
 
-const launchTemplateUserData = pulumi
-  .all([cluster.name, eip.allocationId])
-  .apply(([clusterName, allocationId]) => {
-    return Buffer.from(
+const instance = new aws.ec2.Instance('backend', {
+  ami: ecsAmi.then((a) => a.id),
+  instanceType: 't3.micro',
+  subnetId,
+  vpcSecurityGroupIds: [sg.id],
+  iamInstanceProfile: instanceProfile.name,
+  userData: cluster.name.apply((clusterName) =>
+    Buffer.from(
       `#!/bin/bash
 echo ECS_CLUSTER=${clusterName} >> /etc/ecs/ecs.config
-INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-aws ec2 associate-address --instance-id "$INSTANCE_ID" --allocation-id ${allocationId} --region ${region}
 `,
       'utf-8',
-    ).toString('base64');
-  });
-
-const launchTemplate = new aws.ec2.LaunchTemplate('backend', {
-  namePrefix: 'game-brain-backend-',
-  imageId: ecsAmi.then((a) => a.id),
-  instanceType: 't3.micro',
-  iamInstanceProfile: { arn: instanceProfile.arn },
-  vpcSecurityGroupIds: [sg.id],
-  userData: launchTemplateUserData,
+    ).toString('base64'),
+  ),
   ...(keyName ? { keyName } : {}),
-  blockDeviceMappings: [
-    {
-      deviceName: '/dev/xvda',
-      ebs: {
-        volumeSize: 30,
-        volumeType: 'gp3',
-      },
-    },
-  ],
-  tagSpecifications: [
-    {
-      resourceType: 'instance',
-      tags: {
-        Name: 'game-brain-backend',
-      },
-    },
-  ],
+  rootBlockDevice: {
+    volumeSize: 30,
+    volumeType: 'gp3',
+  },
+  tags: {
+    Name: 'game-brain-backend',
+  },
 });
 
-const _asg = new aws.autoscaling.Group('backend', {
-  name: 'game-brain-backend',
-  minSize: 1,
-  maxSize: 1,
-  desiredCapacity: 1,
-  vpcZoneIdentifiers: [subnetId],
-  launchTemplate: {
-    id: launchTemplate.id,
-    version: '$Latest',
-  },
-  tags: [
-    {
-      key: 'Name',
-      value: 'game-brain-backend',
-      propagateAtLaunch: true,
-    },
-  ],
+new aws.ec2.EipAssociation('backendEipAssoc', {
+  instanceId: instance.id,
+  allocationId: eip.allocationId,
 });
 
 // Task definition: host network, image :latest, secrets from SSM (no CloudWatch; logs on instance)
