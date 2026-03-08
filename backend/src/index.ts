@@ -32,4 +32,5 @@ app.use(
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console -- server startup
   console.log(`Server ready at http://localhost:${PORT} (GraphQL: /graphql, Hello: /hello)`);
+  console.log('HELLO SERVER');
 });
