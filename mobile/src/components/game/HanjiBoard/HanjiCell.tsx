@@ -10,9 +10,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Spacing } from '@/constants/theme';
+import { Text } from '@/components/common/Text';
 import { useTheme } from '@/hooks/useTheme';
-
 import type { HanjiCellState } from '@/utils/hanji/lineValidation';
 
 type HanjiCellProps = {
@@ -97,9 +96,9 @@ export const HanjiCell = memo(function HanjiCell({
         ]}
       >
         {state === 'marked' ? (
-          <Animated.Text style={[styles.marked, { color: theme.textSecondary, fontSize: size > 30 ? 14 : 10 }]}>
+          <Text type="caption" color="textSecondary">
             ✕
-          </Animated.Text>
+          </Text>
         ) : null}
       </Animated.View>
     </GestureDetector>
