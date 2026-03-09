@@ -47,6 +47,15 @@ export function HashiBoard({ puzzle }: HashiBoardProps) {
     }));
   }, [puzzle.islands, cellSize]);
 
+  const currentBridgesPerIsland = useMemo((): number[] => {
+    return connections.reduce<number[]>((counts, conn, ci) => {
+      const n = bridgeCounts[ci] ?? 0;
+      counts[conn.a] += n;
+      counts[conn.b] += n;
+      return counts;
+    }, new Array(puzzle.islands.length).fill(0));
+  }, [puzzle.islands.length, connections, bridgeCounts]);
+
   return (
     <View style={styles.container}>
       <Text type="h3" textAlign="center">
@@ -72,6 +81,7 @@ export function HashiBoard({ puzzle }: HashiBoardProps) {
           <HashiIsland
             key={i}
             requiredBridges={island.requiredBridges}
+            currentBridges={currentBridgesPerIsland[i] ?? 0}
             x={islandPositions[i].x}
             y={islandPositions[i].y}
             cellSize={cellSize}
