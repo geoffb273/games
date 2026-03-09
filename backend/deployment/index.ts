@@ -299,7 +299,7 @@ const service = new aws.ecs.Service('backend', {
   launchType: 'EC2',
   schedulingStrategy: 'REPLICA',
   deploymentMinimumHealthyPercent: 0,
-  deploymentMaximumPercent: 100,
+  deploymentMaximumPercent: 200,
 });
 
 // Origin URL for reference (e.g. point api.game-brain.net A record to this IP; Cloudflare proxy handles HTTPS)
