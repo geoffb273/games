@@ -1,10 +1,13 @@
 import { useCallback } from 'react';
-import { FlatList, Pressable, StyleSheet } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { type DailyChallenge as DailyChallengeType } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { Text } from '@/components/common/Text';
 import { Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
+import { getColorWithOpacity } from '@/utils/colorUtils';
 
 function formatDate(date: Date): string {
   const d = new Date(date);
@@ -19,6 +22,8 @@ type DailyChallengesListProps = {
   onEndReached: () => void;
 };
 
+const EDGE_GRADIENT_WIDTH = 24;
+
 export function DailyChallengesList({
   dailyChallenges,
   activeChallengeId,
@@ -26,6 +31,8 @@ export function DailyChallengesList({
   hasNextPage,
   onEndReached,
 }: DailyChallengesListProps) {
+  const theme = useTheme();
+
   const renderItem = useCallback(
     ({ item: challenge }: { item: DailyChallengeType }) => (
       <DailyChallenge
@@ -38,18 +45,34 @@ export function DailyChallengesList({
   );
 
   return (
-    <FlatList
-      horizontal
-      style={styles.list}
-      inverted
-      data={dailyChallenges}
-      keyExtractor={(item) => item.id}
-      renderItem={renderItem}
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.container}
-      onEndReached={hasNextPage ? onEndReached : undefined}
-      onEndReachedThreshold={0.5}
-    />
+    <View style={styles.wrapper}>
+      <FlatList
+        horizontal
+        style={styles.list}
+        inverted
+        data={dailyChallenges}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.container}
+        onEndReached={hasNextPage ? onEndReached : undefined}
+        onEndReachedThreshold={0.5}
+      />
+      <LinearGradient
+        colors={[theme.background, getColorWithOpacity(theme.background, 0)]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={[styles.edgeGradient, styles.edgeGradientLeft]}
+        pointerEvents="none"
+      />
+      <LinearGradient
+        colors={[getColorWithOpacity(theme.background, 0), theme.background]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={[styles.edgeGradient, styles.edgeGradientRight]}
+        pointerEvents="none"
+      />
+    </View>
   );
 }
 
@@ -85,12 +108,28 @@ function DailyChallenge({ challenge, isSelected, onPress }: DailyChallengeProps)
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    position: 'relative',
+  },
   list: {
     flexGrow: 0,
+  },
+  edgeGradient: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: EDGE_GRADIENT_WIDTH,
+  },
+  edgeGradientLeft: {
+    left: 0,
+  },
+  edgeGradientRight: {
+    right: 0,
   },
   container: {
     gap: Spacing.one,
     paddingBottom: Spacing.three,
+    paddingHorizontal: Spacing.four,
   },
   challengeChip: {
     paddingHorizontal: Spacing.three,
@@ -98,6 +137,5 @@ const styles = StyleSheet.create({
     borderRadius: Radii.sm,
     borderWidth: 1,
     alignItems: 'center',
-    minWidth: 130,
   },
 });

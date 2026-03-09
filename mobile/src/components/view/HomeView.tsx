@@ -69,11 +69,11 @@ export function HomeView() {
 
 const styles = StyleSheet.create({
   header: {
+    paddingHorizontal: Spacing.four,
     gap: Spacing.half,
     paddingBottom: Spacing.two,
   },
   puzzleList: {
-    paddingHorizontal: Spacing.four,
     rowGap: Spacing.one,
     paddingBottom: Spacing.five,
   },

@@ -99,6 +99,7 @@ const styles = StyleSheet.create({
     borderRadius: Radii.md,
     padding: Spacing.three,
     borderWidth: 1,
+    marginHorizontal: Spacing.four,
   },
   puzzleCardContent: {
     flexDirection: 'row',
