@@ -1,0 +1,28 @@
+---
+description: How to plan and write code in this codebase
+alwaysApply: true
+---
+
+# Planning and Writing in This Codebase
+
+## Project layout
+
+- **backend**: Node/Express, Apollo Server, Pothos GraphQL, Prisma. TypeScript, ESM.
+- **mobile**: Expo (React Native), Apollo Client, Valtio. TypeScript.
+
+## When planning
+
+- Identify which app(s) are affected (backend, mobile, or both).
+- For API/GraphQL changes: consider schema (backend), codegen (mobile), and client usage together.
+- For new features: list concrete files to add or change; avoid vague "add X" without paths.
+
+## When writing code
+
+- Prefer editing existing files over creating new ones unless the change is a new module/feature.
+- Run the project linter after edits (`pnpm lint` in backend or mobile); match existing style (import order, type-only imports, naming).
+- Use existing patterns: e.g. backend uses service/DAO layering; mobile uses `@/` path alias and generated GraphQL types.
+
+## Scope
+
+- Prefer small, reviewable edits. For large refactors, break into steps and do one at a time.
+- When suggesting commands, use the correct package manager (pnpm) and directory (e.g. `pnpm --filter backend test` or `cd backend && pnpm test`).

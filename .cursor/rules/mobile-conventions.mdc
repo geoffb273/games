@@ -1,0 +1,26 @@
+---
+description: Mobile app (Expo/React Native) and Apollo Client conventions
+globs: mobile/**/*.ts,mobile/**/*.tsx
+alwaysApply: false
+---
+
+# Mobile Conventions
+
+## Paths and imports
+
+- Use the `@/` path alias for app code (e.g. `@/components`, `@/generated`, `@/store`). Avoid deep relative paths when an alias is available.
+- Keep import order consistent (external, then `@/`, then relative); match ESLint `simple-import-sort` and `no-relative-import-paths` where configured.
+
+## GraphQL and Apollo Client
+
+- Use generated types and operations from `@/generated` (GraphQL Codegen). Run `pnpm generate` (or `generate:watch`) after schema/operation changes.
+- Prefer Apollo hooks (`useQuery`, `useMutation`) and the project’s existing Apollo setup (e.g. `apollo.ts`); follow patterns used in existing screens/components.
+
+## React / Expo
+
+- Use functional components and hooks. Extract reusable logic into custom hooks.
+- Use Expo APIs and packages for device features (e.g. SecureStore, linking); avoid ad-hoc native modules unless already in the project.
+
+## State
+
+- Use Valtio for client state where the codebase already uses it; use Apollo cache for server state. Don’t introduce a new global state library without alignment with existing patterns.
