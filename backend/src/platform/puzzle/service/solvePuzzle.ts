@@ -7,6 +7,7 @@ import {
   type HashiPuzzleData,
   type MinesweeperPuzzleData,
   type Puzzle,
+  type SlitherlinkPuzzleData,
 } from '../resource/puzzle';
 import { type SolvePuzzleInput, type UserPuzzleAttempt } from '../resource/userPuzzleAttempt';
 
@@ -64,6 +65,11 @@ function isSolutionCorrect(puzzle: Puzzle, input: SolvePuzzleInput): boolean {
     case 'MINESWEEPER':
       return isMinesweeperSolutionCorrect(
         (puzzle.data as MinesweeperPuzzleData).solution,
+        solution,
+      );
+    case 'SLITHERLINK':
+      return isSlitherlinkSolutionCorrect(
+        (puzzle.data as SlitherlinkPuzzleData).solution,
         solution,
       );
     default:
@@ -141,6 +147,48 @@ function isMinesweeperSolutionCorrect(
 
     for (let col = 0; col < rowExpected.length; col++) {
       if (rowExpected[col] !== rowReceived[col]) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+function isSlitherlinkSolutionCorrect(
+  expected: SlitherlinkPuzzleData['solution'],
+  received: SlitherlinkPuzzleData['solution'],
+): boolean {
+  const expectedH = expected.horizontalEdges;
+  const receivedH = received.horizontalEdges;
+  const expectedV = expected.verticalEdges;
+  const receivedV = received.verticalEdges;
+
+  if (
+    expectedH.length !== receivedH.length ||
+    expectedH.some((row, idx) => row.length !== receivedH[idx]?.length)
+  ) {
+    return false;
+  }
+
+  if (
+    expectedV.length !== receivedV.length ||
+    expectedV.some((row, idx) => row.length !== receivedV[idx]?.length)
+  ) {
+    return false;
+  }
+
+  for (let r = 0; r < expectedH.length; r++) {
+    for (let c = 0; c < expectedH[r].length; c++) {
+      if (expectedH[r][c] !== receivedH[r][c]) {
+        return false;
+      }
+    }
+  }
+
+  for (let r = 0; r < expectedV.length; r++) {
+    for (let c = 0; c < expectedV[r].length; c++) {
+      if (expectedV[r][c] !== receivedV[r][c]) {
         return false;
       }
     }

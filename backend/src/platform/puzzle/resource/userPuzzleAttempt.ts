@@ -1,4 +1,9 @@
-import { type HanjiPuzzleData, type HashiPuzzleData, type MinesweeperPuzzleData } from './puzzle';
+import {
+  type HanjiPuzzleData,
+  type HashiPuzzleData,
+  type MinesweeperPuzzleData,
+  type SlitherlinkPuzzleData,
+} from './puzzle';
 
 export type UserPuzzleAttempt = {
   id: string;
@@ -31,4 +36,8 @@ export type SolvePuzzleInput =
   | (BaseSolvePuzzleInput & {
       puzzleType: 'MINESWEEPER';
       solution?: MinesweeperPuzzleData['solution'] | null;
+    })
+  | (BaseSolvePuzzleInput & {
+      puzzleType: 'SLITHERLINK';
+      solution?: SlitherlinkPuzzleData['solution'] | null;
     });
