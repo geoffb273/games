@@ -60,7 +60,7 @@ module.exports = defineConfig([
             {
               name: 'react-native',
               importNames: ['Text'],
-              message: "Use '@/components/common/text' instead.",
+              message: "Use '@/components/common/Text' instead.",
             },
           ],
         },
