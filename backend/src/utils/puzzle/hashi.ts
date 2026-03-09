@@ -1,6 +1,6 @@
 import { type HashiPuzzleData } from '@/platform/puzzle/resource/puzzle';
 
-import { createSeededRandom, stringToSeed } from '../randomUtils';
+import { createSeededRandom, shuffleArray, stringToSeed } from '../randomUtils';
 
 type Island = { row: number; col: number; requiredBridges: number };
 
@@ -288,17 +288,6 @@ export function solveHashi(islands: Island[]): { solvable: boolean; solution?: H
   }
 
   return { solvable: true, solution: result };
-}
-
-// --- Generation helpers ---
-
-function shuffleArray<T>(arr: T[], random: () => number): T[] {
-  const result = [...arr];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
 }
 
 /**

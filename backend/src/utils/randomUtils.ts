@@ -23,3 +23,25 @@ export function stringToSeed(str: string): number {
   }
   return Math.abs(hash);
 }
+
+/**
+ * Shuffles an array using the Fisher-Yates algorithm. Returns the new shuffled array
+ */
+export function shuffleArray<T>(array: T[], random: () => number): T[] {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+/**
+ * Shuffles an array in place using the Fisher-Yates algorithm.
+ */
+export function shuffleArrayInPlace<T>(array: T[], random: () => number): void {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
