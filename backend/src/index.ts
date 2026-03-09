@@ -7,7 +7,7 @@ import { schema } from '@/schema';
 
 import { buildContext, type Context } from './schema/context/context';
 
-const PORT = Number(process.env.PORT) || 80;
+const PORT = Number(process.env.PORT) || 8080;
 
 const app = express();
 const server = new ApolloServer<Context>({ schema });
