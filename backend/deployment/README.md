@@ -66,13 +66,17 @@ After the first deploy, the EC2 instance will run the task from ECR. For subsequ
 
 ## Cloudflare DNS proxy setup
 
-The backend listens on **port 80**. Use Cloudflare DNS with **proxy enabled** (orange cloud) so Cloudflare provides HTTPS, DDoS protection, and WAF.
+The backend listens on **port 8080**. Use Cloudflare DNS with **proxy enabled** (orange cloud) for HTTPS, DDoS protection, and WAF.
 
-1. **Get the origin IP:** After deploy, run `pulumi stack output ec2OriginUrl` (e.g. `http://34.202.60.131:80`). The host is your Elastic IP.
+By default, Cloudflare connects to the origin on **port 80**. Since this app uses **8080**, you must add an **Origin Rule** in Cloudflare so the proxy uses port 8080:
 
-2. **Add DNS record:** In Cloudflare, add an **A** record for your API hostname (e.g. `api.game-brain.net`) pointing to that Elastic IP. Enable **Proxy** (orange cloud). Cloudflare will proxy HTTPS (443) to your origin on port 80 with “Flexible” SSL, or use “Full” if you add TLS on the origin.
+1. **Get the origin IP:** After deploy, run `pulumi stack output ec2OriginUrl` (e.g. `http://34.202.60.131:8080`). The host is your Elastic IP.
 
-3. **API URL for mobile:** Use your proxied hostname, e.g. `https://api.game-brain.net/graphql`. Set this in EAS build environment variables (or `.env` for local production builds).
+2. **Add DNS record:** In Cloudflare, add an **A** record for your API hostname (e.g. `api.game-brain.net`) pointing to that Elastic IP. Enable **Proxy** (orange cloud).
+
+3. **Origin Rule (required for port 8080):** In Cloudflare dashboard → your domain → **Rules** → **Origin Rules** → Create rule. Match your API hostname (e.g. `api.game-brain.net`), then set **Override destination port** to `8080`. Save. Without this, Cloudflare would connect to port 80 and get no response.
+
+4. **API URL for mobile:** Use your proxied hostname, e.g. `https://api.game-brain.net/graphql`. Set this in EAS build environment variables (or `.env` for local production builds).
 
 CORS is handled by the backend; no Worker is required.
 
@@ -89,7 +93,7 @@ If EC2 Instance Connect and Session Manager don’t work, use key-based SSH:
    ```
    Pulumi will replace the instance (new instance with the key; Elastic IP is reattached).
 
-3. **Connect** (use the Elastic IP from `pulumi stack output ec2OriginUrl`, e.g. `http://34.202.60.131:80` → IP is `34.202.60.131`):
+3. **Connect** (use the Elastic IP from `pulumi stack output ec2OriginUrl`, e.g. `http://34.202.60.131:8080` → IP is `34.202.60.131`):
    ```bash
    ssh -i /path/to/game-brain-backend.pem ec2-user@34.202.60.131
    ```
@@ -100,7 +104,7 @@ After `pulumi up`:
 
 | Export            | Description                                                |
 | ----------------- | ---------------------------------------------------------- |
-| `ec2OriginUrl`    | `http://<elastic-ip>:80` – use the IP for your A record    |
+| `ec2OriginUrl`    | `http://<elastic-ip>:8080` – use the IP for your A record  |
 | `ecrRepositoryUrl`| ECR repository URL for the backend image                   |
 | `ecrRepositoryName` | ECR repository name                                      |
 | `ecsClusterName`  | ECS cluster name                                           |
