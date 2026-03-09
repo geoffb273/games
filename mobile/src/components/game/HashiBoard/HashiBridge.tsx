@@ -14,6 +14,7 @@ type HashiBridgeProps = {
   x2: number;
   y2: number;
   count: 0 | 1 | 2;
+  disabled?: boolean;
   onPress: () => void;
 };
 
@@ -23,6 +24,7 @@ export const HashiBridge = memo(function HashiBridge({
   x2,
   y2,
   count,
+  disabled = false,
   onPress,
 }: HashiBridgeProps) {
   const theme = useTheme();
@@ -34,6 +36,7 @@ export const HashiBridge = memo(function HashiBridge({
 
   return (
     <Pressable
+      disabled={disabled}
       onPress={onPress}
       style={[
         styles.bridgeTouchArea,
@@ -44,6 +47,7 @@ export const HashiBridge = memo(function HashiBridge({
           height: TOUCH_SLOP * 2,
           transformOrigin: 'left center',
           transform: [{ rotate: `${angleDeg}deg` }],
+          pointerEvents: disabled ? 'none' : 'auto',
         },
       ]}
     >

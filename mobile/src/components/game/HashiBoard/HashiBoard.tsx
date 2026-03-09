@@ -20,7 +20,8 @@ type HashiBoardProps = {
 
 export function HashiBoard({ puzzle }: HashiBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const { connections, bridgeCounts, isComplete, onConnectionTap } = useHashiGame(puzzle);
+  const { connections, bridgeCounts, isComplete, isValidBridge, onConnectionTap } =
+    useHashiGame(puzzle);
 
   const { cellSize, boardWidth, boardHeight } = useMemo(() => {
     const availW = screenWidth - Spacing.four * 2 - CELL_GAP;
@@ -72,6 +73,7 @@ export function HashiBoard({ puzzle }: HashiBoardProps) {
             x2={islandPositions[conn.b].x}
             y2={islandPositions[conn.b].y}
             count={bridgeCounts[ci] as 0 | 1 | 2}
+            disabled={bridgeCounts[ci] < 2 && !isValidBridge(ci)}
             onPress={() => onConnectionTap(ci)}
           />
         ))}

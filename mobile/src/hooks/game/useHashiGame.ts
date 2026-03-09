@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { findConnections } from '@/utils/hashi/connections';
+import { wouldNewBridgeCrossExisting } from '@/utils/hashi/crossing';
 import { isHashiComplete } from '@/utils/hashi/validation';
 
 type GameState = number[];
@@ -36,6 +37,8 @@ export type HashiGame = {
   connections: ReturnType<typeof findConnections>;
   bridgeCounts: number[];
   isComplete: boolean;
+  /** Returns true if adding a bridge on the given connection would not cross any existing bridges. */
+  isValidBridge: (connectionIndex: number) => boolean;
   onConnectionTap: (connectionIndex: number) => void;
 };
 
@@ -100,6 +103,12 @@ export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
     updateOptimisticallyPuzzleAttempt,
   ]);
 
+  const isValidBridge = useCallback(
+    (connectionIndex: number): boolean =>
+      !wouldNewBridgeCrossExisting(connectionIndex, connections, bridgeCounts, islands),
+    [connections, bridgeCounts, islands],
+  );
+
   const onConnectionTap = useStableCallback((connectionIndex: number) => {
     dispatch({ type: 'CYCLE_CONNECTION', connectionIndex });
   });
@@ -108,6 +117,7 @@ export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
     connections,
     bridgeCounts,
     isComplete,
+    isValidBridge,
     onConnectionTap,
   };
 }
