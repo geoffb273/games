@@ -88,3 +88,11 @@ jobs:
           aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment --region ${{ env.AWS_REGION }}
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+      - name: schema publish
+        run: |
+          curl -sSL https://graphql-hive.com/install.sh | sh
+          hive schema:publish "shared/schema.graphql" \
+            --registry.accessToken "${{ secrets.GRAPHQL_HIVE_ACCESS_TOKEN }}" \
+            --target "game-brain/game-brain/production" \
+            --github
