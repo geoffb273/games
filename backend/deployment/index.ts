@@ -148,14 +148,14 @@ const instanceProfile = new aws.iam.InstanceProfile('ecsInstanceProfile', {
 // Security group: SSH (optional), app port from anywhere
 const sg = new aws.ec2.SecurityGroup('backendSg', {
   vpcId: vpcId,
-  description: 'Game brain backend - port 4000 for Cloudflare Worker',
+  description: 'Game brain backend - port 80 for Cloudflare proxy',
   ingress: [
     {
       protocol: 'tcp',
-      fromPort: 4000,
-      toPort: 4000,
+      fromPort: 80,
+      toPort: 80,
       cidrBlocks: ['0.0.0.0/0'],
-      description: 'GraphQL (Cloudflare Worker)',
+      description: 'GraphQL (Cloudflare DNS proxy)',
     },
     { protocol: 'tcp', fromPort: 22, toPort: 22, cidrBlocks: ['0.0.0.0/0'], description: 'SSH' },
   ],
@@ -235,8 +235,8 @@ const taskDefinition = new aws.ecs.TaskDefinition('backend', {
           name: 'backend',
           image: img,
           essential: true,
-          portMappings: [{ containerPort: 4000, hostPort: 4000, protocol: 'tcp' }],
-          environment: [{ name: 'PORT', value: '4000' }],
+          portMappings: [{ containerPort: 80, hostPort: 80, protocol: 'tcp' }],
+          environment: [{ name: 'PORT', value: '80' }],
           secrets: [
             { name: 'DATABASE_URL', valueFrom: dbName },
             { name: 'DIRECT_URL', valueFrom: directName },
@@ -257,8 +257,8 @@ const service = new aws.ecs.Service('backend', {
   schedulingStrategy: 'REPLICA',
 });
 
-// Export for Cloudflare Worker: origin URL (HTTP) to point at EIP:4000
-export const ec2OriginUrl = pulumi.interpolate`http://${eip.publicIp}:4000`;
+// Origin URL for reference (e.g. point api.game-brain.net A record to this IP; Cloudflare proxy handles HTTPS)
+export const ec2OriginUrl = pulumi.interpolate`http://${eip.publicIp}:80`;
 export const ecrRepositoryUrl = ecrRepoUrl;
 export const ecrRepositoryName = ecrRepo.name;
 export const ecsClusterName = cluster.name;

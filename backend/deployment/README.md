@@ -1,13 +1,13 @@
 # Game Brain backend deployment (Pulumi + EC2 free tier)
 
-Deploys the GraphQL backend to AWS EC2 (t2.micro, free tier). All public traffic is intended to go through a **Cloudflare Worker** for HTTPS; the Worker proxies to this EC2 instance.
+Deploys the GraphQL backend to AWS EC2 (t3.micro, free tier). Public traffic goes through **Cloudflare DNS proxy** (orange cloud) for HTTPS and security; no Worker required.
 
 ## What gets deployed
 
-- **EC2** – One t2.micro (Amazon Linux 2023), runs the backend in Docker from ECR
+- **EC2** – One t3.micro (Amazon Linux 2 ECS-optimized), runs the backend in Docker from ECR
 - **ECR** – Repository for the backend image (built and pushed by GitHub Actions)
-- **Elastic IP** – Stable public IP for the instance (used as origin by the Cloudflare Worker)
-- **Secrets** – `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET` stored in SSM Parameter Store; EC2 user data fetches them at boot
+- **Elastic IP** – Stable public IP for the instance (point your API domain A record here)
+- **Secrets** – `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET` stored in SSM Parameter Store; ECS task gets them at runtime
 
 No RDS (database is Supabase). No CloudFront or ACM (HTTPS is handled by Cloudflare).
 
@@ -45,15 +45,13 @@ pulumi config set keyName your-key-pair-name
    - **AWS** (choose one):
      - **OIDC:** Configure an IAM role with trust for GitHub OIDC and permissions for ECR, EC2, SSM, IAM (for the deployment). Add the role ARN as `AWS_ROLE_TO_ASSUME`.
      - **Static keys:** `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` for a user with the same permissions.
-   - **Optional – auto-update Cloudflare Worker:** `CLOUDFLARE_API_TOKEN` – Cloudflare API token with “Edit Cloudflare Workers” (or “Workers Scripts” edit). If set, the workflow will update the Worker secret `EC2_ORIGIN_URL` from the Pulumi output after each deploy.
 
 2. **Trigger:** Push to `main` (when `backend/**` or `backend/deployment/**` change) or run the **“Deploy Backend”** workflow manually.
 
 3. The workflow will:
    - Build the backend Docker image and push it to ECR
    - Run `pulumi up` in `backend/deployment`
-   - If `CLOUDFLARE_API_TOKEN` is set: update the Cloudflare Worker secret `EC2_ORIGIN_URL` to the new `ec2OriginUrl`
-   - Print the exported `ec2OriginUrl` (e.g. `http://<elastic-ip>:4000`)
+   - Force a new ECS deployment so the task runs the latest image
 
 ## Deploy locally (optional)
 
@@ -64,27 +62,19 @@ pulumi stack select game-brain   # or your stack name
 pulumi up
 ```
 
-After the first deploy, the EC2 instance will pull the image from ECR on boot. For subsequent code changes, re-run the GitHub workflow (or push to `main`) so a new image is built and pushed; the instance can be updated by redeploying (e.g. replace the instance or run a script to pull the new image and restart the container).
+After the first deploy, the EC2 instance will run the task from ECR. For subsequent code changes, re-run the GitHub workflow (or push to `main`); the workflow forces a new ECS deployment.
 
-## Cloudflare Worker setup
+## Cloudflare DNS proxy setup
 
-All public API traffic should go through a Cloudflare Worker so that HTTPS is handled by Cloudflare (no ACM/CloudFront on AWS).
+The backend listens on **port 80**. Use Cloudflare DNS with **proxy enabled** (orange cloud) so Cloudflare provides HTTPS, DDoS protection, and WAF.
 
-1. **Create the Worker** (see repo `cloudflare-worker/`):
-   - Deploy: `cd cloudflare-worker && pnpm install && pnpm run deploy`
-   - Set the origin URL secret to the value Pulumi exports as `ec2OriginUrl`:
-     ```bash
-     cd cloudflare-worker
-     npx wrangler secret put EC2_ORIGIN_URL
-     # Paste: http://<elastic-ip>:4000  (from `pulumi stack output ec2OriginUrl`)
-     ```
+1. **Get the origin IP:** After deploy, run `pulumi stack output ec2OriginUrl` (e.g. `http://34.202.60.131:80`). The host is your Elastic IP.
 
-2. **Custom domain (optional):** In the Cloudflare dashboard, add a route for your API domain (e.g. `api.yourdomain.com/*`) to this Worker. The mobile app will use this URL.
+2. **Add DNS record:** In Cloudflare, add an **A** record for your API hostname (e.g. `api.game-brain.net`) pointing to that Elastic IP. Enable **Proxy** (orange cloud). Cloudflare will proxy HTTPS (443) to your origin on port 80 with “Flexible” SSL, or use “Full” if you add TLS on the origin.
 
-3. **API URL for mobile:** Set `EXPO_PUBLIC_GRAPHQL_URL` to your public API base (HTTPS), e.g.:
-   - With custom domain: `https://api.yourdomain.com/graphql`
-   - With workers.dev: `https://game-brain-api.<your-subdomain>.workers.dev/graphql`
-   Set this in EAS build environment variables (or in `.env` for local production builds) so the app uses the deployed API.
+3. **API URL for mobile:** Use your proxied hostname, e.g. `https://api.game-brain.net/graphql`. Set this in EAS build environment variables (or `.env` for local production builds).
+
+CORS is handled by the backend; no Worker is required.
 
 ## SSH access
 
@@ -99,7 +89,7 @@ If EC2 Instance Connect and Session Manager don’t work, use key-based SSH:
    ```
    Pulumi will replace the instance (new instance with the key; Elastic IP is reattached).
 
-3. **Connect** (use the Elastic IP from `pulumi stack output ec2OriginUrl`, e.g. `http://34.202.60.131:4000` → IP is `34.202.60.131`):
+3. **Connect** (use the Elastic IP from `pulumi stack output ec2OriginUrl`, e.g. `http://34.202.60.131:80` → IP is `34.202.60.131`):
    ```bash
    ssh -i /path/to/game-brain-backend.pem ec2-user@34.202.60.131
    ```
@@ -108,12 +98,13 @@ If EC2 Instance Connect and Session Manager don’t work, use key-based SSH:
 
 After `pulumi up`:
 
-| Export            | Description                                      |
-| ----------------- | ------------------------------------------------- |
-| `ec2OriginUrl`    | `http://<elastic-ip>:4000` – use as Worker origin |
-| `ecrRepositoryUrl`| ECR repository URL for the backend image         |
-| `ecrRepositoryName` | ECR repository name                            |
-| `instanceId`      | EC2 instance ID                                  |
+| Export            | Description                                                |
+| ----------------- | ---------------------------------------------------------- |
+| `ec2OriginUrl`    | `http://<elastic-ip>:80` – use the IP for your A record    |
+| `ecrRepositoryUrl`| ECR repository URL for the backend image                   |
+| `ecrRepositoryName` | ECR repository name                                      |
+| `ecsClusterName`  | ECS cluster name                                           |
+| `ecsServiceName`  | ECS service name                                           |
 
 ## Tear down
 
