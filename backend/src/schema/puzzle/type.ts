@@ -4,6 +4,7 @@ import {
   type MinesweeperPuzzle,
   type Puzzle,
   PuzzleType,
+  type SlitherlinkPuzzle,
 } from '@/platform/puzzle/resource/puzzle';
 import { type UserPuzzleAttempt } from '@/platform/puzzle/resource/userPuzzleAttempt';
 import { computeSolutionCells } from '@/utils/puzzle/minesweeper';
@@ -150,3 +151,37 @@ export const MinesweeperPuzzleRef = builder
       }),
     }),
   });
+
+// --- Slitherlink types ---
+
+export const SlitherlinkPuzzleRef = builder
+  .objectRef<SlitherlinkPuzzle>('SlitherlinkPuzzle')
+  .implement({
+    interfaces: [PuzzleRef],
+    isTypeOf: (source: unknown): source is SlitherlinkPuzzle =>
+      (source as Puzzle).type === PuzzleType.SLITHERLINK,
+    fields: (t) => ({
+      width: t.int({ nullable: false, resolve: (puzzle) => puzzle.data.width }),
+      height: t.int({ nullable: false, resolve: (puzzle) => puzzle.data.height }),
+      clues: t.field({
+        type: [t.listRef('Int', { nullable: true })],
+        nullable: false,
+        resolve: (puzzle) => puzzle.data.clues,
+      }),
+    }),
+  });
+
+// --- Slitherlink input types ---
+
+export const SlitherlinkSolutionInput = builder.inputType('SlitherlinkSolutionInput', {
+  fields: (t) => ({
+    horizontalEdges: t.field({
+      type: [t.listRef('Boolean')],
+      required: true,
+    }),
+    verticalEdges: t.field({
+      type: [t.listRef('Boolean')],
+      required: true,
+    }),
+  }),
+});

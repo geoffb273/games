@@ -15,6 +15,8 @@ import {
   PuzzleFragmentFragmentDoc,
   type PuzzleQueryQuery,
   PuzzleType as PuzzleTypeGraphql,
+  type SlitherlinkPuzzleFragmentFragment,
+  SlitherlinkPuzzleFragmentFragmentDoc,
 } from '@/generated/gql/graphql';
 
 const getFragmentData = useFragment;
@@ -49,6 +51,12 @@ gql`
     }
   }
 
+  fragment SlitherlinkPuzzleFragment on SlitherlinkPuzzle {
+    width
+    height
+    clues
+  }
+
   fragment PuzzleFragment on Puzzle {
     __typename
     id
@@ -68,6 +76,9 @@ gql`
     ... on MinesweeperPuzzle {
       ...MinesweeperPuzzleFragment
     }
+    ... on SlitherlinkPuzzle {
+      ...SlitherlinkPuzzleFragment
+    }
   }
 `;
 
@@ -75,6 +86,7 @@ fragmentRegistry.register(PuzzleFragmentFragmentDoc);
 fragmentRegistry.register(HanjiPuzzleFragmentFragmentDoc);
 fragmentRegistry.register(HashiPuzzleFragmentFragmentDoc);
 fragmentRegistry.register(MinesweeperPuzzleFragmentFragmentDoc);
+fragmentRegistry.register(SlitherlinkPuzzleFragmentFragmentDoc);
 
 export { PuzzleTypeGraphql as PuzzleType };
 
@@ -144,7 +156,14 @@ export type MinesweeperPuzzle = PuzzleBase & {
   revealedCells: { col: number; row: number; value: number }[];
 };
 
-export type Puzzle = HanjiPuzzle | HashiPuzzle | MinesweeperPuzzle;
+export type SlitherlinkPuzzle = PuzzleBase & {
+  type: 'SLITHERLINK';
+  height: number;
+  width: number;
+  clues: (number | null)[][];
+};
+
+export type Puzzle = HanjiPuzzle | HashiPuzzle | MinesweeperPuzzle | SlitherlinkPuzzle;
 
 /**
  * Maps the graphql puzzle fragment type to the expected {@link Puzzle} type
@@ -214,6 +233,17 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
         })),
       };
     }
+    case 'SlitherlinkPuzzle': {
+      const slitherlink = getFragmentData(SlitherlinkPuzzleFragmentFragmentDoc, puzzle);
+      const result: SlitherlinkPuzzle = {
+        ...shared,
+        type: 'SLITHERLINK',
+        height: slitherlink.height,
+        width: slitherlink.width,
+        clues: slitherlink.clues,
+      };
+      return result;
+    }
   }
 }
 
@@ -244,11 +274,18 @@ export type MinesweeperPuzzleFragmentData = PuzzleBaseFragmentData &
     __typename: 'MinesweeperPuzzle';
   };
 
+/** Unmasked fragment data for SlitherlinkPuzzle. Keep in sync with PuzzleFragment + SlitherlinkPuzzleFragment. */
+export type SlitherlinkPuzzleFragmentData = PuzzleBaseFragmentData &
+  FragmentData<SlitherlinkPuzzleFragmentFragment> & {
+    __typename: 'SlitherlinkPuzzle';
+  };
+
 /** Union of all puzzle fragment data shapes (unmasked). */
 export type PuzzleFragmentData =
   | HanjiPuzzleFragmentData
   | HashiPuzzleFragmentData
-  | MinesweeperPuzzleFragmentData;
+  | MinesweeperPuzzleFragmentData
+  | SlitherlinkPuzzleFragmentData;
 
 /**
  * Maps the {@link Puzzle} type to the shape expected when writing to the cache.
@@ -311,6 +348,16 @@ export function mapToPuzzleFragment(puzzle: Puzzle): PuzzleQueryData {
           row: c.row,
           value: c.value,
         })),
+      };
+      return data as PuzzleQueryData;
+    }
+    case 'SLITHERLINK': {
+      const data: SlitherlinkPuzzleFragmentData = {
+        __typename: 'SlitherlinkPuzzle',
+        ...base,
+        width: puzzle.width,
+        height: puzzle.height,
+        clues: puzzle.clues,
       };
       return data as PuzzleQueryData;
     }

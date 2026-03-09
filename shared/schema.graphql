@@ -147,6 +147,11 @@ input MutationSolvePuzzleInput {
   puzzleId: ID!
   puzzleType: PuzzleType!
 
+  """
+  The solution to the Slitherlink puzzle. Should only be provided if the puzzle type is SLITHERLINK.
+  """
+  slitherlinkSolution: SlitherlinkSolutionInput
+
   """The time the user started the puzzle"""
   startedAt: DateTime!
 }
@@ -233,6 +238,21 @@ union QueryPuzzlesResult = NotFoundError | QueryPuzzlesSuccess | UnknownError
 
 type QueryPuzzlesSuccess {
   data: [Puzzle!]!
+}
+
+type SlitherlinkPuzzle implements Puzzle {
+  attempt: PuzzleAttempt
+  clues: [[Int]!]!
+  description: String
+  height: Int!
+  id: ID!
+  name: String!
+  width: Int!
+}
+
+input SlitherlinkSolutionInput {
+  horizontalEdges: [[Boolean!]!]!
+  verticalEdges: [[Boolean!]!]!
 }
 
 type UnauthorizedError implements Error {

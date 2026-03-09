@@ -55,6 +55,15 @@ function PuzzleBoard({ puzzle }: { puzzle: Puzzle }) {
       return <HashiBoard puzzle={puzzle} />;
     case 'MINESWEEPER':
       return <MinesweeperBoard puzzle={puzzle} />;
+    case 'SLITHERLINK':
+      return (
+        <View style={styles.centered}>
+          <ErrorView
+            title="Slitherlink coming soon"
+            message="This puzzle type is available, but gameplay isn't implemented yet."
+          />
+        </View>
+      );
   }
 }
 

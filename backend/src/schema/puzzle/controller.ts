@@ -5,6 +5,7 @@ import {
   hanjiPuzzleDataSchema,
   hashiPuzzleDataSchema,
   minesweeperPuzzleDataSchema,
+  slitherlinkPuzzleDataSchema,
 } from '@/platform/puzzle/resource/puzzle';
 import {
   getPuzzle,
@@ -20,7 +21,13 @@ import {
   UnknownError,
   ValidationError,
 } from '../errors';
-import { HashiBridgeInput, PuzzleAttemptRef, PuzzleRef, PuzzleTypeEnum } from './type';
+import {
+  HashiBridgeInput,
+  PuzzleAttemptRef,
+  PuzzleRef,
+  PuzzleTypeEnum,
+  SlitherlinkSolutionInput,
+} from './type';
 
 builder.queryField('puzzle', (t) =>
   t.fieldWithInput({
@@ -88,6 +95,12 @@ builder.mutationField('solvePuzzle', (t) =>
         description:
           'The solution to the Minesweeper puzzle. Should only be provided if the puzzle type is MINESWEEPER.',
       }),
+      slitherlinkSolution: t.input.field({
+        type: SlitherlinkSolutionInput,
+        required: false,
+        description:
+          'The solution to the Slitherlink puzzle. Should only be provided if the puzzle type is SLITHERLINK.',
+      }),
       startedAt: t.input.field({
         type: 'DateTime',
         required: true,
@@ -116,6 +129,7 @@ builder.mutationField('solvePuzzle', (t) =>
           hanjiSolution,
           hashiSolution,
           minesweeperSolution,
+          slitherlinkSolution,
           startedAt,
           completedAt,
           durationMs,
@@ -164,6 +178,19 @@ builder.mutationField('solvePuzzle', (t) =>
               solution:
                 minesweeperSolution != null
                   ? minesweeperPuzzleDataSchema.shape.solution.parse(minesweeperSolution)
+                  : null,
+            });
+          case 'SLITHERLINK':
+            return solvePuzzle({
+              puzzleId,
+              userId: user.id,
+              startedAt,
+              completedAt,
+              durationMs,
+              puzzleType: 'SLITHERLINK',
+              solution:
+                slitherlinkSolution != null
+                  ? slitherlinkPuzzleDataSchema.shape.solution.parse(slitherlinkSolution)
                   : null,
             });
           default:

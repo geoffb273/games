@@ -14,6 +14,7 @@ const PUZZLE_TYPE_ICONS: Record<Puzzle['type'], keyof typeof MaterialCommunityIc
   HANJI: 'grid-large',
   HASHI: 'bridge',
   MINESWEEPER: 'bomb',
+  SLITHERLINK: 'vector-polyline',
 };
 
 export function PuzzleListEmptyState({
