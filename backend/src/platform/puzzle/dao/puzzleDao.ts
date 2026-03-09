@@ -13,6 +13,8 @@ import {
   minesweeperPuzzleDataSchema,
   type Puzzle,
   PuzzleType,
+  type SlitherlinkPuzzleData,
+  slitherlinkPuzzleDataSchema,
 } from '../resource/puzzle';
 
 const PUZZLE_SELECT = {
@@ -110,13 +112,14 @@ export async function getDailyChallengeToPuzzlesMap({
  */
 export async function createPuzzles({
   dailyChallengeId,
-  data: { hanji, hashi, minesweeper },
+  data: { hanji, hashi, minesweeper, slitherlink },
 }: {
   dailyChallengeId: string;
   data: {
     hanji: HanjiPuzzleData;
     hashi: HashiPuzzleData;
     minesweeper: MinesweeperPuzzleData;
+    slitherlink: SlitherlinkPuzzleData;
   };
 }): Promise<Puzzle[]> {
   return prisma.$transaction(async (tx) => {
@@ -127,7 +130,12 @@ export async function createPuzzles({
       data: minesweeper,
       tx,
     });
-    return [hanjiPuzzle, hashiPuzzle, minesweeperPuzzle];
+    const slitherlinkPuzzle = await createSlitherlinkPuzzle({
+      dailyChallengeId,
+      data: slitherlink,
+      tx,
+    });
+    return [hanjiPuzzle, hashiPuzzle, minesweeperPuzzle, slitherlinkPuzzle];
   });
 }
 
@@ -218,6 +226,35 @@ async function createMinesweeperPuzzle({
     });
 }
 
+async function createSlitherlinkPuzzle({
+  dailyChallengeId,
+  data,
+  tx,
+}: {
+  dailyChallengeId: string;
+  data: SlitherlinkPuzzleData;
+  tx: Prisma.TransactionClient;
+}): Promise<Puzzle> {
+  const validatedData = slitherlinkPuzzleDataSchema.parse(data);
+
+  return tx.puzzle
+    .create({
+      data: {
+        dailyChallengeId,
+        type: PuzzleType.SLITHERLINK,
+        data: validatedData,
+      },
+      select: PUZZLE_SELECT,
+    })
+    .then(mapPuzzle)
+    .catch((error) => {
+      if (isForeignKeyViolationError(error)) {
+        throw new UnknownError(`Daily challenge not found with id: ${dailyChallengeId}`);
+      }
+      throw error;
+    });
+}
+
 // HELPERS
 /**
  * Maps a puzzle from the database to the domain model
@@ -244,6 +281,8 @@ function mapPuzzle(puzzle: Prisma.PuzzleGetPayload<{ select: typeof PUZZLE_SELEC
         return { ...base, type, data: hashiPuzzleDataSchema.parse(puzzle.data) };
       case PuzzleType.MINESWEEPER:
         return { ...base, type, data: minesweeperPuzzleDataSchema.parse(puzzle.data) };
+      case PuzzleType.SLITHERLINK:
+        return { ...base, type, data: slitherlinkPuzzleDataSchema.parse(puzzle.data) };
     }
   } catch (error) {
     throw new UnknownError(`Failed to map puzzle: ${error}`);

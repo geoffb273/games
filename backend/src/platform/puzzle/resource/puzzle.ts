@@ -4,6 +4,7 @@ export const PuzzleType = {
   HANJI: 'HANJI',
   HASHI: 'HASHI',
   MINESWEEPER: 'MINESWEEPER',
+  SLITHERLINK: 'SLITHERLINK',
 } as const;
 export type PuzzleType = (typeof PuzzleType)[keyof typeof PuzzleType];
 
@@ -32,7 +33,12 @@ export type MinesweeperPuzzle = BasePuzzle & {
   data: MinesweeperPuzzleData;
 };
 
-export type Puzzle = HanjiPuzzle | HashiPuzzle | MinesweeperPuzzle;
+export type SlitherlinkPuzzle = BasePuzzle & {
+  type: 'SLITHERLINK';
+  data: SlitherlinkPuzzleData;
+};
+
+export type Puzzle = HanjiPuzzle | HashiPuzzle | MinesweeperPuzzle | SlitherlinkPuzzle;
 
 const hanjiCellSchema = z.union([z.literal(0), z.literal(1)]);
 
@@ -113,3 +119,39 @@ export const minesweeperPuzzleDataSchema = z
   );
 
 export type MinesweeperPuzzleData = z.infer<typeof minesweeperPuzzleDataSchema>;
+
+const slitherlinkClueSchema = z.union([z.int().min(0).max(4), z.null()]);
+
+const slitherlinkSolutionSchema = z.object({
+  horizontalEdges: z.array(z.array(z.boolean())),
+  verticalEdges: z.array(z.array(z.boolean())),
+});
+
+export const slitherlinkPuzzleDataSchema = z
+  .object({
+    width: z.int().min(1),
+    height: z.int().min(1),
+    clues: z.array(z.array(slitherlinkClueSchema)),
+    solution: slitherlinkSolutionSchema,
+  })
+  .refine((d) => d.clues.length === d.height && d.clues.every((row) => row.length === d.width), {
+    message: 'clues dimensions must match width x height',
+  })
+  .refine(
+    (d) =>
+      d.solution.horizontalEdges.length === d.height + 1 &&
+      d.solution.horizontalEdges.every((row) => row.length === d.width),
+    {
+      message: 'horizontalEdges dimensions must be (height + 1) x width',
+    },
+  )
+  .refine(
+    (d) =>
+      d.solution.verticalEdges.length === d.height &&
+      d.solution.verticalEdges.every((row) => row.length === d.width + 1),
+    {
+      message: 'verticalEdges dimensions must be height x (width + 1)',
+    },
+  );
+
+export type SlitherlinkPuzzleData = z.infer<typeof slitherlinkPuzzleDataSchema>;
