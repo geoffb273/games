@@ -20,6 +20,11 @@ jobs:
   check:
     name: Lint, Typecheck & Schema
     runs-on: ubuntu-latest
+    env:
+      # Placeholders only; not used by lint/tsc/check:schema but required by app bootstrap
+      DATABASE_URL: _
+      DIRECT_URL: _
+      JWT_SECRET: _
 
     steps:
       - uses: actions/checkout@v4
