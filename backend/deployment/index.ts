@@ -225,7 +225,7 @@ const taskDefinition = new aws.ecs.TaskDefinition('backend', {
   networkMode: 'host',
   requiresCompatibilities: ['EC2'],
   cpu: '256',
-  memory: '512',
+  memory: '256',
   executionRoleArn: taskExecutionRole.arn,
   containerDefinitions: pulumi
     .all([imageUri, dbParam.name, directParam.name, jwtParam.name])
