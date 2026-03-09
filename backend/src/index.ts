@@ -18,7 +18,6 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/hello', (_req, res) => {
-  console.log('HELLO');
   res.json({ message: 'Hello' });
 });
 
@@ -32,5 +31,4 @@ app.use(
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console -- server startup
   console.log(`Server ready at http://localhost:${PORT} (GraphQL: /graphql, Hello: /hello)`);
-  console.log('HELLO SERVER');
 });
