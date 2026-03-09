@@ -1,0 +1,34 @@
+---
+description: Backend TypeScript, GraphQL, and layering conventions
+globs: backend/**/*.ts
+alwaysApply: false
+---
+
+# Backend Conventions
+
+## Layering (DAO / Service)
+
+- **DAO modules** (`**/dao/*`) must only be imported from their **corresponding service** files. Controllers, schema code, and scripts must not import DAOs directly.
+- Resolve data and side effects in the service layer; expose results to schema/controllers.
+
+```typescript
+// ❌ BAD – controller importing DAO
+import { userDao } from '@/platform/user/dao/userDao';
+
+// ✅ GOOD – controller uses service
+import { userService } from '@/platform/user/service/userService';
+```
+
+## TypeScript
+
+- Use `type` imports where only types are needed: `import type { X } from '...'`.
+- Prefix unused parameters/variables with `_` (e.g. `_req`, `_unused`).
+- Prefer `logger` (or project logging) over `console.log`; ESLint warns on `no-console`.
+
+## Imports
+
+- Keep import order: external packages first, then `@/` aliases, then relative. Use `simple-import-sort` style (already in ESLint).
+
+## GraphQL (Pothos)
+
+- Keep schema building in schema layer; use services for data and validation (e.g. Zod). Use existing patterns for errors (`@pothos/plugin-errors`) and relay if applicable.
