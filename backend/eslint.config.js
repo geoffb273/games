@@ -4,7 +4,7 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist/*'] },
+  { ignores: ['dist/*', 'src/generated/*'] },
   tseslint.configs.recommended,
   eslintConfigPrettier,
   eslintPluginPrettier,
