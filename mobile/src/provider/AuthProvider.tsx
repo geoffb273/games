@@ -1,9 +1,12 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { useAuthenticateDevice } from '@/api/user/authenticateDeviceMutation';
 import { useCurrentUserQuery } from '@/api/user/currentUserQuer';
+import { type AuthenticatedUser } from '@/api/user/user';
+import { ErrorView } from '@/components/common/ErrorView';
 import { AppLoadingView } from '@/components/view/AppLoadingView';
-import { AuthContext, type AuthContextType } from '@/context/AuthContext';
+import { AuthContext } from '@/context/AuthContext';
 import { getOrCreateDeviceId } from '@/store/device';
 import { clearToken, loadToken, saveToken, useAuthToken } from '@/store/token';
 
@@ -79,8 +82,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isLoading = isLoadingToken || isLoadingNewToken || isLoadingUser;
   const isError = isErrorNewToken || isErrorUser;
 
-  const value: AuthContextType = useMemo(() => {
-    if (isLoading) {
+  const value:
+    | { user: null; status: 'loading' | 'error' }
+    | { user: AuthenticatedUser; status: 'authenticated' } = useMemo(() => {
+    if (isLoading || showLoadingView) {
       return {
         user: null,
         status: 'loading',
@@ -98,11 +103,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: user,
       status: 'authenticated',
     };
-  }, [user, isLoading, isError]);
+  }, [isLoading, showLoadingView, isError, user]);
 
-  if (showLoadingView) {
-    return <AppLoadingView isLoading={isLoading} onHidden={() => setShowLoadingView(false)} />;
+  switch (value.status) {
+    case 'loading':
+      return <AppLoadingView isLoading={isLoading} onHidden={() => setShowLoadingView(false)} />;
+    case 'error':
+      return (
+        <View style={styles.errorContainer}>
+          <ErrorView
+            title="Sign-in failed"
+            message="We couldn’t sign you in. Please check your connection and try again."
+          />
+        </View>
+      );
+    case 'authenticated':
+      return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
   }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
+const styles = StyleSheet.create({
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

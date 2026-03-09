@@ -4,15 +4,9 @@ import { type AuthenticatedUser } from '@/api/user/user';
 
 export type AuthStatus = 'authenticated' | 'error' | 'loading';
 
-export type AuthContextType =
-  | {
-      user: AuthenticatedUser;
-      status: 'authenticated';
-    }
-  | {
-      user: null;
-      status: 'error' | 'loading';
-    };
+export type AuthContextType = {
+  user: AuthenticatedUser;
+};
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
