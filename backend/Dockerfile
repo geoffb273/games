@@ -21,7 +21,7 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=4000
+ENV PORT=8080
 
 COPY package.json pnpm-lock.yaml tsconfig.runtime.json ./
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts && pnpm add tsx
@@ -30,6 +30,6 @@ COPY --from=deps /app/src ./src
 COPY --from=deps /app/prisma ./prisma/
 
 # DATABASE_URL, DIRECT_URL, JWT_SECRET must be set at runtime (e.g. by EC2/ECS)
-EXPOSE 4000
+EXPOSE 8080
 
 CMD ["pnpm", "exec", "tsx", "--tsconfig", "tsconfig.runtime.json", "src/index.ts"]
