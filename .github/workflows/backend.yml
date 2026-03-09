@@ -25,7 +25,8 @@ jobs:
       DATABASE_URL: _
       DIRECT_URL: _
       JWT_SECRET: _
-
+      ADMIN_SECRET: _
+      GRAPHQL_HIVE_ACCESS_TOKEN: _
     steps:
       - uses: actions/checkout@v4
 
@@ -47,24 +48,14 @@ jobs:
           DATABASE_URL: ${{ env.DATABASE_URL }}
           DIRECT_URL: ${{ env.DIRECT_URL }}
           JWT_SECRET: ${{ env.JWT_SECRET }}
+          ADMIN_SECRET: ${{ env.ADMIN_SECRET }}
+          GRAPHQL_HIVE_ACCESS_TOKEN: ${{ env.GRAPHQL_HIVE_ACCESS_TOKEN }}
 
       - name: Lint
         run: pnpm lint
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
-          DIRECT_URL: ${{ env.DIRECT_URL }}
-          JWT_SECRET: ${{ env.JWT_SECRET }}
 
       - name: Typecheck
         run: pnpm tsc
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
-          DIRECT_URL: ${{ env.DIRECT_URL }}
-          JWT_SECRET: ${{ env.JWT_SECRET }}
 
       - name: Check schema is in sync
         run: pnpm check:schema
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
-          DIRECT_URL: ${{ env.DIRECT_URL }}
-          JWT_SECRET: ${{ env.JWT_SECRET }}

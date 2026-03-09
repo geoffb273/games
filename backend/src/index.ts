@@ -1,16 +1,28 @@
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@as-integrations/express5';
+import { useHive } from '@graphql-hive/apollo';
 import cors from 'cors';
 import express from 'express';
 
 import { schema } from '@/schema';
 
+import { GRAPHQL_HIVE_ACCESS_TOKEN } from './constants';
 import { buildContext, type Context } from './schema/context/context';
-
 const PORT = Number(process.env.PORT) || 8080;
 
 const app = express();
-const server = new ApolloServer<Context>({ schema });
+const server = new ApolloServer<Context>({
+  schema,
+  plugins: [
+    useHive({
+      enabled: true,
+      token: GRAPHQL_HIVE_ACCESS_TOKEN,
+      usage: {
+        target: 'game-brain/game-brain/production',
+      },
+    }),
+  ],
+});
 
 await server.start();
 

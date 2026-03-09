@@ -9,6 +9,7 @@ const databaseUrl = config.requireSecret('databaseUrl');
 const directUrl = config.requireSecret('directUrl');
 const jwtSecret = config.requireSecret('jwtSecret');
 const adminSecret = config.requireSecret('adminSecret');
+const graphqlHiveAccessToken = config.requireSecret('graphqlHiveAccessToken');
 /** Optional: EC2 key pair name for SSH (create in EC2 → Key Pairs, then set and redeploy). */
 const keyName = config.get('keyName');
 
@@ -62,6 +63,11 @@ const adminSecretParam = new aws.ssm.Parameter('adminSecret', {
   type: 'SecureString',
   value: adminSecret,
 });
+const graphqlHiveAccessTokenParam = new aws.ssm.Parameter('graphqlHiveAccessToken', {
+  name: `${ssmPrefix}/graphqlHiveAccessToken`,
+  type: 'SecureString',
+  value: graphqlHiveAccessToken,
+});
 
 // --- ECS task execution role (ECR pull + SSM read for task secrets) ---
 const taskExecutionRole = new aws.iam.Role('ecsTaskExecutionRole', {
@@ -85,7 +91,13 @@ new aws.iam.RolePolicyAttachment('taskExecutionRoleECR', {
 new aws.iam.RolePolicy('taskExecutionSsm', {
   role: taskExecutionRole.id,
   policy: pulumi
-    .all([dbParam.arn, directParam.arn, jwtParam.arn, adminSecretParam.arn])
+    .all([
+      dbParam.arn,
+      directParam.arn,
+      jwtParam.arn,
+      adminSecretParam.arn,
+      graphqlHiveAccessTokenParam.arn,
+    ])
     .apply((arns) =>
       JSON.stringify({
         Version: '2012-10-17',
@@ -142,7 +154,13 @@ new aws.iam.RolePolicy('instanceEcrPull', {
 new aws.iam.RolePolicy('instanceSsmParams', {
   role: instanceRole.id,
   policy: pulumi
-    .all([dbParam.arn, directParam.arn, jwtParam.arn, adminSecretParam.arn])
+    .all([
+      dbParam.arn,
+      directParam.arn,
+      jwtParam.arn,
+      adminSecretParam.arn,
+      graphqlHiveAccessTokenParam.arn,
+    ])
     .apply((arns) =>
       JSON.stringify({
         Version: '2012-10-17',
@@ -244,8 +262,15 @@ const taskDefinition = new aws.ecs.TaskDefinition('backend', {
   memory: '256',
   executionRoleArn: taskExecutionRole.arn,
   containerDefinitions: pulumi
-    .all([imageUri, dbParam.name, directParam.name, jwtParam.name, adminSecretParam.name])
-    .apply(([img, dbName, directName, jwtName, adminSecretName]) =>
+    .all([
+      imageUri,
+      dbParam.name,
+      directParam.name,
+      jwtParam.name,
+      adminSecretParam.name,
+      graphqlHiveAccessTokenParam.name,
+    ])
+    .apply(([img, dbName, directName, jwtName, adminSecretName, hiveTokenName]) =>
       JSON.stringify([
         {
           name: 'backend',
@@ -258,6 +283,7 @@ const taskDefinition = new aws.ecs.TaskDefinition('backend', {
             { name: 'DIRECT_URL', valueFrom: directName },
             { name: 'JWT_SECRET', valueFrom: jwtName },
             { name: 'ADMIN_SECRET', valueFrom: adminSecretName },
+            { name: 'GRAPHQL_HIVE_ACCESS_TOKEN', valueFrom: hiveTokenName },
           ],
         },
       ]),

@@ -1,5 +1,6 @@
 import { type IncomingMessage } from 'http';
 
+import { ADMIN_SECRET } from '@/constants';
 import { type User } from '@/platform/user/resource/user';
 import { getUser } from '@/platform/user/service/userService';
 import { verifyToken } from '@/utils/jwt';
@@ -17,10 +18,8 @@ export type Authorization = {
 };
 
 export function buildAuthorization(req: IncomingMessage): Authorization {
-  const adminSecret = process.env.ADMIN_SECRET;
   const headerSecret = req.headers['x-admin-secret'];
-  const isAdmin =
-    Boolean(adminSecret) && typeof headerSecret === 'string' && headerSecret === adminSecret;
+  const isAdmin = typeof headerSecret === 'string' && headerSecret === ADMIN_SECRET;
 
   const token = req.headers.authorization?.split(' ')[1];
 

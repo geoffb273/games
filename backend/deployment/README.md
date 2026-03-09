@@ -32,6 +32,7 @@ pulumi config set --secret databaseUrl '...'
 pulumi config set --secret directUrl  '...'
 pulumi config set --secret jwtSecret  '...'
 pulumi config set --secret adminSecret '...'   # for admin-only GraphQL operations (e.g. createDailyChallenge Lambda)
+pulumi config set --secret graphqlHiveAccessToken '...'  # for GraphQL Hive usage reporting
 
 # Optional
 pulumi config set aws:region us-east-1
