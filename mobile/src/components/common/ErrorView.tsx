@@ -4,7 +4,7 @@ import Svg, { Circle, Line, Path } from 'react-native-svg';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
-import { Text } from './Text';
+import { Text } from '@/components/common/Text';
 
 type ErrorViewProps = {
   title?: string;
