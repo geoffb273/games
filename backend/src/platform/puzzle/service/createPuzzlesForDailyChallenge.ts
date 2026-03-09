@@ -1,6 +1,7 @@
 import { generateHanjiPuzzleData } from '@/utils/puzzle/hanji';
 import { generateHashiPuzzleData } from '@/utils/puzzle/hashi';
 import { generateMinesweeperPuzzleData } from '@/utils/puzzle/minesweeper';
+import { generateSlitherlinkPuzzleData } from '@/utils/puzzle/slitherlink';
 
 import { createPuzzles } from '../dao/puzzleDao';
 import { type Puzzle } from '../resource/puzzle';
@@ -33,8 +34,14 @@ export async function createPuzzlesForDailyChallenge({
     seed,
   });
 
+  const slitherlink = generateSlitherlinkPuzzleData({
+    width: 9,
+    height: 9,
+    seed,
+  });
+
   return createPuzzles({
     dailyChallengeId,
-    data: { hanji, hashi, minesweeper },
+    data: { hanji, hashi, minesweeper, slitherlink },
   });
 }

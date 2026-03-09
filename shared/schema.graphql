@@ -170,6 +170,7 @@ enum PuzzleType {
   HANJI
   HASHI
   MINESWEEPER
+  SLITHERLINK
 }
 
 type Query {
