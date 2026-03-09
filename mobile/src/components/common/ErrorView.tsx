@@ -1,10 +1,9 @@
 import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 
+import { Text } from '@/components/common/Text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
-
-import { Text } from '@/components/common/Text';
 
 type ErrorViewProps = {
   title?: string;
