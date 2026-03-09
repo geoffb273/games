@@ -1,119 +1,73 @@
-# Game Brain backend deployment (Pulumi + EC2 free tier)
+# Backend deployment (Pulumi + EC2)
 
-Deploys the GraphQL backend to AWS EC2 (t3.micro, free tier). Public traffic goes through **Cloudflare DNS proxy** (orange cloud) for HTTPS and security; no Worker required.
+Deploys the GraphQL backend to AWS EC2. Traffic is fronted by **Cloudflare DNS proxy** for HTTPS; the app listens on port 8080.
 
 ## What gets deployed
 
 - **EC2** – One t3.micro (Amazon Linux 2 ECS-optimized), runs the backend in Docker from ECR
 - **ECR** – Repository for the backend image (built and pushed by GitHub Actions)
-- **Elastic IP** – Stable public IP for the instance (point your API domain A record here)
-- **Secrets** – `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET` stored in SSM Parameter Store; ECS task gets them at runtime
+- **Elastic IP** – Stable public IP for the instance (used for your API domain A record)
+- **Secrets** – `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET` in SSM Parameter Store; the ECS task receives them at runtime
 
-No RDS (database is Supabase). No CloudFront or ACM (HTTPS is handled by Cloudflare).
+Database is Supabase (no RDS). HTTPS is handled by Cloudflare (no ACM/CloudFront here).
 
 ## Prerequisites
 
-- Pulumi CLI: https://www.pulumi.com/docs/get-started/install/
+- [Pulumi CLI](https://www.pulumi.com/docs/get-started/install/)
 - Node.js and pnpm (see repo root)
-- AWS credentials (for local `pulumi up`) or use GitHub Actions only
-- Pulumi Cloud (or self-hosted backend) and a stack (e.g. `game-brain`)
+- AWS credentials (for local `pulumi up`) or rely on GitHub Actions
+- Pulumi Cloud (or self-hosted) and a stack
 
-## Pulumi config (required)
+## Configuration
 
-Set these **before** running `pulumi up`. Use `--secret` for sensitive values so they are encrypted in the stack.
+Config is set **before** running `pulumi up`. Use `--secret` for sensitive values so they are encrypted in the stack.
 
 ```bash
 cd backend/deployment
 pnpm install
 
-# Required: Supabase (or other Postgres) connection strings and JWT secret
-pulumi config set --secret databaseUrl 'postgresql://...'
-pulumi config set --secret directUrl  'postgresql://...'
-pulumi config set --secret jwtSecret  'your-jwt-secret'
+# Required (use --secret for sensitive values)
+pulumi config set --secret databaseUrl '...'
+pulumi config set --secret directUrl  '...'
+pulumi config set --secret jwtSecret  '...'
 
-# Optional: AWS region (defaults to us-east-1)
+# Optional
 pulumi config set aws:region us-east-1
-
-# Optional: EC2 key pair name for SSH (see "SSH access" below)
-pulumi config set keyName your-key-pair-name
+pulumi config set keyName <your-key-pair-name>   # for SSH access
 ```
 
-## Deploy via GitHub Actions
+## Deploy
 
-1. **Secrets** (repo Settings → Secrets and variables → Actions):
-   - `PULUMI_ACCESS_TOKEN` – From Pulumi Cloud (Account → Access Tokens)
-   - **AWS** (choose one):
-     - **OIDC:** Configure an IAM role with trust for GitHub OIDC and permissions for ECR, EC2, SSM, IAM (for the deployment). Add the role ARN as `AWS_ROLE_TO_ASSUME`.
-     - **Static keys:** `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` for a user with the same permissions.
+**Via GitHub Actions (typical):** Push to `main` when `backend/**` or `backend/deployment/**` change, or run the **“Deploy Backend”** workflow manually. Repo secrets must include Pulumi and AWS credentials (see your team or CI docs).
 
-2. **Trigger:** Push to `main` (when `backend/**` or `backend/deployment/**` change) or run the **“Deploy Backend”** workflow manually.
-
-3. The workflow will:
-   - Build the backend Docker image and push it to ECR
-   - Run `pulumi up` in `backend/deployment`
-   - Force a new ECS deployment so the task runs the latest image
-
-## Deploy locally (optional)
+**Locally:**
 
 ```bash
 cd backend/deployment
 pnpm install
-pulumi stack select game-brain   # or your stack name
+pulumi stack select <stack-name>
 pulumi up
 ```
 
-After the first deploy, the EC2 instance will run the task from ECR. For subsequent code changes, re-run the GitHub workflow (or push to `main`); the workflow forces a new ECS deployment.
+## Post-deploy
 
-## Cloudflare DNS proxy setup
+- **DNS:** Point your API hostname’s A record to the Elastic IP. Use Cloudflare with proxy on, and set an **Origin Rule** so the proxy uses port **8080** (app does not listen on 80).
+- **Origin URL:** Run `pulumi stack output ec2OriginUrl` to get `http://<elastic-ip>:8080`; the IP is what you use for the A record.
+- **SSH:** If you need key-based SSH, create a key pair in EC2, set `keyName` in Pulumi config, redeploy, then `ssh -i <key.pem> ec2-user@<elastic-ip>`.
 
-The backend listens on **port 8080**. Use Cloudflare DNS with **proxy enabled** (orange cloud) for HTTPS, DDoS protection, and WAF.
+## Stack outputs
 
-By default, Cloudflare connects to the origin on **port 80**. Since this app uses **8080**, you must add an **Origin Rule** in Cloudflare so the proxy uses port 8080:
-
-1. **Get the origin IP:** After deploy, run `pulumi stack output ec2OriginUrl` (e.g. `http://34.202.60.131:8080`). The host is your Elastic IP.
-
-2. **Add DNS record:** In Cloudflare, add an **A** record for your API hostname (e.g. `api.game-brain.net`) pointing to that Elastic IP. Enable **Proxy** (orange cloud).
-
-3. **Origin Rule (required for port 8080):** In Cloudflare dashboard → your domain → **Rules** → **Origin Rules** → Create rule. Match your API hostname (e.g. `api.game-brain.net`), then set **Override destination port** to `8080`. Save. Without this, Cloudflare would connect to port 80 and get no response.
-
-4. **API URL for mobile:** Use your proxied hostname, e.g. `https://api.game-brain.net/graphql`. Set this in EAS build environment variables (or `.env` for local production builds).
-
-CORS is handled by the backend; no Worker is required.
-
-## SSH access
-
-If EC2 Instance Connect and Session Manager don’t work, use key-based SSH:
-
-1. **Create a key pair** (once): In AWS Console → EC2 → Key Pairs → Create key pair. Name it (e.g. `game-brain-backend`), choose `.pem`, download and store the file securely (e.g. `chmod 400 game-brain-backend.pem`).
-
-2. **Configure Pulumi** and redeploy so the instance gets the key:
-   ```bash
-   pulumi config set keyName game-brain-backend
-   pulumi up
-   ```
-   Pulumi will replace the instance (new instance with the key; Elastic IP is reattached).
-
-3. **Connect** (use the Elastic IP from `pulumi stack output ec2OriginUrl`, e.g. `http://34.202.60.131:8080` → IP is `34.202.60.131`):
-   ```bash
-   ssh -i /path/to/game-brain-backend.pem ec2-user@34.202.60.131
-   ```
-
-## Exports
-
-After `pulumi up`:
-
-| Export            | Description                                                |
-| ----------------- | ---------------------------------------------------------- |
-| `ec2OriginUrl`    | `http://<elastic-ip>:8080` – use the IP for your A record  |
-| `ecrRepositoryUrl`| ECR repository URL for the backend image                   |
-| `ecrRepositoryName` | ECR repository name                                      |
-| `ecsClusterName`  | ECS cluster name                                           |
-| `ecsServiceName`  | ECS service name                                           |
+| Output              | Description                |
+| ------------------- | -------------------------- |
+| `ec2OriginUrl`      | `http://<elastic-ip>:8080` |
+| `ecrRepositoryUrl`  | ECR repository URL         |
+| `ecrRepositoryName` | ECR repository name        |
+| `ecsClusterName`    | ECS cluster name           |
+| `ecsServiceName`    | ECS service name           |
 
 ## Tear down
 
 ```bash
 pulumi destroy
+pulumi stack rm <stack-name>   # optional
 ```
-
-Then remove the stack if desired: `pulumi stack rm game-brain`.
