@@ -43,12 +43,28 @@ jobs:
 
       - name: Generate prisma client
         run: pnpm generate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          DIRECT_URL: ${{ env.DIRECT_URL }}
+          JWT_SECRET: ${{ env.JWT_SECRET }}
 
       - name: Lint
         run: pnpm lint
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          DIRECT_URL: ${{ env.DIRECT_URL }}
+          JWT_SECRET: ${{ env.JWT_SECRET }}
 
       - name: Typecheck
         run: pnpm tsc
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          DIRECT_URL: ${{ env.DIRECT_URL }}
+          JWT_SECRET: ${{ env.JWT_SECRET }}
 
       - name: Check schema is in sync
         run: pnpm check:schema
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          DIRECT_URL: ${{ env.DIRECT_URL }}
+          JWT_SECRET: ${{ env.JWT_SECRET }}
