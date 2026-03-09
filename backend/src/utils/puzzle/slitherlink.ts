@@ -12,6 +12,11 @@ type Edge = {
   to: Dot;
 };
 
+const LOOP_MIN_LENGTH_BASELINE = 8;
+const LOOP_MIN_LENGTH_FRACTION = 0.45;
+const LOOP_MIN_TURNS_BASELINE = 4;
+const SMALL_GRID_PERIMETER_THRESHOLD = 10;
+
 type GenerateSlitherlinkPuzzleDataOptions = {
   width: number;
   height: number;
@@ -211,6 +216,167 @@ function buildEdgeGrids(
 }
 
 /**
+ * Computes basic loop metrics for a candidate solution loop.
+ *
+ * Measures total edge count, the number of direction changes (turns),
+ * and whether the loop traces a simple axis-aligned rectangle.
+ */
+function computeLoopMetrics(
+  width: number,
+  height: number,
+  horizontalEdges: boolean[][],
+  verticalEdges: boolean[][],
+): { length: number; turns: number; isAxisAlignedRectangle: boolean } {
+  let length = 0;
+  for (let r = 0; r <= height; r++) {
+    for (let c = 0; c < width; c++) {
+      if (horizontalEdges[r][c]) {
+        length++;
+      }
+    }
+  }
+  for (let r = 0; r < height; r++) {
+    for (let c = 0; c <= width; c++) {
+      if (verticalEdges[r][c]) {
+        length++;
+      }
+    }
+  }
+
+  let turns = 0;
+  let minRow = Number.POSITIVE_INFINITY;
+  let maxRow = Number.NEGATIVE_INFINITY;
+  let minCol = Number.POSITIVE_INFINITY;
+  let maxCol = Number.NEGATIVE_INFINITY;
+
+  const incidentCounts: number[][] = Array.from({ length: height + 1 }, () =>
+    Array<number>(width + 1).fill(0),
+  );
+
+  for (let row = 0; row <= height; row++) {
+    for (let col = 0; col <= width; col++) {
+      let incident = 0;
+      let horiz = 0;
+      let vert = 0;
+
+      if (col > 0 && horizontalEdges[row][col - 1]) {
+        incident++;
+        horiz++;
+      }
+      if (col < width && horizontalEdges[row][col]) {
+        incident++;
+        horiz++;
+      }
+      if (row > 0 && verticalEdges[row - 1][col]) {
+        incident++;
+        vert++;
+      }
+      if (row < height && verticalEdges[row][col]) {
+        incident++;
+        vert++;
+      }
+
+      incidentCounts[row][col] = incident;
+
+      if (incident > 0) {
+        if (row < minRow) minRow = row;
+        if (row > maxRow) maxRow = row;
+        if (col < minCol) minCol = col;
+        if (col > maxCol) maxCol = col;
+      }
+
+      if (incident === 2 && horiz === 1 && vert === 1) {
+        turns++;
+      }
+    }
+  }
+
+  if (length === 0) {
+    return { length: 0, turns: 0, isAxisAlignedRectangle: false };
+  }
+
+  let isAxisAlignedRectangle = true;
+  for (let row = 0; row <= height; row++) {
+    for (let col = 0; col <= width; col++) {
+      const incident = incidentCounts[row][col];
+      if (incident === 0) continue;
+
+      const onBorder = row === minRow || row === maxRow || col === minCol || col === maxCol;
+      if (!onBorder) {
+        isAxisAlignedRectangle = false;
+        break;
+      }
+    }
+    if (!isAxisAlignedRectangle) break;
+  }
+
+  if (isAxisAlignedRectangle) {
+    for (let row = minRow; row <= maxRow && isAxisAlignedRectangle; row++) {
+      for (let col = minCol; col <= maxCol; col++) {
+        const onBorder = row === minRow || row === maxRow || col === minCol || col === maxCol;
+        if (onBorder && incidentCounts[row][col] === 0) {
+          isAxisAlignedRectangle = false;
+          break;
+        }
+      }
+    }
+  }
+
+  return { length, turns, isAxisAlignedRectangle };
+}
+
+/**
+ * Heuristic check to decide if a candidate loop is sufficiently “interesting”.
+ *
+ * Enforces a minimum loop length and number of turns (scaled by grid size)
+ * and rejects simple axis-aligned rectangles and degenerate loops.
+ */
+function isLoopComplexEnough(
+  width: number,
+  height: number,
+  horizontalEdges: boolean[][],
+  verticalEdges: boolean[][],
+): boolean {
+  const { length, turns, isAxisAlignedRectangle } = computeLoopMetrics(
+    width,
+    height,
+    horizontalEdges,
+    verticalEdges,
+  );
+
+  if (length === 0) {
+    return false;
+  }
+
+  const perimeter = 2 * (width + height);
+  let minLength: number;
+  let minTurns: number;
+
+  if (perimeter <= SMALL_GRID_PERIMETER_THRESHOLD) {
+    minLength = Math.max(4, Math.floor(0.75 * perimeter));
+    minTurns = 4;
+  } else {
+    const minLengthFromPerimeter = Math.floor(LOOP_MIN_LENGTH_FRACTION * perimeter);
+    minLength = Math.max(LOOP_MIN_LENGTH_BASELINE, minLengthFromPerimeter);
+    minTurns = LOOP_MIN_TURNS_BASELINE;
+  }
+
+  if (length < minLength) {
+    return false;
+  }
+
+  if (turns < minTurns) {
+    return false;
+  }
+
+  if (isAxisAlignedRectangle) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
  * Returns true if the given edge grids form a single closed loop (every vertex degree 0 or 2, one component).
  */
 function validateSingleLoop(
@@ -317,6 +483,124 @@ function deriveClues(
   return clues;
 }
 
+const TARGET_CLUE_DENSITY_MIN = 0.35;
+const TARGET_CLUE_DENSITY_MAX = 0.55;
+const MAX_CLUE_REMOVAL_ATTEMPTS_MULTIPLIER = 3;
+
+/**
+ * Thins a full clue grid into a sparser, more informative one while preserving uniqueness.
+ *
+ * Starts from a fully-clued, uniquely-solvable puzzle, removes mostly low-information clues
+ * towards a target density, then adds clues back if needed until the puzzle is uniquely solvable again.
+ */
+function sparsifyClues(
+  width: number,
+  height: number,
+  fullClues: (number | null)[][],
+  random: () => number,
+): (number | null)[][] {
+  const totalCells = width * height;
+  if (totalCells === 0) {
+    return fullClues;
+  }
+
+  const targetDensity =
+    TARGET_CLUE_DENSITY_MIN + random() * (TARGET_CLUE_DENSITY_MAX - TARGET_CLUE_DENSITY_MIN);
+  const targetNonNull = Math.max(1, Math.floor(totalCells * targetDensity));
+
+  const clues: (number | null)[][] = fullClues.map((row) => row.slice());
+
+  type Cell = { r: number; c: number; priority: number };
+  const cells: Cell[] = [];
+
+  function cluePriority(value: number | null): number {
+    if (value === null) return 10;
+    if (value === 0) return 0;
+    if (value === 4) return 1;
+    if (value === 2) return 2;
+    return 3;
+  }
+
+  for (let r = 0; r < height; r++) {
+    for (let c = 0; c < width; c++) {
+      const value = clues[r][c];
+      cells.push({ r, c, priority: cluePriority(value) });
+    }
+  }
+
+  for (let i = cells.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    const tmp = cells[i];
+    cells[i] = cells[j];
+    cells[j] = tmp;
+  }
+
+  cells.sort((a, b) => a.priority - b.priority);
+
+  let nonNullCount = totalCells;
+  const maxAttempts = totalCells * MAX_CLUE_REMOVAL_ATTEMPTS_MULTIPLIER;
+  let attempts = 0;
+  const removed: Cell[] = [];
+
+  // First pass: aggressively remove low-priority clues without
+  // re-checking uniqueness on every single change.
+  for (const cell of cells) {
+    if (nonNullCount <= targetNonNull) break;
+    if (attempts >= maxAttempts) break;
+
+    const { r, c } = cell;
+    if (clues[r][c] === null) continue;
+
+    const original = clues[r][c];
+    // Remove in priority order (0, 4, 2, 3, 1) so we keep the most informative clues when sparse.
+    clues[r][c] = null;
+    attempts++;
+
+    removed.push({ r, c, priority: cluePriority(original) });
+    nonNullCount--;
+  }
+
+  // Check uniqueness after the removal phase.
+  const solutions = findSlitherlinkSolutions(width, height, clues, 2);
+  if (solutions.length === 1) {
+    return clues;
+  }
+
+  // Binary-search repair: find minimal number of clues to add back (by priority) for uniqueness.
+  removed.sort((a, b) => b.priority - a.priority);
+  const baseClues = clues.map((row) => row.slice());
+
+  let low = 0;
+  let high = removed.length;
+  while (low < high) {
+    const mid = (low + high) >> 1;
+    const workClues = baseClues.map((row) => row.slice());
+    for (let i = 0; i < mid; i++) {
+      const { r, c } = removed[i];
+      workClues[r][c] = fullClues[r][c];
+    }
+    const sols = findSlitherlinkSolutions(width, height, workClues, 2);
+    if (sols.length === 1) {
+      high = mid;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  for (let i = 0; i < low; i++) {
+    const { r, c } = removed[i];
+    clues[r][c] = fullClues[r][c];
+  }
+
+  const finalSolutions = findSlitherlinkSolutions(width, height, clues, 2);
+  if (finalSolutions.length === 1) {
+    return clues;
+  }
+
+  // As a last resort, fall back to the fully-clued, unique puzzle.
+  return fullClues;
+}
+
 /** Edge state: -1 unknown, 0 no line, 1 line */
 type EdgeState = -1 | 0 | 1;
 
@@ -325,20 +609,31 @@ type SlitherlinkSolution = {
   verticalEdges: boolean[][];
 };
 
-/** Returns a deep copy of the horizontal and vertical edge state arrays. */
-function cloneState(
-  hState: EdgeState[][],
-  vState: EdgeState[][],
-): { hState: EdgeState[][]; vState: EdgeState[][] } {
-  return {
-    hState: hState.map((row) => row.slice()),
-    vState: vState.map((row) => row.slice()),
-  };
+/**
+ * Copies horizontal and vertical edge state from source arrays into destination arrays.
+ * Destinations must have the same dimensions as sources; used for solver backtracking without allocating.
+ */
+function copyState(
+  srcH: EdgeState[][],
+  srcV: EdgeState[][],
+  dstH: EdgeState[][],
+  dstV: EdgeState[][],
+): void {
+  for (let r = 0; r < srcH.length; r++) {
+    for (let c = 0; c < srcH[r].length; c++) {
+      dstH[r][c] = srcH[r][c];
+    }
+  }
+  for (let r = 0; r < srcV.length; r++) {
+    for (let c = 0; c < srcV[r].length; c++) {
+      dstV[r][c] = srcV[r][c];
+    }
+  }
 }
 
 /**
  * Propagates constraints for cell (r, c): clue must equal the count of line edges on its border.
- * @returns false if the clue is violated.
+ * @returns false if the clue is violated, true otherwise (true does not mean state changed).
  */
 function propagateCell(
   clues: (number | null)[][],
@@ -492,20 +787,9 @@ function propagateDot(
   return true;
 }
 
-/** Returns true if the two edge-state snapshots are equal. */
-function stateEquals(
-  a: { hState: EdgeState[][]; vState: EdgeState[][] },
-  hState: EdgeState[][],
-  vState: EdgeState[][],
-): boolean {
-  return (
-    a.hState.every((row, i) => row.every((v, j) => v === hState[i][j])) &&
-    a.vState.every((row, i) => row.every((v, j) => v === vState[i][j]))
-  );
-}
-
 /**
  * Runs cell and dot propagation until no further deductions; returns false on contradiction.
+ * Uses a single pass with change detection to avoid cloning state each round.
  */
 function propagate(
   width: number,
@@ -514,22 +798,53 @@ function propagate(
   hState: EdgeState[][],
   vState: EdgeState[][],
 ): boolean {
-  let converged = false;
-  while (!converged) {
-    const before = cloneState(hState, vState);
+  let changed = true;
+  while (changed) {
+    changed = false;
     for (let r = 0; r < height; r++) {
       for (let c = 0; c < width; c++) {
+        const beforeTop = hState[r][c];
+        const beforeRight = vState[r][c + 1];
+        const beforeBottom = hState[r + 1][c];
+        const beforeLeft = vState[r][c];
         if (!propagateCell(clues, hState, vState, r, c)) return false;
+        if (
+          beforeTop !== hState[r][c] ||
+          beforeRight !== vState[r][c + 1] ||
+          beforeBottom !== hState[r + 1][c] ||
+          beforeLeft !== vState[r][c]
+        ) {
+          changed = true;
+        }
       }
     }
     for (let row = 0; row <= height; row++) {
       for (let col = 0; col <= width; col++) {
+        const before = getDotEdgeValues(hState, vState, width, height, row, col);
         if (!propagateDot(width, height, hState, vState, row, col)) return false;
+        const after = getDotEdgeValues(hState, vState, width, height, row, col);
+        if (before.some((v, i) => v !== after[i])) changed = true;
       }
     }
-    converged = stateEquals(before, hState, vState);
   }
   return true;
+}
+
+/** Returns the edge state values incident to dot (row, col), for change detection in propagate. */
+function getDotEdgeValues(
+  hState: EdgeState[][],
+  vState: EdgeState[][],
+  width: number,
+  height: number,
+  row: number,
+  col: number,
+): EdgeState[] {
+  const out: EdgeState[] = [];
+  if (col > 0) out.push(hState[row][col - 1]);
+  if (col < width) out.push(hState[row][col]);
+  if (row > 0) out.push(vState[row - 1][col]);
+  if (row < height) out.push(vState[row][col]);
+  return out;
 }
 
 /** Converts edge state arrays (-1/0/1) to solution format (boolean grids; -1 treated as false). */
@@ -540,27 +855,68 @@ function stateToSolution(hState: EdgeState[][], vState: EdgeState[][]): Slitherl
   };
 }
 
-/** Returns the first edge still unknown (-1), or null if all are assigned. */
+/**
+ * Returns an unknown edge to branch on, or null if all assigned.
+ * Prefers edges that touch cells with clue 0 or 4 (most constrained) to fail fast.
+ */
 function findFirstUnknown(
+  width: number,
+  height: number,
+  clues: (number | null)[][],
   hState: EdgeState[][],
   vState: EdgeState[][],
 ): { type: 'H' | 'V'; r: number; c: number } | null {
+  let best: { type: 'H' | 'V'; r: number; c: number; score: number } | null = null;
+
+  function scoreEdge(type: 'H' | 'V', r: number, c: number): number {
+    let s = 0;
+    if (type === 'H') {
+      // Horizontal edge (r,c): top of cell (r,c), bottom of cell (r-1,c)
+      if (r < height) {
+        const clue = clues[r][c];
+        if (clue === 0 || clue === 4) s++;
+      }
+      if (r > 0) {
+        const clue = clues[r - 1][c];
+        if (clue === 0 || clue === 4) s++;
+      }
+    } else {
+      // Vertical edge (r,c): left of cell (r,c), right of cell (r,c-1)
+      if (c < width) {
+        const clue = clues[r][c];
+        if (clue === 0 || clue === 4) s++;
+      }
+      if (c > 0) {
+        const clue = clues[r][c - 1];
+        if (clue === 0 || clue === 4) s++;
+      }
+    }
+    return s;
+  }
+
   for (let r = 0; r < hState.length; r++) {
     for (let c = 0; c < hState[r].length; c++) {
-      if (hState[r][c] === -1) return { type: 'H', r, c };
+      if (hState[r][c] === -1) {
+        const score = scoreEdge('H', r, c);
+        if (best === null || score > best.score) best = { type: 'H', r, c, score };
+      }
     }
   }
   for (let r = 0; r < vState.length; r++) {
     for (let c = 0; c < vState[r].length; c++) {
-      if (vState[r][c] === -1) return { type: 'V', r, c };
+      if (vState[r][c] === -1) {
+        const score = scoreEdge('V', r, c);
+        if (best === null || score > best.score) best = { type: 'V', r, c, score };
+      }
     }
   }
-  return null;
+  return best === null ? null : { type: best.type, r: best.r, c: best.c };
 }
 
 /**
  * Finds up to maxSolutions solutions to the Slitherlink puzzle with the given clues.
  * Uses constraint propagation and backtracking; only counts assignments that form a single loop.
+ * Uses a reusable save buffer to avoid allocating on every branch.
  * @param maxSolutions Stop after finding this many solutions (e.g. 2 to check uniqueness).
  * @returns Array of solutions, each with horizontalEdges and verticalEdges. Exported for tests.
  */
@@ -572,40 +928,6 @@ export function findSlitherlinkSolutions(
 ): SlitherlinkSolution[] {
   const solutions: SlitherlinkSolution[] = [];
 
-  function solve(hState: EdgeState[][], vState: EdgeState[][]): void {
-    if (solutions.length >= maxSolutions) return;
-
-    if (!propagate(width, height, clues, hState, vState)) return;
-
-    const unknown = findFirstUnknown(hState, vState);
-    if (unknown === null) {
-      const sol = stateToSolution(hState, vState);
-      if (validateSingleLoop(width, height, sol.horizontalEdges, sol.verticalEdges)) {
-        solutions.push(sol);
-      }
-      return;
-    }
-
-    const { type, r, c } = unknown;
-    if (type === 'H') {
-      const state0 = cloneState(hState, vState);
-      state0.hState[r][c] = 0;
-      solve(state0.hState, state0.vState);
-      if (solutions.length >= maxSolutions) return;
-      const state1 = cloneState(hState, vState);
-      state1.hState[r][c] = 1;
-      solve(state1.hState, state1.vState);
-    } else {
-      const state0 = cloneState(hState, vState);
-      state0.vState[r][c] = 0;
-      solve(state0.hState, state0.vState);
-      if (solutions.length >= maxSolutions) return;
-      const state1 = cloneState(hState, vState);
-      state1.vState[r][c] = 1;
-      solve(state1.hState, state1.vState);
-    }
-  }
-
   const hState: EdgeState[][] = Array.from(
     { length: height + 1 },
     () => Array<number>(width).fill(-1) as EdgeState[],
@@ -614,7 +936,55 @@ export function findSlitherlinkSolutions(
     { length: height },
     () => Array<number>(width + 1).fill(-1) as EdgeState[],
   );
-  solve(hState, vState);
+  const hStateSaved: EdgeState[][] = Array.from(
+    { length: height + 1 },
+    () => Array<number>(width).fill(-1) as EdgeState[],
+  );
+  const vStateSaved: EdgeState[][] = Array.from(
+    { length: height },
+    () => Array<number>(width + 1).fill(-1) as EdgeState[],
+  );
+
+  function solve(
+    h: EdgeState[][],
+    v: EdgeState[][],
+    hSave: EdgeState[][],
+    vSave: EdgeState[][],
+  ): void {
+    if (solutions.length >= maxSolutions) return;
+
+    if (!propagate(width, height, clues, h, v)) return;
+
+    const unknown = findFirstUnknown(width, height, clues, h, v);
+    if (unknown === null) {
+      const sol = stateToSolution(h, v);
+      if (validateSingleLoop(width, height, sol.horizontalEdges, sol.verticalEdges)) {
+        solutions.push(sol);
+      }
+      return;
+    }
+
+    const { type, r, c } = unknown;
+    if (type === 'H') {
+      copyState(h, v, hSave, vSave);
+      h[r][c] = 0;
+      solve(h, v, hSave, vSave);
+      if (solutions.length >= maxSolutions) return;
+      copyState(hSave, vSave, h, v);
+      h[r][c] = 1;
+      solve(h, v, hSave, vSave);
+    } else {
+      copyState(h, v, hSave, vSave);
+      v[r][c] = 0;
+      solve(h, v, hSave, vSave);
+      if (solutions.length >= maxSolutions) return;
+      copyState(hSave, vSave, h, v);
+      v[r][c] = 1;
+      solve(h, v, hSave, vSave);
+    }
+  }
+
+  solve(hState, vState, hStateSaved, vStateSaved);
   return solutions;
 }
 
@@ -648,10 +1018,14 @@ export function generateSlitherlinkPuzzleData({
     const isValidLoop = validateSingleLoop(width, height, horizontalEdges, verticalEdges);
     if (!isValidLoop) continue;
 
-    const clues = deriveClues(width, height, horizontalEdges, verticalEdges);
+    if (!isLoopComplexEnough(width, height, horizontalEdges, verticalEdges)) continue;
 
-    const solutions = findSlitherlinkSolutions(width, height, clues, 2);
-    if (solutions.length !== 1) continue;
+    const fullClues = deriveClues(width, height, horizontalEdges, verticalEdges);
+
+    const fullSolutions = findSlitherlinkSolutions(width, height, fullClues, 2);
+    if (fullSolutions.length !== 1) continue;
+
+    const clues = sparsifyClues(width, height, fullClues, attemptRandom);
 
     return {
       width,
