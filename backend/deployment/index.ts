@@ -1,12 +1,19 @@
 import * as aws from '@pulumi/aws';
 import * as pulumi from '@pulumi/pulumi';
 
+import type { ScheduledLambdaConfig } from './lambda';
+import { buildScheduledLambdaOptions, createScheduledLambda } from './lambda';
+
 const config = new pulumi.Config();
 const databaseUrl = config.requireSecret('databaseUrl');
 const directUrl = config.requireSecret('directUrl');
 const jwtSecret = config.requireSecret('jwtSecret');
+const adminSecret = config.requireSecret('adminSecret');
 /** Optional: EC2 key pair name for SSH (create in EC2 → Key Pairs, then set and redeploy). */
 const keyName = config.get('keyName');
+
+const lambdasConfig = (config.getObject<ScheduledLambdaConfig[]>('lambdas') ??
+  []) as ScheduledLambdaConfig[];
 
 const awsConfig = new pulumi.Config('aws');
 const region = awsConfig.get('region') || 'us-east-1';
@@ -50,6 +57,11 @@ const jwtParam = new aws.ssm.Parameter('jwtSecret', {
   type: 'SecureString',
   value: jwtSecret,
 });
+const adminSecretParam = new aws.ssm.Parameter('adminSecret', {
+  name: `${ssmPrefix}/adminSecret`,
+  type: 'SecureString',
+  value: adminSecret,
+});
 
 // --- ECS task execution role (ECR pull + SSM read for task secrets) ---
 const taskExecutionRole = new aws.iam.Role('ecsTaskExecutionRole', {
@@ -70,20 +82,22 @@ new aws.iam.RolePolicyAttachment('taskExecutionRoleECR', {
   policyArn: 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy',
 });
 
-const _taskExecutionSsmPolicy = new aws.iam.RolePolicy('taskExecutionSsm', {
+new aws.iam.RolePolicy('taskExecutionSsm', {
   role: taskExecutionRole.id,
-  policy: pulumi.all([dbParam.arn, directParam.arn, jwtParam.arn]).apply((arns) =>
-    JSON.stringify({
-      Version: '2012-10-17',
-      Statement: [
-        {
-          Effect: 'Allow',
-          Action: ['ssm:GetParameter', 'ssm:GetParameters'],
-          Resource: arns,
-        },
-      ],
-    }),
-  ),
+  policy: pulumi
+    .all([dbParam.arn, directParam.arn, jwtParam.arn, adminSecretParam.arn])
+    .apply((arns) =>
+      JSON.stringify({
+        Version: '2012-10-17',
+        Statement: [
+          {
+            Effect: 'Allow',
+            Action: ['ssm:GetParameter', 'ssm:GetParameters'],
+            Resource: arns,
+          },
+        ],
+      }),
+    ),
 });
 
 // --- Instance role for ECS container instance (ECS for EC2 + ECR pull + SSM) ---
@@ -105,7 +119,7 @@ new aws.iam.RolePolicyAttachment('instanceRoleEcs', {
   policyArn: 'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role',
 });
 
-const _instanceEcrPolicy = new aws.iam.RolePolicy('instanceEcrPull', {
+new aws.iam.RolePolicy('instanceEcrPull', {
   role: instanceRole.id,
   policy: pulumi.interpolate`{
     "Version": "2012-10-17",
@@ -125,20 +139,22 @@ const _instanceEcrPolicy = new aws.iam.RolePolicy('instanceEcrPull', {
   }`,
 });
 
-const _instanceSsmPolicy = new aws.iam.RolePolicy('instanceSsmParams', {
+new aws.iam.RolePolicy('instanceSsmParams', {
   role: instanceRole.id,
-  policy: pulumi.all([dbParam.arn, directParam.arn, jwtParam.arn]).apply((arns) =>
-    JSON.stringify({
-      Version: '2012-10-17',
-      Statement: [
-        {
-          Effect: 'Allow',
-          Action: ['ssm:GetParameter', 'ssm:GetParameters'],
-          Resource: arns,
-        },
-      ],
-    }),
-  ),
+  policy: pulumi
+    .all([dbParam.arn, directParam.arn, jwtParam.arn, adminSecretParam.arn])
+    .apply((arns) =>
+      JSON.stringify({
+        Version: '2012-10-17',
+        Statement: [
+          {
+            Effect: 'Allow',
+            Action: ['ssm:GetParameter', 'ssm:GetParameters'],
+            Resource: arns,
+          },
+        ],
+      }),
+    ),
 });
 
 const instanceProfile = new aws.iam.InstanceProfile('ecsInstanceProfile', {
@@ -228,8 +244,8 @@ const taskDefinition = new aws.ecs.TaskDefinition('backend', {
   memory: '256',
   executionRoleArn: taskExecutionRole.arn,
   containerDefinitions: pulumi
-    .all([imageUri, dbParam.name, directParam.name, jwtParam.name])
-    .apply(([img, dbName, directName, jwtName]) =>
+    .all([imageUri, dbParam.name, directParam.name, jwtParam.name, adminSecretParam.name])
+    .apply(([img, dbName, directName, jwtName, adminSecretName]) =>
       JSON.stringify([
         {
           name: 'backend',
@@ -241,6 +257,7 @@ const taskDefinition = new aws.ecs.TaskDefinition('backend', {
             { name: 'DATABASE_URL', valueFrom: dbName },
             { name: 'DIRECT_URL', valueFrom: directName },
             { name: 'JWT_SECRET', valueFrom: jwtName },
+            { name: 'ADMIN_SECRET', valueFrom: adminSecretName },
           ],
         },
       ]),
@@ -259,6 +276,11 @@ const service = new aws.ecs.Service('backend', {
 
 // Origin URL for reference (e.g. point api.game-brain.net A record to this IP; Cloudflare proxy handles HTTPS)
 export const ec2OriginUrl = pulumi.interpolate`http://${eip.publicIp}:8080`;
+
+lambdasConfig.forEach((entry) => {
+  createScheduledLambda(buildScheduledLambdaOptions(entry, { ec2OriginUrl, adminSecretParam }));
+});
+
 export const ecrRepositoryUrl = ecrRepoUrl;
 export const ecrRepositoryName = ecrRepo.name;
 export const ecsClusterName = cluster.name;

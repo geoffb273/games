@@ -1,9 +1,13 @@
 import { resolveCursorConnection, type ResolveCursorConnectionArgs } from '@pothos/plugin-relay';
 
-import { listDailyChallenges } from '@/platform/dailyChallenge/service/dailyChallengeService';
+import {
+  createDailyChallenge as createDailyChallengeService,
+  listDailyChallenges,
+} from '@/platform/dailyChallenge/service/dailyChallengeService';
 import { buildCursorArgs, encodeCursor } from '@/utils/paginationUtils';
 
 import { builder } from '../builder';
+import { AlreadyExistsError, UnauthorizedError } from '../errors';
 import { DailyChallengeRef } from './type';
 
 builder.queryField('dailyChallenges', (t) =>
@@ -22,6 +26,30 @@ builder.queryField('dailyChallenges', (t) =>
           return listDailyChallenges({ take, skip, cursor });
         },
       );
+    },
+  }),
+);
+
+builder.mutationField('createDailyChallenge', (t) =>
+  t.fieldWithInput({
+    description: 'Creates a daily challenge for the given date (admin only via x-admin-secret).',
+    type: DailyChallengeRef,
+    nullable: false,
+    input: {
+      date: t.input.field({
+        type: 'DateTime',
+        required: true,
+        description: 'The date for the daily challenge (start of day).',
+      }),
+    },
+    errors: {
+      types: [AlreadyExistsError, UnauthorizedError],
+    },
+    resolve: async (_, { input: { date } }, { authorization }) => {
+      if (!authorization.isAdmin) {
+        throw new UnauthorizedError('Admin secret required');
+      }
+      return createDailyChallengeService({ date });
     },
   }),
 );

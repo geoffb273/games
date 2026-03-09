@@ -7,7 +7,8 @@ Deploys the GraphQL backend to AWS EC2. Traffic is fronted by **Cloudflare DNS p
 - **EC2** – One t3.micro (Amazon Linux 2 ECS-optimized), runs the backend in Docker from ECR
 - **ECR** – Repository for the backend image (built and pushed by GitHub Actions)
 - **Elastic IP** – Stable public IP for the instance (used for your API domain A record)
-- **Secrets** – `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET` in SSM Parameter Store; the ECS task receives them at runtime
+- **Secrets** – `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `ADMIN_SECRET` in SSM Parameter Store; the ECS task receives them at runtime
+- **Lambda** – `createDailyChallenge` runs daily at midnight EST (EventBridge Scheduler), calls the GraphQL API to create the daily challenge for 2 days ahead
 
 Database is Supabase (no RDS). HTTPS is handled by Cloudflare (no ACM/CloudFront here).
 
@@ -30,10 +31,12 @@ pnpm install
 pulumi config set --secret databaseUrl '...'
 pulumi config set --secret directUrl  '...'
 pulumi config set --secret jwtSecret  '...'
+pulumi config set --secret adminSecret '...'   # for admin-only GraphQL operations (e.g. createDailyChallenge Lambda)
 
 # Optional
 pulumi config set aws:region us-east-1
 pulumi config set keyName <your-key-pair-name>   # for SSH access
+# Scheduled Lambdas: set config key `lambdas` (array of { name, handlerSubpath, scheduleExpression, scheduleExpressionTimezone? }) in stack YAML
 ```
 
 ## Deploy
@@ -45,6 +48,7 @@ pulumi config set keyName <your-key-pair-name>   # for SSH access
 ```bash
 cd backend/deployment
 pnpm install
+pnpm run build:lambdas   # build Lambda handlers (required before first deploy)
 pulumi stack select <stack-name>
 pulumi up
 ```

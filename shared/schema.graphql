@@ -95,12 +95,28 @@ type MinesweeperRevealedCell {
 type Mutation {
   authenticateDevice(input: MutationAuthenticateDeviceInput!): AuthPayload!
 
+  """
+  Creates a daily challenge for the given date (admin only via x-admin-secret).
+  """
+  createDailyChallenge(input: MutationCreateDailyChallengeInput!): MutationCreateDailyChallengeResult!
+
   """Solves a puzzle for the logged in user"""
   solvePuzzle(input: MutationSolvePuzzleInput!): MutationSolvePuzzleResult!
 }
 
 input MutationAuthenticateDeviceInput {
   deviceId: String!
+}
+
+input MutationCreateDailyChallengeInput {
+  """The date for the daily challenge (start of day)."""
+  date: DateTime!
+}
+
+union MutationCreateDailyChallengeResult = AlreadyExistsError | MutationCreateDailyChallengeSuccess | UnauthorizedError
+
+type MutationCreateDailyChallengeSuccess {
+  data: DailyChallenge!
 }
 
 input MutationSolvePuzzleInput {

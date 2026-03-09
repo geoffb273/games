@@ -1,13 +1,18 @@
 {
-    "name": "game-brain",
-    "main": "index.ts",
-    "devDependencies": {
-        "@types/node": "^18",
-        "typescript": "^5.0.0"
-    },
-    "dependencies": {
-        "@pulumi/aws": "^7.0.0",
-        "@pulumi/awsx": "^3.0.0",
-        "@pulumi/pulumi": "^3.113.0"
-    }
+  "name": "game-brain",
+  "main": "index.ts",
+  "scripts": {
+    "build:lambdas": "node build-lambdas.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^18",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ssm": "^3.0.0",
+    "@pulumi/aws": "^7.0.0",
+    "@pulumi/awsx": "^3.0.0",
+    "@pulumi/pulumi": "^3.113.0"
+  }
 }

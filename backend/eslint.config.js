@@ -9,6 +9,7 @@ export default tseslint.config(
   eslintConfigPrettier,
   eslintPluginPrettier,
   {
+    files: ['src/**/*.ts'],
     plugins: {
       'simple-import-sort': simpleImportSort,
     },
