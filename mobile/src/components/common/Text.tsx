@@ -33,7 +33,7 @@ type TextStyleProps =
 type TextProps = {
   children: ReactNode;
   numberOfLines?: number;
-  color?: 'text' | 'textSecondary' | 'success' | 'warning' | 'background';
+  color?: 'text' | 'textSecondary' | 'success' | 'warning' | 'background' | 'error';
   _colorOverride?: string;
   textAlign?: 'left' | 'center' | 'right' | 'justify';
   style?: StyleProp<TextStyle>;

@@ -7,6 +7,7 @@ import { HanjiBoard } from '@/components/game/HanjiBoard/HanjiBoard';
 import { HashiBoard } from '@/components/game/HashiBoard/HashiBoard';
 import { MinesweeperBoard } from '@/components/game/MinesweeperBoard/MinesweeperBoard';
 import { PuzzleCompletedView } from '@/components/game/PuzzleCompletedView';
+import { SlitherlinkBoard } from '@/components/game/SlitherlinkBoard/SlitherlinkBoard';
 import { Spacing } from '@/constants/theme';
 
 export function GameView({ id }: { id: string }) {
@@ -56,14 +57,7 @@ function PuzzleBoard({ puzzle }: { puzzle: Puzzle }) {
     case 'MINESWEEPER':
       return <MinesweeperBoard puzzle={puzzle} />;
     case 'SLITHERLINK':
-      return (
-        <View style={styles.centered}>
-          <ErrorView
-            title="Slitherlink coming soon"
-            message="This puzzle type is available, but gameplay isn't implemented yet."
-          />
-        </View>
-      );
+      return <SlitherlinkBoard puzzle={puzzle} />;
   }
 }
 

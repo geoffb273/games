@@ -45,24 +45,39 @@ type BaseSolvePuzzleInput = {
   durationMs?: number | null;
 };
 
+type SlitherlinkSolutionInput = {
+  horizontalEdges: boolean[][];
+  verticalEdges: boolean[][];
+};
+
 export type SolvePuzzleInput =
   | (BaseSolvePuzzleInput & {
       puzzleType: PuzzleType.Hanji;
       hanjiSolution: number[][] | null;
       hashiSolution?: never;
       minesweeperSolution?: never;
+      slitherlinkSolution?: never;
     })
   | (BaseSolvePuzzleInput & {
       puzzleType: PuzzleType.Hashi;
       hashiSolution: HashiBridgeInput[] | null;
       hanjiSolution?: never;
       minesweeperSolution?: never;
+      slitherlinkSolution?: never;
     })
   | (BaseSolvePuzzleInput & {
       puzzleType: PuzzleType.Minesweeper;
       minesweeperSolution: boolean[][] | null;
       hanjiSolution?: never;
       hashiSolution?: never;
+      slitherlinkSolution?: never;
+    })
+  | (BaseSolvePuzzleInput & {
+      puzzleType: PuzzleType.Slitherlink;
+      slitherlinkSolution: SlitherlinkSolutionInput | null;
+      hanjiSolution?: never;
+      hashiSolution?: never;
+      minesweeperSolution?: never;
     });
 
 export function useSolvePuzzle() {
