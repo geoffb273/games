@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useReducer, useRef } from 'react';
 
+import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { type FlowPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
@@ -46,6 +47,7 @@ export function useFlowGame(puzzle: FlowPuzzle): FlowGame {
   );
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzleId });
+  const { refetch } = useDailyChallengesQuery();
   const startedAtRef = useRef<Date>(puzzle.attempt?.startedAt ?? new Date());
   const submittedRef = useRef(false);
 
@@ -74,10 +76,12 @@ export function useFlowGame(puzzle: FlowPuzzle): FlowGame {
       completedAt,
       durationMs,
       flowSolution: grid.map((row) => row.slice()),
-    }).catch(() => {
-      submittedRef.current = false;
-    });
-  }, [isComplete, grid, puzzleId, solvePuzzle, updateOptimisticallyPuzzleAttempt]);
+    })
+      .then(refetch)
+      .catch(() => {
+        submittedRef.current = false;
+      });
+  }, [isComplete, grid, puzzleId, solvePuzzle, updateOptimisticallyPuzzleAttempt, refetch]);
 
   const setCell = useStableCallback((row: number, col: number, value: number) => {
     dispatch({ type: 'SET_CELL', row, col, value });

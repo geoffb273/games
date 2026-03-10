@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
+import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
@@ -88,7 +89,7 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
   const [mode, setMode] = useState<InteractionMode>('flag');
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzleId });
-
+  const { refetch } = useDailyChallengesQuery();
   const startedAtRef = useRef<Date>(puzzle.attempt?.startedAt ?? new Date());
   const submittedRef = useRef(false);
 
@@ -124,10 +125,20 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
       startedAt: startedAtRef.current,
       ...(success && { completedAt, durationMs }),
       minesweeperSolution: buildMinesweeperSolution(mineField),
-    }).catch(() => {
-      submittedRef.current = false;
-    });
-  }, [state.gameOver, isWin, puzzleId, mineField, solvePuzzle, updateOptimisticallyPuzzleAttempt]);
+    })
+      .then(refetch)
+      .catch(() => {
+        submittedRef.current = false;
+      });
+  }, [
+    state.gameOver,
+    isWin,
+    puzzleId,
+    mineField,
+    solvePuzzle,
+    updateOptimisticallyPuzzleAttempt,
+    refetch,
+  ]);
 
   const onCellTap = useStableCallback((row: number, col: number) => {
     if (state.gameOver) return;

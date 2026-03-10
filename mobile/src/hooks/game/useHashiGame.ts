@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
+import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
@@ -62,7 +63,7 @@ export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
   const [bridgeCounts, dispatch] = useReducer(gameReducer, connections.length, createInitialState);
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzleId });
-
+  const { refetch } = useDailyChallengesQuery();
   const startedAtRef = useRef<Date>(puzzle.attempt?.startedAt ?? new Date());
   const submittedRef = useRef(false);
 
@@ -90,9 +91,11 @@ export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
       completedAt,
       durationMs,
       hashiSolution: buildHashiSolution(connections, bridgeCounts, islands),
-    }).catch(() => {
-      submittedRef.current = false;
-    });
+    })
+      .then(refetch)
+      .catch(() => {
+        submittedRef.current = false;
+      });
   }, [
     isComplete,
     puzzleId,
@@ -101,6 +104,7 @@ export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
     islands,
     solvePuzzle,
     updateOptimisticallyPuzzleAttempt,
+    refetch,
   ]);
 
   const isValidBridge = useCallback(

@@ -11,6 +11,7 @@ import { HashiBoard } from '@/components/game/HashiBoard/HashiBoard';
 import { MinesweeperBoard } from '@/components/game/MinesweeperBoard/MinesweeperBoard';
 import { PuzzleCompletedView } from '@/components/game/PuzzleCompletedView';
 import { SlitherlinkBoard } from '@/components/game/SlitherlinkBoard/SlitherlinkBoard';
+import { VerticallyCenteredLayout } from '@/components/layout/VerticallyCenteredLayout';
 import { Spacing } from '@/constants/theme';
 
 type TransitionPhase = 'playing' | 'exiting' | 'completed';
@@ -44,11 +45,13 @@ export function GameView({ id }: { id: string }) {
   // Show completed view: loaded with attempt already, or after exit animation
   if (shouldShowCompleted && puzzle?.attempt != null) {
     return (
-      <PuzzleCompletedView
-        puzzleType={puzzle.type}
-        solved={puzzle.attempt.completedAt != null}
-        durationMs={puzzle.attempt.durationMs}
-      />
+      <VerticallyCenteredLayout>
+        <PuzzleCompletedView
+          puzzleType={puzzle.type}
+          solved={puzzle.attempt.completedAt != null}
+          durationMs={puzzle.attempt.durationMs}
+        />
+      </VerticallyCenteredLayout>
     );
   }
 

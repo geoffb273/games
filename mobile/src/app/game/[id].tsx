@@ -2,19 +2,16 @@ import { StyleSheet, View } from 'react-native';
 
 import { Stack, useLocalSearchParams } from 'expo-router';
 
-import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { GameView } from '@/components/view/GameView';
 import { useTheme } from '@/hooks/useTheme';
 
 export default function GameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { puzzle } = usePuzzleQuery({ id });
-  const title = puzzle?.name ?? '';
   const theme = useTheme();
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <Stack.Screen options={{ title, headerBackButtonDisplayMode: 'minimal' }} />
+      <Stack.Screen options={{ title: '', headerBackButtonDisplayMode: 'minimal' }} />
       <GameView id={id} />
     </View>
   );

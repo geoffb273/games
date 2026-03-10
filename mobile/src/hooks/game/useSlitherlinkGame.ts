@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useReducer, useRef } from 'react';
 
+import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
@@ -89,6 +90,7 @@ export function useSlitherlinkGame(puzzle: SlitherlinkPuzzle): SlitherlinkGame {
 
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzleId });
+  const { refetch } = useDailyChallengesQuery();
 
   const startedAtRef = useRef<Date>(puzzle.attempt?.startedAt ?? new Date());
   const submittedRef = useRef(false);
@@ -124,9 +126,11 @@ export function useSlitherlinkGame(puzzle: SlitherlinkPuzzle): SlitherlinkGame {
         horizontalEdges: horizontalLines,
         verticalEdges: verticalLines,
       },
-    }).catch(() => {
-      submittedRef.current = false;
-    });
+    })
+      .then(refetch)
+      .catch(() => {
+        submittedRef.current = false;
+      });
   }, [
     isComplete,
     puzzleId,
@@ -134,6 +138,7 @@ export function useSlitherlinkGame(puzzle: SlitherlinkPuzzle): SlitherlinkGame {
     verticalLines,
     solvePuzzle,
     updateOptimisticallyPuzzleAttempt,
+    refetch,
   ]);
 
   const onHorizontalEdgePress = useStableCallback((row: number, col: number) => {
