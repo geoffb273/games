@@ -17,7 +17,6 @@ export async function createPuzzlesForDailyChallenge({
   const flow = generateFlowPuzzleData({
     width: 8,
     height: 8,
-    numPairs: 4,
     seed,
   });
 

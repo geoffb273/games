@@ -1,4 +1,5 @@
 import { UnknownError, ValidationError } from '@/schema/errors';
+import { isValidFlowSolution } from '@/utils/puzzle/flow';
 
 import { getPuzzle as getPuzzleDao } from '../dao/puzzleDao';
 import { createUserPuzzleAttempt } from '../dao/userPuzzleAttemptDao';
@@ -59,8 +60,10 @@ function isSolutionCorrect(puzzle: Puzzle, input: SolvePuzzleInput): boolean {
   }
 
   switch (puzzleType) {
-    case 'FLOW':
-      return isFlowSolutionCorrect((puzzle.data as FlowPuzzleData).solution, solution);
+    case 'FLOW': {
+      const data = puzzle.data as FlowPuzzleData;
+      return isValidFlowSolution(data.width, data.height, data.pairs, solution);
+    }
     case 'HANJI':
       return isHanjiSolutionCorrect((puzzle.data as HanjiPuzzleData).solution, solution);
     case 'HASHI':
@@ -78,32 +81,6 @@ function isSolutionCorrect(puzzle: Puzzle, input: SolvePuzzleInput): boolean {
     default:
       throw new UnknownError('Unknown puzzle type');
   }
-}
-
-function isFlowSolutionCorrect(
-  expected: FlowPuzzleData['solution'],
-  received: FlowPuzzleData['solution'],
-): boolean {
-  if (expected.length !== received.length) {
-    return false;
-  }
-
-  for (let row = 0; row < expected.length; row++) {
-    const rowExpected = expected[row];
-    const rowReceived = received[row];
-
-    if (rowExpected.length !== rowReceived.length) {
-      return false;
-    }
-
-    for (let col = 0; col < rowExpected.length; col++) {
-      if (rowExpected[col] !== rowReceived[col]) {
-        return false;
-      }
-    }
-  }
-
-  return true;
 }
 
 function isHanjiSolutionCorrect(
