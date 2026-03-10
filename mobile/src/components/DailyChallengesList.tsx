@@ -11,7 +11,13 @@ import { getColorWithOpacity } from '@/utils/colorUtils';
 
 function formatDate(date: Date): string {
   const d = new Date(date);
-  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+
+  return d.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'America/New_York',
+  });
 }
 
 type DailyChallengesListProps = {

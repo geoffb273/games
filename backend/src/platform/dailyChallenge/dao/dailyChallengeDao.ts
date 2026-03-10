@@ -1,6 +1,7 @@
 import { prisma } from '@/client/prisma';
 import { type Prisma } from '@/generated/prisma';
 import { AlreadyExistsError, NotFoundError } from '@/schema/errors';
+import { asAmericaNewYorkMidnight } from '@/utils/dateUtils';
 import { isAlreadyExistsError, isNotFoundError } from '@/utils/errorUtils';
 import { type CursorArgs } from '@/utils/paginationUtils';
 
@@ -19,7 +20,7 @@ const DAILY_CHALLENGE_SELECT = {
  * @throws {NotFoundError} if no daily challenge is found
  */
 export async function getLatestDailyChallenge(): Promise<DailyChallenge> {
-  return prisma.dailyChallenge
+  const dailyChallenge = await prisma.dailyChallenge
     .findFirstOrThrow({
       where: { date: { lte: new Date() } },
       orderBy: { date: 'desc' },
@@ -31,6 +32,8 @@ export async function getLatestDailyChallenge(): Promise<DailyChallenge> {
       }
       throw error;
     });
+
+  return mapToDailyChallenge(dailyChallenge);
 }
 
 /**
@@ -39,7 +42,7 @@ export async function getLatestDailyChallenge(): Promise<DailyChallenge> {
  * @throws {AlreadyExistsError} if the daily challenge already exists for the given date.
  */
 export async function createDailyChallenge({ date }: { date: Date }): Promise<DailyChallenge> {
-  return prisma.dailyChallenge
+  const dailyChallenge = await prisma.dailyChallenge
     .create({
       data: { date },
       select: DAILY_CHALLENGE_SELECT,
@@ -52,6 +55,8 @@ export async function createDailyChallenge({ date }: { date: Date }): Promise<Da
       }
       throw error;
     });
+
+  return mapToDailyChallenge(dailyChallenge);
 }
 
 /**
@@ -62,7 +67,7 @@ export async function listDailyChallenges({
   skip,
   cursor,
 }: CursorArgs<{ date: Date }>): Promise<DailyChallenge[]> {
-  return prisma.dailyChallenge.findMany({
+  const dailyChallenges = await prisma.dailyChallenge.findMany({
     take,
     skip,
     cursor,
@@ -70,6 +75,8 @@ export async function listDailyChallenges({
     where: { date: { lte: new Date() } },
     select: DAILY_CHALLENGE_SELECT,
   });
+
+  return dailyChallenges.map(mapToDailyChallenge);
 }
 
 /**
@@ -122,4 +129,13 @@ export async function getCompletedPuzzleCountsByDailyChallengeIds({
     map.set(puzzle.dailyChallengeId, (map.get(puzzle.dailyChallengeId) ?? 0) + 1);
     return map;
   }, new Map<string, number>());
+}
+
+function mapToDailyChallenge(
+  dailyChallenge: Prisma.DailyChallengeGetPayload<{ select: typeof DAILY_CHALLENGE_SELECT }>,
+): DailyChallenge {
+  return {
+    ...dailyChallenge,
+    date: asAmericaNewYorkMidnight(dailyChallenge.date),
+  };
 }
