@@ -42,8 +42,8 @@ export async function createPuzzlesForDailyChallenge({
   });
 
   const slitherlink = generateSlitherlinkPuzzleData({
-    width: 9,
-    height: 9,
+    width: 6,
+    height: 6,
     seed,
   });
 

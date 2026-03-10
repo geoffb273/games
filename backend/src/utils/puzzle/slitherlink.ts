@@ -13,8 +13,8 @@ type Edge = {
 };
 
 const LOOP_MIN_LENGTH_BASELINE = 8;
-const LOOP_MIN_LENGTH_FRACTION = 0.45;
-const LOOP_MIN_TURNS_BASELINE = 4;
+const LOOP_MIN_LENGTH_FRACTION = 0.55;
+const LOOP_MIN_TURNS_BASELINE = 5;
 const SMALL_GRID_PERIMETER_THRESHOLD = 10;
 
 type GenerateSlitherlinkPuzzleDataOptions = {
@@ -483,8 +483,8 @@ function deriveClues(
   return clues;
 }
 
-const TARGET_CLUE_DENSITY_MIN = 0.35;
-const TARGET_CLUE_DENSITY_MAX = 0.55;
+const TARGET_CLUE_DENSITY_MIN = 0.25;
+const TARGET_CLUE_DENSITY_MAX = 0.4;
 const MAX_CLUE_REMOVAL_ATTEMPTS_MULTIPLIER = 3;
 
 /**
