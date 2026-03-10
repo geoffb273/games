@@ -57,6 +57,7 @@ export type SolvePuzzleInput =
       hashiSolution?: never;
       minesweeperSolution?: never;
       slitherlinkSolution?: never;
+      flowSolution?: never;
     })
   | (BaseSolvePuzzleInput & {
       puzzleType: PuzzleType.Hashi;
@@ -64,6 +65,7 @@ export type SolvePuzzleInput =
       hanjiSolution?: never;
       minesweeperSolution?: never;
       slitherlinkSolution?: never;
+      flowSolution?: never;
     })
   | (BaseSolvePuzzleInput & {
       puzzleType: PuzzleType.Minesweeper;
@@ -71,6 +73,7 @@ export type SolvePuzzleInput =
       hanjiSolution?: never;
       hashiSolution?: never;
       slitherlinkSolution?: never;
+      flowSolution?: never;
     })
   | (BaseSolvePuzzleInput & {
       puzzleType: PuzzleType.Slitherlink;
@@ -78,6 +81,15 @@ export type SolvePuzzleInput =
       hanjiSolution?: never;
       hashiSolution?: never;
       minesweeperSolution?: never;
+      flowSolution?: never;
+    })
+  | (BaseSolvePuzzleInput & {
+      puzzleType: PuzzleType.Flow;
+      flowSolution: number[][] | null;
+      hanjiSolution?: never;
+      hashiSolution?: never;
+      minesweeperSolution?: never;
+      slitherlinkSolution?: never;
     });
 
 export function useSolvePuzzle() {

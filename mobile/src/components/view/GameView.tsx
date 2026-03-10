@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { ErrorView } from '@/components/common/ErrorView';
+import { FlowBoard } from '@/components/game/FlowBoard/FlowBoard';
 import { HanjiBoard } from '@/components/game/HanjiBoard/HanjiBoard';
 import { HashiBoard } from '@/components/game/HashiBoard/HashiBoard';
 import { MinesweeperBoard } from '@/components/game/MinesweeperBoard/MinesweeperBoard';
@@ -50,6 +51,8 @@ export function GameView({ id }: { id: string }) {
 
 function PuzzleBoard({ puzzle }: { puzzle: Puzzle }) {
   switch (puzzle.type) {
+    case 'FLOW':
+      return <FlowBoard puzzle={puzzle} />;
     case 'HANJI':
       return <HanjiBoard puzzle={puzzle} />;
     case 'HASHI':

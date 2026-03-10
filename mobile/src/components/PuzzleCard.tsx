@@ -11,6 +11,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { ErrorView } from './common/ErrorView';
 
 const PUZZLE_TYPE_ICONS: Record<Puzzle['type'], keyof typeof MaterialCommunityIcons.glyphMap> = {
+  FLOW: 'chart-bubble',
   HANJI: 'grid-large',
   HASHI: 'bridge',
   MINESWEEPER: 'bomb',

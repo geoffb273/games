@@ -4,6 +4,8 @@ import { type FragmentData } from '@/api/typeUtils';
 import { fragmentRegistry } from '@/client/apollo';
 import { type FragmentType, useFragment } from '@/generated/gql';
 import {
+  type FlowPuzzleFragmentFragment,
+  FlowPuzzleFragmentFragmentDoc,
   type HanjiPuzzleFragmentFragment,
   HanjiPuzzleFragmentFragmentDoc,
   type HashiPuzzleFragmentFragment,
@@ -57,6 +59,18 @@ gql`
     clues
   }
 
+  fragment FlowPuzzleFragment on FlowPuzzle {
+    width
+    height
+    pairs {
+      number
+      ends {
+        row
+        col
+      }
+    }
+  }
+
   fragment PuzzleFragment on Puzzle {
     __typename
     id
@@ -79,6 +93,9 @@ gql`
     ... on SlitherlinkPuzzle {
       ...SlitherlinkPuzzleFragment
     }
+    ... on FlowPuzzle {
+      ...FlowPuzzleFragment
+    }
   }
 `;
 
@@ -87,6 +104,7 @@ fragmentRegistry.register(HanjiPuzzleFragmentFragmentDoc);
 fragmentRegistry.register(HashiPuzzleFragmentFragmentDoc);
 fragmentRegistry.register(MinesweeperPuzzleFragmentFragmentDoc);
 fragmentRegistry.register(SlitherlinkPuzzleFragmentFragmentDoc);
+fragmentRegistry.register(FlowPuzzleFragmentFragmentDoc);
 
 export { PuzzleTypeGraphql as PuzzleType };
 
@@ -163,7 +181,16 @@ export type SlitherlinkPuzzle = PuzzleBase & {
   clues: (number | null)[][];
 };
 
-export type Puzzle = HanjiPuzzle | HashiPuzzle | MinesweeperPuzzle | SlitherlinkPuzzle;
+export type FlowPairEnd = { row: number; col: number };
+
+export type FlowPuzzle = PuzzleBase & {
+  type: 'FLOW';
+  height: number;
+  width: number;
+  pairs: { number: number; ends: [FlowPairEnd, FlowPairEnd] }[];
+};
+
+export type Puzzle = HanjiPuzzle | HashiPuzzle | MinesweeperPuzzle | SlitherlinkPuzzle | FlowPuzzle;
 
 /**
  * Maps the graphql puzzle fragment type to the expected {@link Puzzle} type
@@ -244,6 +271,22 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
       };
       return result;
     }
+    case 'FlowPuzzle': {
+      const flow = getFragmentData(FlowPuzzleFragmentFragmentDoc, puzzle);
+      return {
+        ...shared,
+        type: 'FLOW',
+        height: flow.height,
+        width: flow.width,
+        pairs: flow.pairs.map((p) => ({
+          number: p.number,
+          ends: [p.ends[0], p.ends[1]].map((e) => ({ row: e.row, col: e.col })) as [
+            FlowPairEnd,
+            FlowPairEnd,
+          ],
+        })),
+      };
+    }
   }
 }
 
@@ -280,12 +323,19 @@ export type SlitherlinkPuzzleFragmentData = PuzzleBaseFragmentData &
     __typename: 'SlitherlinkPuzzle';
   };
 
+/** Unmasked fragment data for FlowPuzzle. Keep in sync with PuzzleFragment + FlowPuzzleFragment. */
+export type FlowPuzzleFragmentData = PuzzleBaseFragmentData &
+  FragmentData<FlowPuzzleFragmentFragment> & {
+    __typename: 'FlowPuzzle';
+  };
+
 /** Union of all puzzle fragment data shapes (unmasked). */
 export type PuzzleFragmentData =
   | HanjiPuzzleFragmentData
   | HashiPuzzleFragmentData
   | MinesweeperPuzzleFragmentData
-  | SlitherlinkPuzzleFragmentData;
+  | SlitherlinkPuzzleFragmentData
+  | FlowPuzzleFragmentData;
 
 /**
  * Maps the {@link Puzzle} type to the shape expected when writing to the cache.
@@ -358,6 +408,19 @@ export function mapToPuzzleFragment(puzzle: Puzzle): PuzzleQueryData {
         width: puzzle.width,
         height: puzzle.height,
         clues: puzzle.clues,
+      };
+      return data as PuzzleQueryData;
+    }
+    case 'FLOW': {
+      const data: FlowPuzzleFragmentData = {
+        __typename: 'FlowPuzzle',
+        ...base,
+        width: puzzle.width,
+        height: puzzle.height,
+        pairs: puzzle.pairs.map((p) => ({
+          number: p.number,
+          ends: p.ends.map((e) => ({ row: e.row, col: e.col })),
+        })),
       };
       return data as PuzzleQueryData;
     }

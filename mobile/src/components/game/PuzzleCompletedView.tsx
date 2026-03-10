@@ -7,9 +7,11 @@ import { Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
 const PUZZLE_TYPE_LABELS: Record<Puzzle['type'], string> = {
+  FLOW: 'Flow',
   HANJI: 'Hanji',
   HASHI: 'Hashi',
   MINESWEEPER: 'Minesweeper',
+  SLITHERLINK: 'Slitherlink',
 };
 
 type PuzzleCompletedViewProps = {

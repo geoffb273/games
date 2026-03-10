@@ -16,7 +16,7 @@ function startOfDayUTC(date: Date): Date {
 
 async function main() {
   const dateArg = process.argv[2];
-  const date = startOfDayUTC(dateArg ? parseDate(dateArg) : new Date());
+  const date = startOfDayUTC(dateArg ? parseDate(dateArg) : new Date('2026-03-10'));
 
   console.log(`Creating daily challenge for ${date.toISOString().split('T')[0]}...`);
 
