@@ -78,15 +78,15 @@ export function AuthFetchProvider({ children }: { children: React.ReactNode }) {
   const isError = isErrorNewToken || isErrorUser;
 
   const value: AuthFetchContextType = useMemo(() => {
-    if (isLoading) {
+    if (isError) {
       return {
-        status: 'loading',
+        status: 'error',
       };
     }
 
-    if (isError || user == null) {
+    if (isLoading || user == null) {
       return {
-        status: 'error',
+        status: 'loading',
       };
     }
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, runOnJS } from 'react-native-reanimated';
 
 import { AppLogo } from '@/components/common/AppLogo';
 import { useLatestRef } from '@/hooks/useLatestRef';
@@ -8,10 +8,9 @@ import { useStableCallback } from '@/hooks/useStableCallback';
 import { useTheme } from '@/hooks/useTheme';
 import { useTimeoutEffect } from '@/hooks/useTimeoutEffect';
 
-const INITIAL_BLANK_MS = 300;
-const MIN_SPINNER_MS = 500;
+const MIN_LOGO__MS = 500;
 
-type LoadingStep = 'hidden' | 'blank' | 'logo' | 'can-hide';
+type LoadingStep = 'hidden' | 'logo' | 'can-hide' | 'hiding';
 
 export function AppLoadingView({
   isLoading,
@@ -22,7 +21,7 @@ export function AppLoadingView({
 }) {
   const onHiddenStable = useStableCallback(onHidden);
   const theme = useTheme();
-  const [step, setStep] = useState<LoadingStep>(isLoading ? 'blank' : 'hidden');
+  const [step, setStep] = useState<LoadingStep>(isLoading ? 'logo' : 'hidden');
   const stepRef = useLatestRef(step);
 
   useEffect(() => {
@@ -38,33 +37,40 @@ export function AppLoadingView({
       case 'hidden':
         return;
       case 'can-hide':
-      case 'blank':
-        setStep('hidden');
+        setStep('hiding');
         return;
       case 'logo':
         const timeout = setTimeout(() => {
           setStep('can-hide');
-        }, MIN_SPINNER_MS);
+        }, MIN_LOGO__MS);
         return () => clearTimeout(timeout);
     }
   }, [isLoading, step]);
 
   useTimeoutEffect(
     () => {
-      if (!isLoading || stepRef.current !== 'blank') return;
+      if (!isLoading || stepRef.current !== 'logo') return;
 
-      setStep('logo');
+      setStep('can-hide');
     },
     [isLoading, stepRef],
-    INITIAL_BLANK_MS,
+    MIN_LOGO__MS,
   );
 
-  const showLogo = step === 'logo';
+  const showLogo = step === 'logo' || step === 'can-hide';
 
   return (
     <Animated.View style={[styles.overlay, { backgroundColor: theme.background }]}>
       {showLogo && (
-        <Animated.View entering={FadeIn}>
+        <Animated.View
+          entering={FadeIn.duration(100)}
+          exiting={FadeOut.duration(100).withCallback((finished) => {
+            'worklet';
+            if (finished) {
+              runOnJS(setStep)('hidden');
+            }
+          })}
+        >
           <AppLogo />
         </Animated.View>
       )}
