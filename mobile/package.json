@@ -5,6 +5,10 @@
   "scripts": {
     "test": "jest --watchAll",
     "dev": "expo start",
+    "build:prod": "eas build --platform ios --profile production",
+    "build:preview": "eas build --platform ios --profile preview",
+    "build:dev": "eas build --platform ios --profile development",
+    "submit": "eas submit --platform ios",
     "eas-build-post-install": "pnpm run generate",
     "postinstall": "pnpm run generate",
     "ios": "expo run ios",
