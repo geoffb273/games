@@ -5,16 +5,20 @@ import { Text } from '@/components/common/Text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
+import { Button } from './Button';
+
 type ErrorViewProps = {
   title?: string;
   message?: string | null;
   containerStyle?: StyleProp<ViewStyle>;
+  onRetry?: () => void;
 };
 
 export function ErrorView({
   title = 'Something went wrong',
   message = 'Please try again.',
   containerStyle,
+  onRetry,
 }: ErrorViewProps) {
   return (
     <View style={[styles.container, containerStyle]}>
@@ -27,6 +31,7 @@ export function ErrorView({
           {message}
         </Text>
       ) : null}
+      {onRetry != null ? <Button onPress={onRetry}>Retry</Button> : null}
     </View>
   );
 }

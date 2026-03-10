@@ -30,10 +30,12 @@ type TextStyleProps =
       type: SemanticType;
     };
 
+export type TextColor = 'text' | 'textSecondary' | 'success' | 'warning' | 'background' | 'error';
+
 type TextProps = {
   children: ReactNode;
   numberOfLines?: number;
-  color?: 'text' | 'textSecondary' | 'success' | 'warning' | 'background' | 'error';
+  color?: TextColor;
   _colorOverride?: string;
   textAlign?: 'left' | 'center' | 'right' | 'justify';
   style?: StyleProp<TextStyle>;

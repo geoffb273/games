@@ -19,6 +19,7 @@ export function HomeView() {
     isError: isChallengesError,
     fetchMore,
     hasNextPage,
+    refetch: refetchChallenges,
   } = useDailyChallengesQuery();
 
   const [selectedChallengeId, setSelectedChallengeId] = useState<string | null>(null);
@@ -30,12 +31,13 @@ export function HomeView() {
     puzzles,
     isLoading: isPuzzlesLoading,
     isError: isPuzzlesError,
+    refetch: refetchPuzzles,
   } = usePuzzlesQuery({ dailyChallengeId: activeChallengeId });
 
   if (isChallengesError && !isChallengesLoading) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.background }]}>
-        <ErrorView message="Unable to load daily challenges" />
+        <ErrorView message="Unable to load daily challenges" onRetry={refetchChallenges} />
       </View>
     );
   }
@@ -43,9 +45,9 @@ export function HomeView() {
   return (
     <FlatListLayout
       header={
-        <>
+        <View style={styles.headerContainer}>
           <View style={styles.header}>
-            <Text type="h2">Puzzle Book</Text>
+            <Text type="h2">Game Brain</Text>
           </View>
           <DailyChallengesList
             dailyChallenges={dailyChallenges}
@@ -54,20 +56,27 @@ export function HomeView() {
             hasNextPage={hasNextPage}
             onEndReached={fetchMore}
           />
-        </>
+        </View>
       }
       data={puzzles ?? []}
       renderItem={({ item }) => <PuzzleCard puzzle={item} />}
       contentContainerStyle={styles.puzzleList}
       edges={['top']}
       ListEmptyComponent={
-        <PuzzleListEmptyState isLoading={isPuzzlesLoading} isError={isPuzzlesError} />
+        <PuzzleListEmptyState
+          isLoading={isPuzzlesLoading}
+          isError={isPuzzlesError}
+          onRetry={refetchPuzzles}
+        />
       }
     />
   );
 }
 
 const styles = StyleSheet.create({
+  headerContainer: {
+    gap: Spacing.two,
+  },
   header: {
     paddingHorizontal: Spacing.four,
     gap: Spacing.half,

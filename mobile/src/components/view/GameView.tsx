@@ -19,7 +19,7 @@ type TransitionPhase = 'playing' | 'exiting' | 'completed';
 const BOARD_EXIT_DURATION_MS = 300;
 
 export function GameView({ id }: { id: string }) {
-  const { puzzle, isLoading, isError, isNotFound } = usePuzzleQuery({ id });
+  const { puzzle, isLoading, isError, isNotFound, refetch } = usePuzzleQuery({ id });
 
   const { shouldShowCompleted, showPlaceholder, boardExitAnimation, markBoardShown } =
     usePuzzleBoardTransition({ puzzle, puzzleId: id });
@@ -37,7 +37,7 @@ export function GameView({ id }: { id: string }) {
   if (isError || isPuzzleMissing) {
     return (
       <View style={styles.centered}>
-        <ErrorView message="Unable to load puzzle" />
+        <ErrorView message="Unable to load puzzle" onRetry={refetch} />
       </View>
     );
   }

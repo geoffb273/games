@@ -1,14 +1,19 @@
-import { useState } from 'react';
-import { StyleSheet, Switch, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
+import { Toggle } from '@/components/common/Toggle';
 import { Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
+import { setHapticsPreference, useHapticsPreference } from '@/store/hapticsStore';
+import { setThemePreference, useThemePreference } from '@/store/themeStore';
 
 export function SettingsView() {
   const theme = useTheme();
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const { preference } = useThemePreference();
+  const { preference: hapticsPreference } = useHapticsPreference();
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -20,33 +25,85 @@ export function SettingsView() {
           </Text>
         </View>
 
-        <View
-          style={[
-            styles.settingRow,
-            {
-              backgroundColor: theme.backgroundElement,
-              borderColor: theme.borderSubtle,
-            },
-          ]}
-        >
-          <View style={styles.settingText}>
-            <Text type="emphasized_body">Sound Effects</Text>
-            <Text type="caption" color="textSecondary">
-              Toggle in-game sound effects on or off.
-            </Text>
-          </View>
+        <View style={styles.settingsSection}>
+          <SettingsRow
+            title="Haptics"
+            description="Enable or disable haptic feedback throughout the app"
+            rightContent={
+              <Toggle
+                value={hapticsPreference === 'on'}
+                onValueChange={(isOn) => setHapticsPreference(isOn ? 'on' : 'off')}
+              />
+            }
+          />
 
-          <Switch
-            value={soundEnabled}
-            onValueChange={setSoundEnabled}
-            trackColor={{
-              false: theme.borderSubtle,
-              true: theme.success,
-            }}
-            thumbColor={theme.background}
+          <SettingsRow
+            title="Dark Mode"
+            description="Use a dark appearance throughout the app"
+            rightContent={
+              <Toggle
+                value={preference === 'dark'}
+                onValueChange={(isDark) => setThemePreference(isDark ? 'dark' : 'light')}
+              />
+            }
           />
         </View>
+
+        <View style={styles.buttonPreviewSection}>
+          <Text type="caption" color="textSecondary">
+            Buttons
+          </Text>
+
+          <View style={styles.buttonRow}>
+            <Button variant="primary" onPress={() => {}}>
+              Primary
+            </Button>
+            <Button variant="secondary" onPress={() => {}}>
+              Secondary
+            </Button>
+          </View>
+
+          <View style={styles.buttonRow}>
+            <Button variant="outline" onPress={() => {}}>
+              Outline
+            </Button>
+            <Button variant="ghost" onPress={() => {}}>
+              Ghost
+            </Button>
+          </View>
+        </View>
       </SafeAreaView>
+    </View>
+  );
+}
+
+type SettingsRowProps = {
+  title: string;
+  description: string;
+  rightContent: React.ReactNode;
+};
+
+function SettingsRow({ title, description, rightContent }: SettingsRowProps) {
+  const theme = useTheme();
+
+  return (
+    <View
+      style={[
+        styles.settingRow,
+        {
+          backgroundColor: theme.backgroundElement,
+          borderColor: theme.borderSubtle,
+        },
+      ]}
+    >
+      <View style={styles.settingText}>
+        <Text type="emphasized_body">{title}</Text>
+        <Text type="caption" color="textSecondary">
+          {description}
+        </Text>
+      </View>
+
+      {rightContent}
     </View>
   );
 }
@@ -58,6 +115,17 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     paddingHorizontal: Spacing.four,
+  },
+  settingsSection: {
+    gap: Spacing.two,
+  },
+  buttonPreviewSection: {
+    marginTop: Spacing.three,
+    gap: Spacing.one,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
   },
   header: {
     gap: Spacing.half,

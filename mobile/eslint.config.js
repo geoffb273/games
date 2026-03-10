@@ -62,6 +62,11 @@ module.exports = defineConfig([
               importNames: ['Text'],
               message: "Use '@/components/common/Text' instead.",
             },
+            {
+              name: 'react-native',
+              importNames: ['Switch'],
+              message: "Use '@/components/common/Toggle' instead.",
+            },
           ],
         },
       ],

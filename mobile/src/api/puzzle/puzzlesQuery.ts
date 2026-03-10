@@ -30,7 +30,7 @@ export function usePuzzlesQuery({
 }: {
   dailyChallengeId: string | null | undefined;
 }) {
-  const { data, loading, error } = useQuery(PuzzlesDocument, {
+  const { data, loading, error, refetch } = useQuery(PuzzlesDocument, {
     variables: { input: { dailyChallengeId } },
   });
 
@@ -42,5 +42,6 @@ export function usePuzzlesQuery({
     isLoading: loading,
     isError: error != null,
     error,
+    refetch,
   };
 }

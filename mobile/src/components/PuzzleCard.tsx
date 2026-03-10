@@ -21,9 +21,11 @@ const PUZZLE_TYPE_ICONS: Record<Puzzle['type'], keyof typeof MaterialCommunityIc
 export function PuzzleListEmptyState({
   isLoading,
   isError,
+  onRetry,
 }: {
   isLoading?: boolean;
   isError?: boolean;
+  onRetry?: () => void;
 }) {
   const theme = useTheme();
 
@@ -32,7 +34,7 @@ export function PuzzleListEmptyState({
       {isLoading ? (
         <ActivityIndicator size="small" color={theme.text} />
       ) : isError ? (
-        <ErrorView title="Unable to load puzzles" message={null} />
+        <ErrorView title="Unable to load puzzles" message={null} onRetry={onRetry} />
       ) : (
         <Text type="body" color="textSecondary" textAlign="center">
           No puzzles available
