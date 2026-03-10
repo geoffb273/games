@@ -71,7 +71,7 @@ export function HanjiBoard({ puzzle }: HanjiBoardProps) {
               ]}
             >
               {puzzle.colClues[c].map((n, i) => (
-                <Text key={i} type="caption" color="textSecondary">
+                <Text key={i} type="emphasized_body" color="textSecondary">
                   {n}
                 </Text>
               ))}
@@ -94,7 +94,7 @@ export function HanjiBoard({ puzzle }: HanjiBoardProps) {
             >
               <View style={styles.rowClueNums}>
                 {puzzle.rowClues[r].map((n, i) => (
-                  <Text key={i} type="caption" color="textSecondary">
+                  <Text key={i} type="emphasized_body" color="textSecondary">
                     {n}
                   </Text>
                 ))}

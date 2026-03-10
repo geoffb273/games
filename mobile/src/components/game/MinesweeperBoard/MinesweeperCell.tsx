@@ -12,6 +12,7 @@ import Animated, {
   ZoomIn,
 } from 'react-native-reanimated';
 
+import { Text } from '@/components/common/Text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -96,7 +97,6 @@ export const MinesweeperCell = memo(function MinesweeperCell({
     : isFlagged
       ? theme.backgroundSelected
       : theme.backgroundElement;
-  const fontSize = size > 36 ? 18 : size > 30 ? 15 : 12;
 
   return (
     <GestureDetector gesture={gesture}>
@@ -114,16 +114,17 @@ export const MinesweeperCell = memo(function MinesweeperCell({
         ]}
       >
         {isRevealed && value != null && value > 0 ? (
-          <Animated.Text
-            entering={FadeIn.duration(200).delay(Math.min(20 * (row + col), 600))}
-            style={[styles.cellNumber, { fontSize, color: NUMBER_COLORS[value] ?? theme.text }]}
-          >
-            {value}
-          </Animated.Text>
+          <Animated.View entering={FadeIn.duration(200).delay(Math.min(20 * (row + col), 600))}>
+            <Text _colorOverride={NUMBER_COLORS[value] ?? theme.text} size="lg">
+              {value}
+            </Text>
+          </Animated.View>
         ) : isFlagged ? (
-          <Animated.Text entering={ZoomIn.duration(200)} style={[styles.flagMarker, { fontSize }]}>
-            ▲
-          </Animated.Text>
+          <Animated.View entering={ZoomIn.duration(200)}>
+            <Text color="error" size="lg">
+              ▲
+            </Text>
+          </Animated.View>
         ) : null}
       </Animated.View>
     </GestureDetector>
