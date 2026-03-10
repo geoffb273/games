@@ -41,11 +41,14 @@ type UseDailyChallengesQueryResult = {
   refetch: () => void;
 };
 
-export function useDailyChallengesQuery(): UseDailyChallengesQueryResult {
+export function useDailyChallengesQuery({
+  enabled = true,
+}: { enabled?: boolean } = {}): UseDailyChallengesQueryResult {
   const { data, loading, error, fetchMore, networkStatus, refetch } = useQuery(
     DailyChallengesDocument,
     {
       variables: { first: PAGE_SIZE },
+      skip: !enabled,
     },
   );
 

@@ -1,21 +1,16 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
 
 import { useAuthenticateDevice } from '@/api/user/authenticateDeviceMutation';
 import { useCurrentUserQuery } from '@/api/user/currentUserQuer';
-import { type AuthenticatedUser } from '@/api/user/user';
-import { ErrorView } from '@/components/common/ErrorView';
-import { AppLoadingView } from '@/components/view/AppLoadingView';
-import { AuthContext } from '@/context/AuthContext';
+import { AuthFetchContext, type AuthFetchContextType } from '@/context/AuthFetchContext';
 import { getOrCreateDeviceId } from '@/store/device';
 import { clearToken, loadToken, saveToken, useAuthToken } from '@/store/token';
 
 const MAX_RETRIES = 3;
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthFetchProvider({ children }: { children: React.ReactNode }) {
   const { token } = useAuthToken();
   const [isLoadingToken, setIsLoadingToken] = useState(false);
-  const [showLoadingView, setShowLoadingView] = useState(true);
 
   const retryAttemptsRef = useRef(0);
   const isRetryingRef = useRef(false);
@@ -82,19 +77,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isLoading = isLoadingToken || isLoadingNewToken || isLoadingUser;
   const isError = isErrorNewToken || isErrorUser;
 
-  const value:
-    | { user: null; status: 'loading' | 'error' }
-    | { user: AuthenticatedUser; status: 'authenticated' } = useMemo(() => {
-    if (isLoading || showLoadingView) {
+  const value: AuthFetchContextType = useMemo(() => {
+    if (isLoading) {
       return {
-        user: null,
         status: 'loading',
       };
     }
 
     if (isError || user == null) {
       return {
-        user: null,
         status: 'error',
       };
     }
@@ -103,29 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user: user,
       status: 'authenticated',
     };
-  }, [isLoading, showLoadingView, isError, user]);
+  }, [isLoading, isError, user]);
 
-  switch (value.status) {
-    case 'loading':
-      return <AppLoadingView isLoading={isLoading} onHidden={() => setShowLoadingView(false)} />;
-    case 'error':
-      return (
-        <View style={styles.errorContainer}>
-          <ErrorView
-            title="Sign-in failed"
-            message="We couldn’t sign you in. Please check your connection and try again."
-          />
-        </View>
-      );
-    case 'authenticated':
-      return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-  }
+  return <AuthFetchContext.Provider value={value}>{children}</AuthFetchContext.Provider>;
 }
-
-const styles = StyleSheet.create({
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});

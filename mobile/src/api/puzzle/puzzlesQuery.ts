@@ -27,11 +27,14 @@ gql`
  */
 export function usePuzzlesQuery({
   dailyChallengeId,
+  enabled = true,
 }: {
+  enabled?: boolean;
   dailyChallengeId: string | null | undefined;
 }) {
   const { data, loading, error, refetch } = useQuery(PuzzlesDocument, {
     variables: { input: { dailyChallengeId } },
+    skip: !enabled,
   });
 
   const puzzles =
