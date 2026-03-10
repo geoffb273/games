@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useReducer, useRef } from 'react';
 
+import { z } from 'zod';
+
 import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
+import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { triggerHapticHard, triggerHapticLight } from '@/utils/hapticUtils';
 import { isSlitherlinkComplete } from '@/utils/slitherlink/validation';
@@ -83,10 +86,58 @@ export type SlitherlinkGame = {
   onVerticalEdgePress: (row: number, col: number) => void;
 };
 
+const edgeSchema = z.union([z.literal('empty'), z.literal('line')]);
+
 export function useSlitherlinkGame(puzzle: SlitherlinkPuzzle): SlitherlinkGame {
   const { id: puzzleId, width, height, clues } = puzzle;
-  const [state, dispatch] = useReducer(gameReducer, { width, height }, ({ width: w, height: h }) =>
-    createInitialState(w, h),
+
+  const horizontalSchema = useMemo(
+    () =>
+      z
+        .array(z.array(edgeSchema))
+        .refine(
+          (rows) => rows.length === height + 1 && rows.every((r) => r.length === width),
+          'Invalid horizontal edges dimensions',
+        ),
+    [width, height],
+  );
+  const verticalSchema = useMemo(
+    () =>
+      z
+        .array(z.array(edgeSchema))
+        .refine(
+          (rows) => rows.length === height && rows.every((r) => r.length === width + 1),
+          'Invalid vertical edges dimensions',
+        ),
+    [width, height],
+  );
+
+  const stateSchema = useMemo(
+    () =>
+      z.object({
+        horizontal: horizontalSchema,
+        vertical: verticalSchema,
+      }),
+    [horizontalSchema, verticalSchema],
+  );
+
+  const { persistedState, saveState, clearState } = usePersistedGameState<GameState>({
+    puzzleId,
+    puzzleType: PuzzleType.Slitherlink,
+    version: 1,
+    schema: stateSchema,
+  });
+
+  const [state, dispatch] = useReducer(
+    gameReducer,
+    persistedState ?? { width, height },
+    (initial) =>
+      'horizontal' in initial
+        ? (initial as GameState)
+        : createInitialState(
+            (initial as { width: number; height: number }).width,
+            (initial as { width: number; height: number }).height,
+          ),
   );
 
   const { solvePuzzle } = useSolvePuzzle();
@@ -118,6 +169,8 @@ export function useSlitherlinkGame(puzzle: SlitherlinkPuzzle): SlitherlinkGame {
       durationMs,
     });
 
+    clearState();
+
     solvePuzzle({
       puzzleId,
       puzzleType: PuzzleType.Slitherlink,
@@ -134,22 +187,27 @@ export function useSlitherlinkGame(puzzle: SlitherlinkPuzzle): SlitherlinkGame {
         submittedRef.current = false;
       });
   }, [
+    clearState,
+    horizontalLines,
     isComplete,
     puzzleId,
-    horizontalLines,
-    verticalLines,
+    refetch,
     solvePuzzle,
     updateOptimisticallyPuzzleAttempt,
-    refetch,
+    verticalLines,
   ]);
 
   const onHorizontalEdgePress = useStableCallback((row: number, col: number) => {
     triggerHapticLight();
+    const next = gameReducer(state, { type: 'TOGGLE_EDGE', orientation: 'horizontal', row, col });
+    saveState(next);
     dispatch({ type: 'TOGGLE_EDGE', orientation: 'horizontal', row, col });
   });
 
   const onVerticalEdgePress = useStableCallback((row: number, col: number) => {
     triggerHapticLight();
+    const next = gameReducer(state, { type: 'TOGGLE_EDGE', orientation: 'vertical', row, col });
+    saveState(next);
     dispatch({ type: 'TOGGLE_EDGE', orientation: 'vertical', row, col });
   });
 

@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
+import { z } from 'zod';
+
 import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
+import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { triggerHapticHard, triggerHapticLight, triggerHapticMedium } from '@/utils/hapticUtils';
 import { getCellsToReveal } from '@/utils/minesweeper/reveal';
@@ -80,18 +83,76 @@ export type MinesweeperGame = {
   toggleMode: () => void;
 };
 
+type MinesweeperPersisted = {
+  state: GameState;
+  mode: InteractionMode;
+  elapsedMs: number;
+};
+
 function buildMinesweeperSolution(mineField: (number | 'MINE')[][]): boolean[][] {
   return mineField.map((row) => row.map((cell) => cell === 'MINE'));
 }
 
+const cellStatusSchema = z.union([z.literal('hidden'), z.literal('flagged')]);
+const revealedCellSchema = z.object({
+  row: z.number().int().nonnegative(),
+  col: z.number().int().nonnegative(),
+  value: z.number().int(),
+});
+
 export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
   const { id: puzzleId, width, height, mineCount, mineField } = puzzle;
-  const [state, dispatch] = useReducer(gameReducer, puzzle, createInitialState);
-  const [mode, setMode] = useState<InteractionMode>('flag');
+
+  const stateSchema = useMemo(
+    () =>
+      z.object({
+        cells: z
+          .array(z.array(cellStatusSchema))
+          .refine(
+            (rows) => rows.length === height && rows.every((r) => r.length === width),
+            'Invalid minesweeper cells dimensions',
+          ),
+        flagCount: z.number().int().min(0),
+        userRevealedCells: z.array(revealedCellSchema),
+        gameOver: z.boolean(),
+      }),
+    [height, width],
+  );
+
+  const persistedSchema = useMemo(
+    () =>
+      z.object({
+        state: stateSchema,
+        mode: z.union([z.literal('flag'), z.literal('reveal')]),
+        elapsedMs: z.number().nonnegative(),
+      }),
+    [stateSchema],
+  );
+
+  const { persistedState, saveState, clearState } = usePersistedGameState<MinesweeperPersisted>({
+    puzzleId,
+    puzzleType: PuzzleType.Minesweeper,
+    version: 1,
+    schema: persistedSchema,
+  });
+
+  const [state, dispatch] = useReducer(
+    gameReducer,
+    persistedState?.state ?? { height, width },
+    (initial) =>
+      'cells' in initial
+        ? (initial as GameState)
+        : createInitialState(initial as { height: number; width: number }),
+  );
+  const [mode, setMode] = useState<InteractionMode>(persistedState?.mode ?? 'flag');
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzleId });
   const { refetch } = useDailyChallengesQuery();
-  const startedAtRef = useRef<Date>(puzzle.attempt?.startedAt ?? new Date());
+  const startedAtRef = useRef<Date>(
+    persistedState != null
+      ? new Date(Date.now() - persistedState.elapsedMs)
+      : (puzzle.attempt?.startedAt ?? new Date()),
+  );
   const submittedRef = useRef(false);
 
   const revealedMap = useMemo(() => {
@@ -109,6 +170,11 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
 
   const isWin = !state.gameOver && revealedMap.size === width * height - mineCount;
 
+  const saveWithTime = useStableCallback((nextState: GameState, nextMode: InteractionMode) => {
+    const elapsedMs = Date.now() - startedAtRef.current.getTime();
+    saveState({ state: nextState, mode: nextMode, elapsedMs });
+  });
+
   useEffect(() => {
     if (!state.gameOver && !isWin) return;
     if (submittedRef.current) return;
@@ -121,6 +187,8 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
       startedAt: startedAtRef.current,
       ...(success && { completedAt, durationMs }),
     });
+    clearState();
+
     solvePuzzle({
       puzzleId,
       puzzleType: PuzzleType.Minesweeper,
@@ -133,13 +201,14 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
         submittedRef.current = false;
       });
   }, [
-    state.gameOver,
+    clearState,
     isWin,
-    puzzleId,
     mineField,
-    solvePuzzle,
-    updateOptimisticallyPuzzleAttempt,
+    puzzleId,
     refetch,
+    solvePuzzle,
+    state.gameOver,
+    updateOptimisticallyPuzzleAttempt,
   ]);
 
   const onCellTap = useStableCallback((row: number, col: number) => {
@@ -149,15 +218,21 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     const isFlagged = state.cells[row][col] === 'flagged';
     if (mode === 'flag') {
       triggerHapticLight();
+      const next = gameReducer(state, { type: 'TOGGLE_FLAG', row, col });
+      saveWithTime(next, mode);
       dispatch({ type: 'TOGGLE_FLAG', row, col });
       return;
     }
     if (isFlagged) return;
     const result = getCellsToReveal(row, col, puzzle.mineField, puzzle.width, puzzle.height);
     if (result.hitMine) {
+      const next = gameReducer(state, { type: 'GAME_OVER' });
+      saveWithTime(next, mode);
       dispatch({ type: 'GAME_OVER' });
     } else {
       triggerHapticLight();
+      const next = gameReducer(state, { type: 'REVEAL_CELLS', cells: result.cells });
+      saveWithTime(next, mode);
       dispatch({ type: 'REVEAL_CELLS', cells: result.cells });
     }
   });
@@ -166,12 +241,18 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     if (state.gameOver) return;
     if (revealedMap.has(`${row},${col}`)) return;
     triggerHapticMedium();
+    const next = gameReducer(state, { type: 'TOGGLE_FLAG', row, col });
+    saveWithTime(next, mode);
     dispatch({ type: 'TOGGLE_FLAG', row, col });
   });
 
   const toggleMode = useCallback(() => {
-    setMode((prev) => (prev === 'flag' ? 'reveal' : 'flag'));
-  }, []);
+    setMode((prev) => {
+      const next = prev === 'flag' ? 'reveal' : 'flag';
+      saveWithTime(state, next);
+      return next;
+    });
+  }, [saveWithTime, state]);
 
   return {
     revealedMap,
