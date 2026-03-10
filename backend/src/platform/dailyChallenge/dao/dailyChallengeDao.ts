@@ -14,13 +14,14 @@ const DAILY_CHALLENGE_SELECT = {
 } satisfies Prisma.DailyChallengeSelect;
 
 /**
- * Gets the latest daily challenge
+ * Gets the latest daily challenge where the date is today or before
  *
  * @throws {NotFoundError} if no daily challenge is found
  */
 export async function getLatestDailyChallenge(): Promise<DailyChallenge> {
   return prisma.dailyChallenge
     .findFirstOrThrow({
+      where: { date: { lte: new Date() } },
       orderBy: { date: 'desc' },
       select: DAILY_CHALLENGE_SELECT,
     })
@@ -54,7 +55,7 @@ export async function createDailyChallenge({ date }: { date: Date }): Promise<Da
 }
 
 /**
- * Paginated lists of daily challenges
+ * Paginated lists of daily challenges where the date is today or before
  */
 export async function listDailyChallenges({
   take,
@@ -66,6 +67,7 @@ export async function listDailyChallenges({
     skip,
     cursor,
     orderBy: { date: 'desc' },
+    where: { date: { lte: new Date() } },
     select: DAILY_CHALLENGE_SELECT,
   });
 }
