@@ -6,6 +6,7 @@
     "test": "jest --watchAll",
     "dev": "expo start",
     "eas-build-post-install": "pnpm run generate",
+    "postinstall": "pnpm run generate",
     "ios": "expo run ios",
     "clean": "expo prebuild --clean --platform ios",
     "tsc": "tsc --noEmit",
