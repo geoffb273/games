@@ -5,6 +5,7 @@ import { type Puzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
+import { formatDuration } from '@/utils/timeUtils';
 
 const PUZZLE_TYPE_LABELS: Record<Puzzle['type'], string> = {
   FLOW: 'Flow',
@@ -24,8 +25,7 @@ export function PuzzleCompletedView({ puzzleType, solved, durationMs }: PuzzleCo
   const theme = useTheme();
   const typeLabel = PUZZLE_TYPE_LABELS[puzzleType];
 
-  const formattedDuration =
-    durationMs != null && durationMs > 0 ? `${Math.round(durationMs / 1000)}s` : null;
+  const formattedDuration = formatDuration(durationMs);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
