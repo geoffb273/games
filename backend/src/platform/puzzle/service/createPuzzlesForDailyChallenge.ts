@@ -1,3 +1,4 @@
+import { generateFlowPuzzleData } from '@/utils/puzzle/flow';
 import { generateHanjiPuzzleData } from '@/utils/puzzle/hanji';
 import { generateHashiPuzzleData } from '@/utils/puzzle/hashi';
 import { generateMinesweeperPuzzleData } from '@/utils/puzzle/minesweeper';
@@ -12,6 +13,13 @@ export async function createPuzzlesForDailyChallenge({
   dailyChallengeId: string;
 }): Promise<Puzzle[]> {
   const seed = dailyChallengeId;
+
+  const flow = generateFlowPuzzleData({
+    width: 8,
+    height: 8,
+    numPairs: 4,
+    seed,
+  });
 
   const hanji = generateHanjiPuzzleData({
     width: 8,
@@ -42,6 +50,6 @@ export async function createPuzzlesForDailyChallenge({
 
   return createPuzzles({
     dailyChallengeId,
-    data: { hanji, hashi, minesweeper, slitherlink },
+    data: { flow, hanji, hashi, minesweeper, slitherlink },
   });
 }

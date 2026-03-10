@@ -2,6 +2,7 @@ import { ZodError } from 'zod';
 
 import { getLatestDailyChallenge } from '@/platform/dailyChallenge/service/dailyChallengeService';
 import {
+  flowPuzzleDataSchema,
   hanjiPuzzleDataSchema,
   hashiPuzzleDataSchema,
   minesweeperPuzzleDataSchema,
@@ -101,6 +102,12 @@ builder.mutationField('solvePuzzle', (t) =>
         description:
           'The solution to the Slitherlink puzzle. Should only be provided if the puzzle type is SLITHERLINK.',
       }),
+      flowSolution: t.input.field({
+        type: t.input.listRef(t.input.listRef('Int')),
+        required: false,
+        description:
+          'The solution to the Flow puzzle. Should only be provided if the puzzle type is FLOW.',
+      }),
       startedAt: t.input.field({
         type: 'DateTime',
         required: true,
@@ -130,6 +137,7 @@ builder.mutationField('solvePuzzle', (t) =>
           hashiSolution,
           minesweeperSolution,
           slitherlinkSolution,
+          flowSolution,
           startedAt,
           completedAt,
           durationMs,
@@ -141,6 +149,19 @@ builder.mutationField('solvePuzzle', (t) =>
 
       try {
         switch (puzzleType) {
+          case 'FLOW':
+            return solvePuzzle({
+              puzzleId,
+              userId: user.id,
+              startedAt,
+              completedAt,
+              durationMs,
+              puzzleType: 'FLOW',
+              solution:
+                flowSolution != null
+                  ? flowPuzzleDataSchema.shape.solution.parse(flowSolution)
+                  : null,
+            });
           case 'HANJI':
             return solvePuzzle({
               puzzleId,

@@ -1,4 +1,5 @@
 import {
+  type FlowPuzzle,
   type HanjiPuzzle,
   type HashiPuzzle,
   type MinesweeperPuzzle,
@@ -34,6 +35,39 @@ export const PuzzleRef = builder.interfaceRef<Puzzle>('Puzzle').implement({
       nullable: true,
       resolve: (puzzle, _args, { dataloaders: { userPuzzleAttempt } }) =>
         userPuzzleAttempt.load(puzzle.id),
+    }),
+  }),
+});
+
+// --- Flow types ---
+
+const FlowCellRef = builder.simpleObject('FlowCell', {
+  fields: (t) => ({
+    row: t.int({ nullable: false }),
+    col: t.int({ nullable: false }),
+  }),
+});
+
+const FlowPairRef = builder.simpleObject('FlowPair', {
+  fields: (t) => ({
+    number: t.int({ nullable: false }),
+    ends: t.field({
+      type: [FlowCellRef],
+      nullable: false,
+    }),
+  }),
+});
+
+export const FlowPuzzleRef = builder.objectRef<FlowPuzzle>('FlowPuzzle').implement({
+  interfaces: [PuzzleRef],
+  isTypeOf: (source: unknown): source is FlowPuzzle => (source as Puzzle).type === PuzzleType.FLOW,
+  fields: (t) => ({
+    width: t.int({ nullable: false, resolve: (puzzle) => puzzle.data.width }),
+    height: t.int({ nullable: false, resolve: (puzzle) => puzzle.data.height }),
+    pairs: t.field({
+      type: [FlowPairRef],
+      nullable: false,
+      resolve: (puzzle) => puzzle.data.pairs,
     }),
   }),
 });

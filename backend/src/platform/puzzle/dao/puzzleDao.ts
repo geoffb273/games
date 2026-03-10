@@ -5,6 +5,8 @@ import { parseEnum } from '@/utils/enumUtils';
 import { isForeignKeyViolationError, isNotFoundError } from '@/utils/errorUtils';
 
 import {
+  type FlowPuzzleData,
+  flowPuzzleDataSchema,
   type HanjiPuzzleData,
   hanjiPuzzleDataSchema,
   type HashiPuzzleData,
@@ -112,10 +114,11 @@ export async function getDailyChallengeToPuzzlesMap({
  */
 export async function createPuzzles({
   dailyChallengeId,
-  data: { hanji, hashi, minesweeper, slitherlink },
+  data: { flow, hanji, hashi, minesweeper, slitherlink },
 }: {
   dailyChallengeId: string;
   data: {
+    flow: FlowPuzzleData;
     hanji: HanjiPuzzleData;
     hashi: HashiPuzzleData;
     minesweeper: MinesweeperPuzzleData;
@@ -123,6 +126,7 @@ export async function createPuzzles({
   };
 }): Promise<Puzzle[]> {
   return prisma.$transaction(async (tx) => {
+    const flowPuzzle = await createFlowPuzzle({ dailyChallengeId, data: flow, tx });
     const hanjiPuzzle = await createHanjiPuzzle({ dailyChallengeId, data: hanji, tx });
     const hashiPuzzle = await createHashiPuzzle({ dailyChallengeId, data: hashi, tx });
     const minesweeperPuzzle = await createMinesweeperPuzzle({
@@ -135,8 +139,37 @@ export async function createPuzzles({
       data: slitherlink,
       tx,
     });
-    return [hanjiPuzzle, hashiPuzzle, minesweeperPuzzle, slitherlinkPuzzle];
+    return [flowPuzzle, hanjiPuzzle, hashiPuzzle, minesweeperPuzzle, slitherlinkPuzzle];
   });
+}
+
+async function createFlowPuzzle({
+  dailyChallengeId,
+  data,
+  tx,
+}: {
+  dailyChallengeId: string;
+  data: FlowPuzzleData;
+  tx: Prisma.TransactionClient;
+}): Promise<Puzzle> {
+  const validatedData = flowPuzzleDataSchema.parse(data);
+
+  return tx.puzzle
+    .create({
+      data: {
+        dailyChallengeId,
+        type: PuzzleType.FLOW,
+        data: validatedData,
+      },
+      select: PUZZLE_SELECT,
+    })
+    .then(mapPuzzle)
+    .catch((error) => {
+      if (isForeignKeyViolationError(error)) {
+        throw new UnknownError(`Daily challenge not found with id: ${dailyChallengeId}`);
+      }
+      throw error;
+    });
 }
 
 async function createHanjiPuzzle({
@@ -275,6 +308,8 @@ function mapPuzzle(puzzle: Prisma.PuzzleGetPayload<{ select: typeof PUZZLE_SELEC
     const type = parseEnum(PuzzleType, puzzle.type);
 
     switch (type) {
+      case PuzzleType.FLOW:
+        return { ...base, type, data: flowPuzzleDataSchema.parse(puzzle.data) };
       case PuzzleType.HANJI:
         return { ...base, type, data: hanjiPuzzleDataSchema.parse(puzzle.data) };
       case PuzzleType.HASHI:

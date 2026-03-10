@@ -23,6 +23,26 @@ interface Error {
   message: String
 }
 
+type FlowCell {
+  col: Int!
+  row: Int!
+}
+
+type FlowPair {
+  ends: [FlowCell!]!
+  number: Int!
+}
+
+type FlowPuzzle implements Puzzle {
+  attempt: PuzzleAttempt
+  description: String
+  height: Int!
+  id: ID!
+  name: String!
+  pairs: [FlowPair!]!
+  width: Int!
+}
+
 type HanjiPuzzle implements Puzzle {
   attempt: PuzzleAttempt
   colClues: [[Int!]!]!
@@ -131,6 +151,11 @@ input MutationSolvePuzzleInput {
   durationMs: Int
 
   """
+  The solution to the Flow puzzle. Should only be provided if the puzzle type is FLOW.
+  """
+  flowSolution: [[Int!]!]
+
+  """
   The solution to the Hanji puzzle. Should only be provided if the puzzle type is HANJI.
   """
   hanjiSolution: [[Int!]!]
@@ -188,6 +213,7 @@ type PuzzleAttempt {
 }
 
 enum PuzzleType {
+  FLOW
   HANJI
   HASHI
   MINESWEEPER

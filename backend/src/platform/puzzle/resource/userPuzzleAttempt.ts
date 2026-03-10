@@ -1,4 +1,5 @@
 import {
+  type FlowPuzzleData,
   type HanjiPuzzleData,
   type HashiPuzzleData,
   type MinesweeperPuzzleData,
@@ -25,6 +26,10 @@ type BaseSolvePuzzleInput = {
 };
 
 export type SolvePuzzleInput =
+  | (BaseSolvePuzzleInput & {
+      puzzleType: 'FLOW';
+      solution?: FlowPuzzleData['solution'] | null;
+    })
   | (BaseSolvePuzzleInput & {
       puzzleType: 'HANJI';
       solution?: HanjiPuzzleData['solution'] | null;

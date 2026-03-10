@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const PuzzleType = {
+  FLOW: 'FLOW',
   HANJI: 'HANJI',
   HASHI: 'HASHI',
   MINESWEEPER: 'MINESWEEPER',
@@ -16,6 +17,11 @@ type BasePuzzle = {
   type: PuzzleType;
   name: string;
   description: string | null | undefined;
+};
+
+export type FlowPuzzle = BasePuzzle & {
+  type: 'FLOW';
+  data: FlowPuzzleData;
 };
 
 export type HanjiPuzzle = BasePuzzle & {
@@ -38,7 +44,41 @@ export type SlitherlinkPuzzle = BasePuzzle & {
   data: SlitherlinkPuzzleData;
 };
 
-export type Puzzle = HanjiPuzzle | HashiPuzzle | MinesweeperPuzzle | SlitherlinkPuzzle;
+export type Puzzle = FlowPuzzle | HanjiPuzzle | HashiPuzzle | MinesweeperPuzzle | SlitherlinkPuzzle;
+
+const flowCellSchema = z.object({
+  row: z.int().min(0),
+  col: z.int().min(0),
+});
+
+const flowPairSchema = z.object({
+  number: z.int().min(1),
+  ends: z.tuple([flowCellSchema, flowCellSchema]),
+});
+
+export const flowPuzzleDataSchema = z
+  .object({
+    width: z.int().min(1),
+    height: z.int().min(1),
+    pairs: z.array(flowPairSchema),
+    solution: z.array(z.array(z.int().min(0))),
+  })
+  .refine((d) => d.solution.length === d.height && d.solution.every((r) => r.length === d.width), {
+    message: 'solution dimensions must match width x height',
+  })
+  .refine(
+    (d) =>
+      d.pairs.every(
+        (p) =>
+          p.ends[0].row < d.height &&
+          p.ends[0].col < d.width &&
+          p.ends[1].row < d.height &&
+          p.ends[1].col < d.width,
+      ),
+    { message: 'all pair endpoints must be within grid bounds' },
+  );
+
+export type FlowPuzzleData = z.infer<typeof flowPuzzleDataSchema>;
 
 const hanjiCellSchema = z.union([z.literal(0), z.literal(1)]);
 
