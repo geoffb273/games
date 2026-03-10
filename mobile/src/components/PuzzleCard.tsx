@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
+import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { Text } from '@/components/common/Text';
 import { Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
@@ -18,36 +19,13 @@ const PUZZLE_TYPE_ICONS: Record<Puzzle['type'], keyof typeof MaterialCommunityIc
   SLITHERLINK: 'vector-polyline',
 };
 
-export function PuzzleListEmptyState({
-  isLoading,
-  isError,
-  onRetry,
-}: {
-  isLoading?: boolean;
-  isError?: boolean;
-  onRetry?: () => void;
-}) {
-  const theme = useTheme();
-
-  return (
-    <View style={styles.emptyState}>
-      {isLoading ? (
-        <ActivityIndicator size="small" color={theme.text} />
-      ) : isError ? (
-        <ErrorView title="Unable to load puzzles" message={null} onRetry={onRetry} />
-      ) : (
-        <Text type="body" color="textSecondary" textAlign="center">
-          No puzzles available
-        </Text>
-      )}
-    </View>
-  );
-}
-
 export function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
   const theme = useTheme();
   const isCompleted = puzzle.attempt != null;
   const isSolved = isCompleted && puzzle.attempt?.completedAt != null;
+
+  // Pre-load the puzzle to avoid flickering
+  usePuzzleQuery({ id: puzzle.id });
 
   return (
     <Pressable
@@ -95,6 +73,32 @@ export function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
         )}
       </View>
     </Pressable>
+  );
+}
+
+export function PuzzleListEmptyState({
+  isLoading,
+  isError,
+  onRetry,
+}: {
+  isLoading?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
+}) {
+  const theme = useTheme();
+
+  return (
+    <View style={styles.emptyState}>
+      {isLoading ? (
+        <ActivityIndicator size="small" color={theme.text} />
+      ) : isError ? (
+        <ErrorView title="Unable to load puzzles" message={null} onRetry={onRetry} />
+      ) : (
+        <Text type="body" color="textSecondary" textAlign="center">
+          No puzzles available
+        </Text>
+      )}
+    </View>
   );
 }
 

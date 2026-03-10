@@ -2,7 +2,6 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
 import { Toggle } from '@/components/common/Toggle';
 import { Radii, Spacing } from '@/constants/theme';
@@ -47,30 +46,6 @@ export function SettingsView() {
               />
             }
           />
-        </View>
-
-        <View style={styles.buttonPreviewSection}>
-          <Text type="caption" color="textSecondary">
-            Buttons
-          </Text>
-
-          <View style={styles.buttonRow}>
-            <Button variant="primary" onPress={() => {}}>
-              Primary
-            </Button>
-            <Button variant="secondary" onPress={() => {}}>
-              Secondary
-            </Button>
-          </View>
-
-          <View style={styles.buttonRow}>
-            <Button variant="outline" onPress={() => {}}>
-              Outline
-            </Button>
-            <Button variant="ghost" onPress={() => {}}>
-              Ghost
-            </Button>
-          </View>
         </View>
       </SafeAreaView>
     </View>
@@ -117,14 +92,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
   },
   settingsSection: {
-    gap: Spacing.two,
-  },
-  buttonPreviewSection: {
-    marginTop: Spacing.three,
-    gap: Spacing.one,
-  },
-  buttonRow: {
-    flexDirection: 'row',
     gap: Spacing.two,
   },
   header: {
