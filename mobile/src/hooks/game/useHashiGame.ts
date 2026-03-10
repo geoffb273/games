@@ -5,6 +5,7 @@ import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { useStableCallback } from '@/hooks/useStableCallback';
+import { triggerHapticHard, triggerHapticLight } from '@/utils/hapticUtils';
 import { findConnections } from '@/utils/hashi/connections';
 import { wouldNewBridgeCrossExisting } from '@/utils/hashi/crossing';
 import { isHashiComplete } from '@/utils/hashi/validation';
@@ -76,6 +77,7 @@ export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
     if (!isComplete || submittedRef.current) return;
 
     submittedRef.current = true;
+    triggerHapticHard();
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
     updateOptimisticallyPuzzleAttempt({
@@ -114,6 +116,7 @@ export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
   );
 
   const onConnectionTap = useStableCallback((connectionIndex: number) => {
+    triggerHapticLight();
     dispatch({ type: 'CYCLE_CONNECTION', connectionIndex });
   });
 

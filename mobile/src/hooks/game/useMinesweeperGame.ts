@@ -5,6 +5,7 @@ import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { useStableCallback } from '@/hooks/useStableCallback';
+import { triggerHapticHard, triggerHapticLight, triggerHapticMedium } from '@/utils/hapticUtils';
 import { getCellsToReveal } from '@/utils/minesweeper/reveal';
 
 // --- Game State ---
@@ -112,6 +113,7 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     if (!state.gameOver && !isWin) return;
     if (submittedRef.current) return;
     submittedRef.current = true;
+    triggerHapticHard();
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
     const success = isWin;
@@ -146,6 +148,7 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     if (revealedMap.has(key)) return;
     const isFlagged = state.cells[row][col] === 'flagged';
     if (mode === 'flag') {
+      triggerHapticLight();
       dispatch({ type: 'TOGGLE_FLAG', row, col });
       return;
     }
@@ -154,6 +157,7 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     if (result.hitMine) {
       dispatch({ type: 'GAME_OVER' });
     } else {
+      triggerHapticLight();
       dispatch({ type: 'REVEAL_CELLS', cells: result.cells });
     }
   });
@@ -161,6 +165,7 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
   const onCellLongPress = useStableCallback((row: number, col: number) => {
     if (state.gameOver) return;
     if (revealedMap.has(`${row},${col}`)) return;
+    triggerHapticMedium();
     dispatch({ type: 'TOGGLE_FLAG', row, col });
   });
 

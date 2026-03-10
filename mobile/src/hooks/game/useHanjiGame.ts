@@ -6,6 +6,7 @@ import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { type HanjiCellState, isPuzzleComplete } from '@/utils/hanji/lineValidation';
+import { triggerHapticHard, triggerHapticLight, triggerHapticMedium } from '@/utils/hapticUtils';
 
 type GameState = HanjiCellState[][];
 
@@ -68,6 +69,7 @@ export function useHanjiGame(puzzle: HanjiPuzzle): HanjiGame {
   useEffect(() => {
     if (!isComplete || submittedRef.current) return;
     submittedRef.current = true;
+    triggerHapticHard();
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
     updateOptimisticallyPuzzleAttempt({
@@ -91,6 +93,7 @@ export function useHanjiGame(puzzle: HanjiPuzzle): HanjiGame {
 
   const onCellTap = useStableCallback((row: number, col: number) => {
     const current = cells[row][col];
+    triggerHapticLight();
     dispatch({ type: 'SET_CELL', row, col, state: CYCLE[current] });
   });
 
@@ -99,6 +102,7 @@ export function useHanjiGame(puzzle: HanjiPuzzle): HanjiGame {
     const next: HanjiCellState =
       current === 'empty' ? 'marked' : current === 'marked' ? 'empty' : current;
     if (next !== current) {
+      triggerHapticMedium();
       dispatch({ type: 'SET_CELL', row, col, state: next });
     }
   });

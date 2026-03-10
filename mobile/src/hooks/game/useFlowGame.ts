@@ -6,6 +6,7 @@ import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { isFlowComplete } from '@/utils/flow/validation';
+import { triggerHapticHard, triggerHapticLight } from '@/utils/hapticUtils';
 
 type GameAction =
   | { type: 'SET_CELL'; row: number; col: number; value: number }
@@ -60,6 +61,7 @@ export function useFlowGame(puzzle: FlowPuzzle): FlowGame {
     if (!isComplete || submittedRef.current) return;
 
     submittedRef.current = true;
+    triggerHapticHard();
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
 
@@ -84,6 +86,7 @@ export function useFlowGame(puzzle: FlowPuzzle): FlowGame {
   }, [isComplete, grid, puzzleId, solvePuzzle, updateOptimisticallyPuzzleAttempt, refetch]);
 
   const setCell = useStableCallback((row: number, col: number, value: number) => {
+    triggerHapticLight();
     dispatch({ type: 'SET_CELL', row, col, value });
   });
 

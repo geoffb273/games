@@ -5,6 +5,7 @@ import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { useStableCallback } from '@/hooks/useStableCallback';
+import { triggerHapticHard, triggerHapticLight } from '@/utils/hapticUtils';
 import { isSlitherlinkComplete } from '@/utils/slitherlink/validation';
 
 type EdgeState = 'empty' | 'line';
@@ -107,6 +108,7 @@ export function useSlitherlinkGame(puzzle: SlitherlinkPuzzle): SlitherlinkGame {
     if (!isComplete || submittedRef.current) return;
 
     submittedRef.current = true;
+    triggerHapticHard();
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
 
@@ -142,10 +144,12 @@ export function useSlitherlinkGame(puzzle: SlitherlinkPuzzle): SlitherlinkGame {
   ]);
 
   const onHorizontalEdgePress = useStableCallback((row: number, col: number) => {
+    triggerHapticLight();
     dispatch({ type: 'TOGGLE_EDGE', orientation: 'horizontal', row, col });
   });
 
   const onVerticalEdgePress = useStableCallback((row: number, col: number) => {
+    triggerHapticLight();
     dispatch({ type: 'TOGGLE_EDGE', orientation: 'vertical', row, col });
   });
 
