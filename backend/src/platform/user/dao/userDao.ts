@@ -38,3 +38,22 @@ export async function findOrCreateByDeviceId({ deviceId }: { deviceId: string })
     select: USER_SELECT,
   });
 }
+
+/**
+ * Deletes a user by their ID.
+ *
+ * @param id - The ID of the user to delete.
+ * @throws {NotFoundError} if the user does not exist
+ */
+export async function deleteUser({ id }: { id: string }): Promise<void> {
+  await prisma.user
+    .delete({
+      where: { id },
+    })
+    .catch((error) => {
+      if (isNotFoundError(error)) {
+        throw new NotFoundError('User with the provided ID does not exist');
+      }
+      throw error;
+    });
+}

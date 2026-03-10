@@ -38,6 +38,21 @@ export async function getUserPuzzleAttemptsByPuzzleIds({
 }
 
 /**
+ * Deletes all user puzzle attempts for a given user.
+ */
+export async function deleteUserPuzzleAttemptsByUserId({
+  userId,
+}: {
+  userId: string;
+}): Promise<void> {
+  await prisma.userPuzzleAttempt.deleteMany({
+    where: {
+      userId,
+    },
+  });
+}
+
+/**
  * Creates a new user puzzle attempt.
  *
  * @throws {AlreadyExistsError} if the user puzzle attempt already exists

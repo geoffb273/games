@@ -119,6 +119,7 @@ type Mutation {
   Creates a daily challenge for the given date (admin only via x-admin-secret).
   """
   createDailyChallenge(input: MutationCreateDailyChallengeInput!): MutationCreateDailyChallengeResult!
+  deleteProgress: MutationDeleteProgressResult!
 
   """Solves a puzzle for the logged in user"""
   solvePuzzle(input: MutationSolvePuzzleInput!): MutationSolvePuzzleResult!
@@ -137,6 +138,12 @@ union MutationCreateDailyChallengeResult = AlreadyExistsError | MutationCreateDa
 
 type MutationCreateDailyChallengeSuccess {
   data: DailyChallenge!
+}
+
+union MutationDeleteProgressResult = MutationDeleteProgressSuccess | UnauthorizedError | UnknownError
+
+type MutationDeleteProgressSuccess {
+  data: Boolean!
 }
 
 input MutationSolvePuzzleInput {

@@ -1,7 +1,9 @@
+import { prisma } from '@/client/prisma';
 import { type User } from '@/generated/prisma/client';
+import { deleteUserPuzzleAttemptsByUserId } from '@/platform/puzzle/dao/userPuzzleAttemptDao';
 import { signToken } from '@/utils/jwt';
 
-import { findOrCreateByDeviceId, getUser as getUserDao } from '../dao/userDao';
+import { deleteUser, findOrCreateByDeviceId, getUser as getUserDao } from '../dao/userDao';
 import { type AuthPayload } from '../resource/user';
 
 /**
@@ -23,4 +25,16 @@ export async function authenticateDevice({ deviceId }: { deviceId: string }): Pr
   const user = await findOrCreateByDeviceId({ deviceId });
   const token = signToken({ userId: user.id });
   return { token };
+}
+
+/**
+ * Deletes a user and all of their puzzle attempts in a single transaction.
+ *
+ * @throws {NotFoundError} if the user does not exist
+ */
+export async function deleteUserProgress({ userId }: { userId: string }): Promise<void> {
+  await prisma.$transaction(async () => {
+    await deleteUserPuzzleAttemptsByUserId({ userId });
+    await deleteUser({ id: userId });
+  });
 }

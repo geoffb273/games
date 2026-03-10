@@ -1,18 +1,56 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useApolloClient } from '@apollo/client/react';
+
+import { useDeleteProgress } from '@/api/user/deleteProgressMutation';
+import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
 import { Toggle } from '@/components/common/Toggle';
 import { Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { setHapticsPreference, useHapticsPreference } from '@/store/hapticsStore';
 import { setThemePreference, useThemePreference } from '@/store/themeStore';
+import { clearToken } from '@/store/token';
 
 export function SettingsView() {
   const theme = useTheme();
+  const client = useApolloClient();
   const { preference } = useThemePreference();
   const { preference: hapticsPreference } = useHapticsPreference();
+  const { deleteProgress, isLoading: isDeleting } = useDeleteProgress();
+
+  const handleDeleteProgress = () => {
+    Alert.alert(
+      'Delete all progress?',
+      'This will delete your account and all puzzle attempts. This cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              try {
+                await deleteProgress();
+                await clearToken();
+                await client.clearStore();
+              } catch {
+                Alert.alert(
+                  'Unable to delete progress',
+                  'Something went wrong while deleting your progress. Please try again.',
+                );
+              }
+            })();
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -46,6 +84,24 @@ export function SettingsView() {
               />
             }
           />
+
+          <View style={styles.dangerSection}>
+            <Text type="emphasized_body" color="text">
+              Danger zone
+            </Text>
+            <Text type="caption" color="textSecondary">
+              Delete your account and all puzzle progress. This cannot be undone.
+            </Text>
+
+            <Button
+              variant="secondary"
+              onPress={handleDeleteProgress}
+              disabled={isDeleting}
+              fullWidth
+            >
+              {isDeleting ? 'Deleting progress…' : 'Delete all progress'}
+            </Button>
+          </View>
         </View>
       </SafeAreaView>
     </View>
@@ -97,6 +153,10 @@ const styles = StyleSheet.create({
   header: {
     gap: Spacing.half,
     paddingBottom: Spacing.three,
+  },
+  dangerSection: {
+    marginTop: Spacing.four,
+    gap: Spacing.one,
   },
   settingRow: {
     borderWidth: 1,
