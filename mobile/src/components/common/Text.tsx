@@ -12,7 +12,7 @@ type Size = '3xl' | '2xl' | 'xl' | 'lg' | 'md' | 'sm' | 'xs';
 type SemanticType = 'body' | 'emphasized_body' | 'caption' | 'h1' | 'h2' | 'h3' | 'lead';
 
 type LineHeight = 'tight' | 'normal' | 'relaxed';
-type FontFamily = 'sans' | 'serif' | 'display';
+type FontFamily = 'sans' | 'serif';
 
 type TextStyleProps =
   | {
@@ -196,8 +196,5 @@ const fontFamilyStyles = StyleSheet.create({
   },
   serif: {
     fontFamily: Fonts.serif,
-  },
-  display: {
-    fontFamily: Fonts.display,
   },
 });
