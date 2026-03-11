@@ -11,6 +11,7 @@ import {
 import {
   getPuzzle,
   getPuzzlesByDailyChallenge,
+  requestPuzzleHint,
   solvePuzzle,
 } from '@/platform/puzzle/service/puzzleService';
 
@@ -267,11 +268,76 @@ builder.mutationField('requestPuzzleHint', (t) =>
       }),
     },
     errors: {
-      types: [UnknownError, ValidationError, NotFoundError, UnauthorizedError],
+      types: [UnknownError, ValidationError, NotFoundError, AlreadyExistsError, UnauthorizedError],
     },
-    resolve: async (_, { input: _input }, { authorization }) => {
-      await authorization.expectUser;
-      throw new UnknownError('Not implemented');
+    resolve: async (
+      _,
+      {
+        input: {
+          puzzleId,
+          puzzleType,
+          hanjiCurrentState,
+          hashiCurrentState,
+          minesweeperCurrentState,
+          slitherlinkCurrentState,
+        },
+      },
+      { authorization },
+    ) => {
+      const user = await authorization.expectUser;
+
+      if (puzzleType === 'FLOW') {
+        throw new ValidationError('Hints are not supported for FLOW puzzles');
+      }
+
+      try {
+        const base = { userId: user.id, puzzleId, puzzleType };
+        switch (puzzleType) {
+          case 'HANJI':
+            return requestPuzzleHint({
+              ...base,
+              puzzleType: 'HANJI',
+              hanjiCurrentState:
+                hanjiCurrentState != null
+                  ? hanjiPuzzleDataSchema.shape.solution.parse(hanjiCurrentState)
+                  : undefined,
+            });
+          case 'HASHI':
+            return requestPuzzleHint({
+              ...base,
+              puzzleType: 'HASHI',
+              hashiCurrentState:
+                hashiCurrentState != null
+                  ? hashiPuzzleDataSchema.shape.solution.parse(hashiCurrentState)
+                  : undefined,
+            });
+          case 'MINESWEEPER':
+            return requestPuzzleHint({
+              ...base,
+              puzzleType: 'MINESWEEPER',
+              minesweeperCurrentState:
+                minesweeperCurrentState != null
+                  ? minesweeperPuzzleDataSchema.shape.solution.parse(minesweeperCurrentState)
+                  : undefined,
+            });
+          case 'SLITHERLINK':
+            return requestPuzzleHint({
+              ...base,
+              puzzleType: 'SLITHERLINK',
+              slitherlinkCurrentState:
+                slitherlinkCurrentState != null
+                  ? slitherlinkPuzzleDataSchema.shape.solution.parse(slitherlinkCurrentState)
+                  : undefined,
+            });
+          default:
+            throw new ValidationError('Unknown input puzzle type');
+        }
+      } catch (error) {
+        if (error instanceof ZodError) {
+          throw new ValidationError(error.message);
+        }
+        throw error;
+      }
     },
   }),
 );

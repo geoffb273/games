@@ -8,8 +8,13 @@ import { getUserPuzzleHintsByPuzzleIds as getUserPuzzleHintsByPuzzleIdsDao } fro
 import { type Puzzle } from '../resource/puzzle';
 import { type UserPuzzleAttempt } from '../resource/userPuzzleAttempt';
 import { type SolvePuzzleInput } from '../resource/userPuzzleAttempt';
-import { type UserPuzzleHint } from '../resource/userPuzzleHint';
+import {
+  type PuzzleHint,
+  type RequestPuzzleHintInput,
+  type UserPuzzleHint,
+} from '../resource/userPuzzleHint';
 import { createPuzzlesForDailyChallenge as createPuzzlesForDailyChallengeCommand } from './createPuzzlesForDailyChallenge';
+import { requestPuzzleHint as requestPuzzleHintCommand } from './requestPuzzleHint';
 import { solvePuzzle as solvePuzzleCommand } from './solvePuzzle';
 /**
  * Gets a puzzle by id
@@ -91,4 +96,11 @@ export async function createPuzzlesForDailyChallenge({
  */
 export async function solvePuzzle(input: SolvePuzzleInput): Promise<UserPuzzleAttempt> {
   return solvePuzzleCommand(input);
+}
+
+/**
+ * @see {@link requestPuzzleHintCommand}
+ */
+export async function requestPuzzleHint(input: RequestPuzzleHintInput): Promise<PuzzleHint> {
+  return requestPuzzleHintCommand(input);
 }

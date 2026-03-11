@@ -201,7 +201,7 @@ input MutationRequestPuzzleHintInput {
   slitherlinkCurrentState: SlitherlinkSolutionInput
 }
 
-union MutationRequestPuzzleHintResult = MutationRequestPuzzleHintSuccess | NotFoundError | UnauthorizedError | UnknownError | ValidationError
+union MutationRequestPuzzleHintResult = AlreadyExistsError | MutationRequestPuzzleHintSuccess | NotFoundError | UnauthorizedError | UnknownError | ValidationError
 
 type MutationRequestPuzzleHintSuccess {
   data: PuzzleHint!
