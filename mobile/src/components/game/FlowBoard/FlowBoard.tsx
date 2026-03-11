@@ -3,9 +3,10 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { FadeIn, runOnJS } from 'react-native-reanimated';
 
-import { type FlowPuzzle } from '@/api/puzzle/puzzle';
+import { type FlowPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { Spacing } from '@/constants/theme';
+import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { useFlowGame } from '@/hooks/game/useFlowGame';
 
 import { FlowCell } from './FlowCell';
@@ -75,6 +76,8 @@ type FlowBoardProps = {
 export function FlowBoard({ puzzle }: FlowBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { grid, isComplete, setCell, clearPathForPair } = useFlowGame(puzzle);
+
+  useInitialOpenInstructionsEffect({ type: PuzzleType.Flow });
 
   const { cellSize } = useMemo(() => {
     const availW = screenWidth - Spacing.four * 2;

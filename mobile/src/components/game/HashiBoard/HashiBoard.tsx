@@ -5,6 +5,7 @@ import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/theme';
+import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { useHashiGame } from '@/hooks/game/useHashiGame';
 
 import { HashiBridge } from './HashiBridge';
@@ -22,6 +23,8 @@ export function HashiBoard({ puzzle }: HashiBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { connections, bridgeCounts, isValidBridge, onConnectionTap, onHint, currentState } =
     useHashiGame(puzzle);
+
+  useInitialOpenInstructionsEffect({ type: PuzzleType.Hashi });
 
   const { cellSize, boardWidth, boardHeight } = useMemo(() => {
     const availW = screenWidth - Spacing.four * 2 - CELL_GAP;

@@ -5,6 +5,7 @@ import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/theme';
+import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { useSlitherlinkGame } from '@/hooks/game/useSlitherlinkGame';
 
 import { SlitherlinkCell } from './SlitherlinkCell';
@@ -21,6 +22,8 @@ export function SlitherlinkBoard({ puzzle }: SlitherlinkBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { horizontal, vertical, onHorizontalEdgePress, onVerticalEdgePress, onHint, currentState } =
     useSlitherlinkGame(puzzle);
+
+  useInitialOpenInstructionsEffect({ type: PuzzleType.Slitherlink });
 
   const { cellSize } = useMemo(() => {
     const availW = screenWidth - Spacing.four * 2;

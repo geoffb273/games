@@ -2,17 +2,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeOut, runOnJS } from 'react-native-reanimated';
 
+import { useNavigation } from 'expo-router';
+
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { ErrorView } from '@/components/common/ErrorView';
 import { FlowBoard } from '@/components/game/FlowBoard/FlowBoard';
 import { HanjiBoard } from '@/components/game/HanjiBoard/HanjiBoard';
 import { HashiBoard } from '@/components/game/HashiBoard/HashiBoard';
+import { GameInstructionsButton } from '@/components/game/instructions/GameInstructionsButton';
 import { MinesweeperBoard } from '@/components/game/MinesweeperBoard/MinesweeperBoard';
 import { PuzzleCompletedView } from '@/components/game/PuzzleCompletedView';
 import { SlitherlinkBoard } from '@/components/game/SlitherlinkBoard/SlitherlinkBoard';
 import { VerticallyCenteredLayout } from '@/components/layout/VerticallyCenteredLayout';
 import { Spacing } from '@/constants/theme';
+import { useStableCallback } from '@/hooks/useStableCallback';
 
 type TransitionPhase = 'playing' | 'exiting' | 'completed';
 
@@ -77,6 +81,18 @@ function PuzzleBoard({ puzzle, markBoardShown }: { puzzle: Puzzle; markBoardShow
   useEffect(() => {
     markBoardShown();
   }, [markBoardShown]);
+
+  const navigation = useNavigation();
+
+  const renderGameInstructionsButton = useStableCallback(() => {
+    return <GameInstructionsButton puzzleType={puzzle.type} />;
+  });
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: renderGameInstructionsButton,
+    });
+  }, [navigation, renderGameInstructionsButton]);
 
   switch (puzzle.type) {
     case 'FLOW':

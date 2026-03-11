@@ -5,6 +5,7 @@ import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/theme';
+import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { useMinesweeperGame } from '@/hooks/game/useMinesweeperGame';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -33,6 +34,8 @@ export function MinesweeperBoard({ puzzle }: MinesweeperBoardProps) {
     currentState,
   } = useMinesweeperGame(puzzle);
 
+  useInitialOpenInstructionsEffect({ type: PuzzleType.Minesweeper });
+
   const cellSize = useMemo(() => {
     const availW = screenWidth - Spacing.four * 2;
     const availH = screenHeight * AVAILABLE_HEIGHT_RATIO;
@@ -53,6 +56,7 @@ export function MinesweeperBoard({ puzzle }: MinesweeperBoardProps) {
             {remaining} mine{remaining !== 1 ? 's' : ''} left
           </Text>
         </View>
+
         <Pressable
           onPress={toggleMode}
           style={[

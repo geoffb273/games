@@ -16,6 +16,7 @@ import {
   type PuzzleFragmentFragment,
   PuzzleFragmentFragmentDoc,
   type PuzzleQueryQuery,
+  PuzzleType,
   PuzzleType as PuzzleTypeGraphql,
   type SlitherlinkPuzzleFragmentFragment,
   SlitherlinkPuzzleFragmentFragmentDoc,
@@ -122,7 +123,7 @@ export type PuzzleBase = {
 };
 
 export type HanjiPuzzle = PuzzleBase & {
-  type: 'HANJI';
+  type: PuzzleType.Hanji;
   height: number;
   width: number;
   rowClues: number[][];
@@ -130,7 +131,7 @@ export type HanjiPuzzle = PuzzleBase & {
 };
 
 export type HashiPuzzle = PuzzleBase & {
-  type: 'HASHI';
+  type: PuzzleType.Hashi;
   height: number;
   width: number;
   islands: { row: number; col: number; requiredBridges: number }[];
@@ -166,7 +167,7 @@ const MINESWEEPER_VALUE_TO_ENUM: Record<MinesweeperCellValueDisplay, Minesweeper
 };
 
 export type MinesweeperPuzzle = PuzzleBase & {
-  type: 'MINESWEEPER';
+  type: PuzzleType.Minesweeper;
   height: number;
   width: number;
   mineCount: number;
@@ -175,7 +176,7 @@ export type MinesweeperPuzzle = PuzzleBase & {
 };
 
 export type SlitherlinkPuzzle = PuzzleBase & {
-  type: 'SLITHERLINK';
+  type: PuzzleType.Slitherlink;
   height: number;
   width: number;
   clues: (number | null)[][];
@@ -184,7 +185,7 @@ export type SlitherlinkPuzzle = PuzzleBase & {
 export type FlowPairEnd = { row: number; col: number };
 
 export type FlowPuzzle = PuzzleBase & {
-  type: 'FLOW';
+  type: PuzzleType.Flow;
   height: number;
   width: number;
   pairs: { number: number; ends: [FlowPairEnd, FlowPairEnd] }[];
@@ -220,7 +221,7 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
       const hanji = getFragmentData(HanjiPuzzleFragmentFragmentDoc, puzzle);
       return {
         ...shared,
-        type: 'HANJI',
+        type: PuzzleType.Hanji,
         height: hanji.height,
         width: hanji.width,
         rowClues: hanji.rowClues,
@@ -231,7 +232,7 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
       const hashi = getFragmentData(HashiPuzzleFragmentFragmentDoc, puzzle);
       return {
         ...shared,
-        type: 'HASHI',
+        type: PuzzleType.Hashi,
         height: hashi.height,
         width: hashi.width,
         islands: hashi.islands.map((i) => ({
@@ -248,7 +249,7 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
       );
       return {
         ...shared,
-        type: 'MINESWEEPER',
+        type: PuzzleType.Minesweeper,
         height: minesweeper.height,
         width: minesweeper.width,
         mineCount: minesweeper.mineCount,
@@ -264,7 +265,7 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
       const slitherlink = getFragmentData(SlitherlinkPuzzleFragmentFragmentDoc, puzzle);
       const result: SlitherlinkPuzzle = {
         ...shared,
-        type: 'SLITHERLINK',
+        type: PuzzleType.Slitherlink,
         height: slitherlink.height,
         width: slitherlink.width,
         clues: slitherlink.clues,
@@ -275,7 +276,7 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
       const flow = getFragmentData(FlowPuzzleFragmentFragmentDoc, puzzle);
       return {
         ...shared,
-        type: 'FLOW',
+        type: PuzzleType.Flow,
         height: flow.height,
         width: flow.width,
         pairs: flow.pairs.map((p) => ({
@@ -358,7 +359,7 @@ export function mapToPuzzleFragment(puzzle: Puzzle): PuzzleQueryData {
   };
 
   switch (puzzle.type) {
-    case 'HANJI': {
+    case PuzzleType.Hanji: {
       const data: HanjiPuzzleFragmentData = {
         __typename: 'HanjiPuzzle',
         ...base,
@@ -369,7 +370,7 @@ export function mapToPuzzleFragment(puzzle: Puzzle): PuzzleQueryData {
       };
       return data as PuzzleQueryData;
     }
-    case 'HASHI': {
+    case PuzzleType.Hashi: {
       const data: HashiPuzzleFragmentData = {
         __typename: 'HashiPuzzle',
         ...base,
@@ -383,7 +384,7 @@ export function mapToPuzzleFragment(puzzle: Puzzle): PuzzleQueryData {
       };
       return data as PuzzleQueryData;
     }
-    case 'MINESWEEPER': {
+    case PuzzleType.Minesweeper: {
       const data: MinesweeperPuzzleFragmentData = {
         __typename: 'MinesweeperPuzzle',
         ...base,
@@ -401,7 +402,7 @@ export function mapToPuzzleFragment(puzzle: Puzzle): PuzzleQueryData {
       };
       return data as PuzzleQueryData;
     }
-    case 'SLITHERLINK': {
+    case PuzzleType.Slitherlink: {
       const data: SlitherlinkPuzzleFragmentData = {
         __typename: 'SlitherlinkPuzzle',
         ...base,
@@ -411,7 +412,7 @@ export function mapToPuzzleFragment(puzzle: Puzzle): PuzzleQueryData {
       };
       return data as PuzzleQueryData;
     }
-    case 'FLOW': {
+    case PuzzleType.Flow: {
       const data: FlowPuzzleFragmentData = {
         __typename: 'FlowPuzzle',
         ...base,

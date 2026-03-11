@@ -6,6 +6,7 @@ import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/theme';
+import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { useHanjiGame } from '@/hooks/game/useHanjiGame';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -25,6 +26,8 @@ export function HanjiBoard({ puzzle }: HanjiBoardProps) {
   const theme = useTheme();
   const { cells, isComplete, onCellTap, onCellLongPress, onHint, currentState } =
     useHanjiGame(puzzle);
+
+  useInitialOpenInstructionsEffect({ type: PuzzleType.Hanji });
 
   const { cellSize, rowClueWidth, colClueHeight, boardWidth } = useMemo(() => {
     const maxRowClueLen = Math.max(0, ...puzzle.rowClues.map((r) => r.length));
