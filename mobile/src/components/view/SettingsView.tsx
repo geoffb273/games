@@ -1,5 +1,5 @@
 import React from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, Linking, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useApolloClient } from '@apollo/client/react';
@@ -116,6 +116,18 @@ export function SettingsView() {
             </Button>
           </View>
         </View>
+
+        <View style={styles.linksSection}>
+          <SettingsLink label="Support" url="https://game-brain.net/support" />
+          <Text type="caption" color="textSecondary">
+            ·
+          </Text>
+          <SettingsLink label="Terms of Service" url="https://game-brain.net/terms-of-service" />
+          <Text type="caption" color="textSecondary">
+            ·
+          </Text>
+          <SettingsLink label="Privacy Policy" url="https://game-brain.net/privacy-policy" />
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -152,6 +164,25 @@ function SettingsRow({ title, description, rightContent }: SettingsRowProps) {
   );
 }
 
+type SettingsLinkProps = {
+  label: string;
+  url: string;
+};
+
+function SettingsLink({ label, url }: SettingsLinkProps) {
+  const handlePress = () => {
+    void Linking.openURL(url);
+  };
+
+  return (
+    <Pressable onPress={handlePress} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+      <Text type="caption" color="textSecondary" underlined>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -184,5 +215,15 @@ const styles = StyleSheet.create({
   settingText: {
     flex: 1,
     gap: Spacing.one,
+  },
+  linksSection: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
+    marginTop: 'auto',
+    paddingTop: Spacing.four,
+    paddingBottom: Spacing.two,
   },
 });

@@ -39,6 +39,7 @@ type TextProps = {
   _colorOverride?: string;
   textAlign?: 'left' | 'center' | 'right' | 'justify';
   style?: StyleProp<TextStyle>;
+  underlined?: boolean;
 } & TextStyleProps;
 
 export type { FontFamily, TextProps };
@@ -55,6 +56,7 @@ export function Text({
   _colorOverride,
   textAlign = 'left',
   style,
+  underlined = false,
 }: TextProps) {
   const theme = useTheme();
 
@@ -84,6 +86,7 @@ export function Text({
         fontFamilyStyles[fontFamily],
         { color: textColor },
         { textAlign },
+        underlined && { textDecorationLine: 'underline' },
         style,
       ]}
     >
