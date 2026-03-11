@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 
@@ -37,8 +39,13 @@ export function usePuzzlesQuery({
     skip: !enabled,
   });
 
-  const puzzles =
-    data?.puzzles.__typename === 'QueryPuzzlesSuccess' ? mapToPuzzles(data.puzzles.data) : null;
+  const puzzles = useMemo(
+    () =>
+      data?.puzzles.__typename === 'QueryPuzzlesSuccess'
+        ? mapToPuzzles(data.puzzles.data).sort((a, b) => a.type.localeCompare(b.type))
+        : null,
+    [data],
+  );
 
   return {
     puzzles,
