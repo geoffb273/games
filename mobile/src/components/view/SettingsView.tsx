@@ -10,6 +10,7 @@ import { Text } from '@/components/common/Text';
 import { Toggle } from '@/components/common/Toggle';
 import { Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
+import { setColorBlindPreference, useColorBlindPreference } from '@/store/colorBlindStore';
 import { setHapticsPreference, useHapticsPreference } from '@/store/hapticsStore';
 import { setThemePreference, useThemePreference } from '@/store/themeStore';
 import { clearToken } from '@/store/token';
@@ -19,6 +20,7 @@ export function SettingsView() {
   const client = useApolloClient();
   const { preference } = useThemePreference();
   const { preference: hapticsPreference } = useHapticsPreference();
+  const { preference: colorBlindPreference } = useColorBlindPreference();
   const { deleteProgress, isLoading: isDeleting } = useDeleteProgress();
 
   const handleDeleteProgress = () => {
@@ -70,6 +72,17 @@ export function SettingsView() {
               <Toggle
                 value={hapticsPreference === 'on'}
                 onValueChange={(isOn) => setHapticsPreference(isOn ? 'on' : 'off')}
+              />
+            }
+          />
+
+          <SettingsRow
+            title="Color blind mode"
+            description="Ensure color is never required to successfully solve puzzles"
+            rightContent={
+              <Toggle
+                value={colorBlindPreference === 'on'}
+                onValueChange={(isOn) => setColorBlindPreference(isOn ? 'on' : 'off')}
               />
             }
           />

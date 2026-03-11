@@ -2,6 +2,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/common/Text';
 import { useTheme } from '@/hooks/useTheme';
+import { useColorBlindEnabled } from '@/store/colorBlindStore';
 
 type FlowCellProps = {
   size: number;
@@ -12,9 +13,14 @@ type FlowCellProps = {
 
 export function FlowCell({ size, pairNumber, cellValue, color }: FlowCellProps) {
   const theme = useTheme();
+  const isColorBlind = useColorBlindEnabled();
   const isFilled = cellValue > 0;
   const backgroundColor = isFilled ? color : theme.backgroundElement;
   const showEndpoint = pairNumber != null;
+
+  const numberToShow = pairNumber ?? cellValue;
+
+  const showNumber = (isColorBlind || showEndpoint) && numberToShow > 0;
 
   return (
     <View
@@ -30,9 +36,9 @@ export function FlowCell({ size, pairNumber, cellValue, color }: FlowCellProps) 
         showEndpoint && { backgroundColor: color },
       ]}
     >
-      {showEndpoint && (
+      {showNumber && (
         <Text type="emphasized_body" _colorOverride="#fff">
-          {pairNumber}
+          {numberToShow}
         </Text>
       )}
     </View>
