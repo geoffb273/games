@@ -5,8 +5,10 @@ config:
       handlerSubpath: createDailyChallenge
       scheduleExpression: 'cron(0 0 * * ? *)'
       scheduleExpressionTimezone: America/New_York
-  game-brain:databaseUrl: postgresql://postgres.mppwwfhgkegbhjivjooe:b55flH4dhuNOq76P@aws-1-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
-  game-brain:directUrl: postgresql://postgres.mppwwfhgkegbhjivjooe:b55flH4dhuNOq76P@aws-1-us-east-1.pooler.supabase.com:5432/postgres
+  game-brain:databaseUrl:
+    secure: AAABANVVd26vrdqBoFW1wD34Dc0tfB1ziLIWVKP4bUgmbnrrqzO0kum0RE+Wzv14f3GZxTLf9FNfc/Ktu4nLHb9gYQHHWVrddC8dJyLT0b82FLNAUj4y6TAq/0qvBtwMyRmfw4fJ3DzJHsAb9MEu4Ar9m1Q8xV3wxyZrG8smtxPwqS0S4DQzVu/INdB2K882tF/mX789jnaLSN59
+  game-brain:directUrl:
+    secure: AAABAKARoXN/QpQ40mCGEW0Ect9iyDG786mNG466oqqOT/GoYzEI++I0rJglNOW6eCQcGsYJkXOfyyNsX3IYIO1WpYKgkHgRjVqE5mNjn7U0b8rCr/wI9A3Mdma/zyMjXX8bFTWMexOc/kL7aVGVjU9nVowjpiuzJb7eFnRhw7H5dbmjq+RkAAddyocl
   game-brain:jwtSecret:
     secure: AAABAKG8JTS9mSg7s0Lulj25I8fEOs4FVLD9Bco7jkzs3XxHdlnofmU4KmaJw4cQd/wGJtw=
   game-brain:keyName: game-brain-backend
