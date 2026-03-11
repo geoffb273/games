@@ -88,6 +88,6 @@ model UserPuzzleHint {
   puzzleId String @db.Uuid
   puzzle   Puzzle @relation(fields: [puzzleId], references: [id])
 
-  @@unique([userId, puzzleId])
+  @@index([userId, puzzleId])
   @@index([puzzleId])
 }
