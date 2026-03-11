@@ -18,7 +18,8 @@ model User {
   id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   deviceId String @unique
 
-  attempts UserPuzzleAttempt[]
+  attempts        UserPuzzleAttempt[]
+  userPuzzleHints UserPuzzleHint[]
 }
 
 model PuzzleType {
@@ -54,7 +55,8 @@ model Puzzle {
   type             String
   puzzleType       PuzzleType     @relation(fields: [type], references: [type])
 
-  attempts UserPuzzleAttempt[]
+  attempts        UserPuzzleAttempt[]
+  userPuzzleHints UserPuzzleHint[]
 
   @@unique([dailyChallengeId, type])
   @@index([type])
@@ -66,6 +68,20 @@ model UserPuzzleAttempt {
   startedAt   DateTime  @default(now())
   completedAt DateTime?
   durationMs  Int?
+
+  userId   String @db.Uuid
+  user     User   @relation(fields: [userId], references: [id])
+  puzzleId String @db.Uuid
+  puzzle   Puzzle @relation(fields: [puzzleId], references: [id])
+
+  @@unique([userId, puzzleId])
+  @@index([puzzleId])
+}
+
+model UserPuzzleHint {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   userId   String @db.Uuid
   user     User   @relation(fields: [userId], references: [id])
