@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
@@ -81,6 +82,7 @@ export type MinesweeperGame = {
   onCellTap: (row: number, col: number) => void;
   onCellLongPress: (row: number, col: number) => void;
   toggleMode: () => void;
+  onHint: (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Minesweeper }>) => void;
 };
 
 type MinesweeperPersisted = {
@@ -139,10 +141,7 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
   const [state, dispatch] = useReducer(
     gameReducer,
     persistedState?.state ?? { height, width },
-    (initial) =>
-      'cells' in initial
-        ? (initial as GameState)
-        : createInitialState(initial as { height: number; width: number }),
+    (initial) => ('cells' in initial ? initial : createInitialState(initial)),
   );
   const [mode, setMode] = useState<InteractionMode>(persistedState?.mode ?? 'flag');
   const { solvePuzzle } = useSolvePuzzle();
@@ -254,6 +253,18 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     });
   }, [saveWithTime, state]);
 
+  const onHint = useStableCallback(
+    (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Minesweeper }>) => {
+      if (state.gameOver) return;
+      const { row, col, isMine } = hint;
+      const key = `${row},${col}`;
+      if (revealedMap.has(key)) return;
+      if (isMine) {
+        onCellLongPress(row, col);
+      }
+    },
+  );
+
   return {
     revealedMap,
     cells: state.cells,
@@ -263,5 +274,6 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     onCellTap,
     onCellLongPress,
     toggleMode,
+    onHint,
   };
 }

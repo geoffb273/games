@@ -13,7 +13,7 @@ type NativePressableProps = Omit<PressableProps, 'style' | 'children' | 'onPress
 
 type ButtonProps = NativePressableProps & {
   variant?: ButtonVariant;
-  children: string;
+  children?: string;
   onPress: () => void | Promise<void>;
   disabled?: boolean;
   leadingIcon?: ReactNode;
@@ -43,7 +43,7 @@ function getVariantStyles(
 
   if (variant === 'secondary') {
     return {
-      backgroundColor: disabled ? theme.backgroundElement : theme.backgroundElement,
+      backgroundColor: disabled ? theme.borderSubtle : theme.backgroundElement,
       textColor: disabled ? 'textSecondary' : 'text',
     };
   }
@@ -60,7 +60,7 @@ function getVariantStyles(
   // ghost
   return {
     backgroundColor: 'transparent',
-    textColor: disabled ? 'textSecondary' : 'textSecondary',
+    textColor: disabled ? 'textSecondary' : 'text',
   };
 }
 
@@ -121,12 +121,15 @@ export function Button({
           {
             justifyContent: getJustifyContent(align),
           },
+          fullWidth && styles.contentStretch,
         ]}
       >
         {leadingIcon != null && <View style={styles.icon}>{leadingIcon}</View>}
-        <Text type="emphasized_body" color={textColor}>
-          {children}
-        </Text>
+        {children != null && (
+          <Text type="emphasized_body" color={textColor}>
+            {children}
+          </Text>
+        )}
         {trailingIcon != null && <View style={styles.icon}>{trailingIcon}</View>}
       </View>
     </Pressable>
@@ -151,6 +154,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.one,
+  },
+  contentStretch: {
     flex: 1,
   },
   icon: {

@@ -7,6 +7,7 @@ import {
   HashiHintFragmentFragmentDoc,
   MinesweeperHintFragmentFragmentDoc,
   PuzzleHintFragmentFragmentDoc,
+  PuzzleType,
   SlitherlinkHintFragmentFragmentDoc,
 } from '@/generated/gql/graphql';
 import { aggressiveExhaustiveGuard } from '@/utils/guardUtils';
@@ -69,16 +70,16 @@ fragmentRegistry.register(MinesweeperHintFragmentFragmentDoc);
 fragmentRegistry.register(SlitherlinkHintFragmentFragmentDoc);
 
 export type PuzzleHint =
-  | { puzzleType: 'HANJI'; row: number; col: number; value: number }
+  | { puzzleType: PuzzleType.Hanji; row: number; col: number; value: number }
   | {
-      puzzleType: 'HASHI';
+      puzzleType: PuzzleType.Hashi;
       from: { row: number; col: number };
       to: { row: number; col: number };
       bridges: number;
     }
-  | { puzzleType: 'MINESWEEPER'; row: number; col: number; isMine: boolean }
+  | { puzzleType: PuzzleType.Minesweeper; row: number; col: number; isMine: boolean }
   | {
-      puzzleType: 'SLITHERLINK';
+      puzzleType: PuzzleType.Slitherlink;
       row: number;
       col: number;
       edgeType: 'HORIZONTAL' | 'VERTICAL';
@@ -92,21 +93,21 @@ export function mapToPuzzleHint(
 
   switch (puzzle.__typename) {
     case 'HanjiHint': {
-      return { ...getFragment(HanjiHintFragmentFragmentDoc, puzzle), puzzleType: 'HANJI' };
+      return { ...getFragment(HanjiHintFragmentFragmentDoc, puzzle), puzzleType: PuzzleType.Hanji };
     }
     case 'HashiHint': {
-      return { ...getFragment(HashiHintFragmentFragmentDoc, puzzle), puzzleType: 'HASHI' };
+      return { ...getFragment(HashiHintFragmentFragmentDoc, puzzle), puzzleType: PuzzleType.Hashi };
     }
     case 'MinesweeperHint': {
       return {
         ...getFragment(MinesweeperHintFragmentFragmentDoc, puzzle),
-        puzzleType: 'MINESWEEPER',
+        puzzleType: PuzzleType.Minesweeper,
       };
     }
     case 'SlitherlinkHint': {
       return {
         ...getFragment(SlitherlinkHintFragmentFragmentDoc, puzzle),
-        puzzleType: 'SLITHERLINK',
+        puzzleType: PuzzleType.Slitherlink,
       };
     }
     default: {
