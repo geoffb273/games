@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { type MinesweeperPuzzle } from '@/api/puzzle/puzzle';
+import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
+import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/theme';
-import { useMinesweeperGame } from '@/hooks/game/useMinesweeperGame';
+import { buildMinesweeperCurrentState, useMinesweeperGame } from '@/hooks/game/useMinesweeperGame';
 import { useTheme } from '@/hooks/useTheme';
 
 import { MinesweeperCell } from './MinesweeperCell';
@@ -21,7 +21,7 @@ type MinesweeperBoardProps = {
 export function MinesweeperBoard({ puzzle }: MinesweeperBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const theme = useTheme();
-  const { revealedMap, cells, gameOver, remaining, mode, onCellTap, onCellLongPress, toggleMode } =
+  const { revealedMap, cells, remaining, mode, onCellTap, onCellLongPress, toggleMode, onHint } =
     useMinesweeperGame(puzzle);
 
   const cellSize = useMemo(() => {
@@ -83,22 +83,12 @@ export function MinesweeperBoard({ puzzle }: MinesweeperBoardProps) {
           </View>
         ))}
       </View>
-
-      {gameOver && (
-        <Animated.View entering={FadeIn.duration(300)}>
-          <Text type="emphasized_body" textAlign="center" color="textSecondary">
-            You hit a mine!
-          </Text>
-        </Animated.View>
-      )}
-
-      {remaining === 0 && !gameOver && (
-        <Animated.View entering={FadeIn.duration(300)}>
-          <Text type="emphasized_body" textAlign="center" color="textSecondary">
-            All mines flagged!
-          </Text>
-        </Animated.View>
-      )}
+      <HintButton
+        puzzleType={PuzzleType.Minesweeper}
+        puzzleId={puzzle.id}
+        onHint={onHint}
+        minesweeperCurrentState={buildMinesweeperCurrentState(cells)}
+      />
     </View>
   );
 }

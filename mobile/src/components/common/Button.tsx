@@ -110,6 +110,7 @@ export function Button({
       }}
       style={({ pressed }) => [
         styles.base,
+        variant !== 'ghost' && styles.padding,
         containerStyle,
         fullWidth && styles.fullWidth,
         pressed && !disabled && styles.pressed,
@@ -138,11 +139,13 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
     borderRadius: Radii.md,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  padding: {
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
   },
   fullWidth: {
     alignSelf: 'stretch',
@@ -153,7 +156,7 @@ const styles = StyleSheet.create({
   content: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.one,
+    gap: Spacing.two,
   },
   contentStretch: {
     flex: 1,

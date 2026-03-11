@@ -9,7 +9,7 @@ import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
-import { triggerHapticHard, triggerHapticLight, triggerHapticMedium } from '@/utils/hapticUtils';
+import { triggerHapticHard, triggerHapticLight } from '@/utils/hapticUtils';
 import { getCellsToReveal } from '@/utils/minesweeper/reveal';
 
 // --- Game State ---
@@ -91,8 +91,11 @@ type MinesweeperPersisted = {
   elapsedMs: number;
 };
 
-function buildMinesweeperSolution(mineField: (number | 'MINE')[][]): boolean[][] {
+export function buildMinesweeperSolution(mineField: (number | 'MINE')[][]): boolean[][] {
   return mineField.map((row) => row.map((cell) => cell === 'MINE'));
+}
+export function buildMinesweeperCurrentState(cells: CellStatus[][]): boolean[][] {
+  return cells.map((row) => row.map((cell) => cell === 'flagged'));
 }
 
 const cellStatusSchema = z.union([z.literal('hidden'), z.literal('flagged')]);
@@ -174,6 +177,7 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     saveState({ state: nextState, mode: nextMode, elapsedMs });
   });
 
+  // Submit the puzzle when the game is over or won
   useEffect(() => {
     if (!state.gameOver && !isWin) return;
     if (submittedRef.current) return;
@@ -210,19 +214,7 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     updateOptimisticallyPuzzleAttempt,
   ]);
 
-  const onCellTap = useStableCallback((row: number, col: number) => {
-    if (state.gameOver) return;
-    const key = `${row},${col}`;
-    if (revealedMap.has(key)) return;
-    const isFlagged = state.cells[row][col] === 'flagged';
-    if (mode === 'flag') {
-      triggerHapticLight();
-      const next = gameReducer(state, { type: 'TOGGLE_FLAG', row, col });
-      saveWithTime(next, mode);
-      dispatch({ type: 'TOGGLE_FLAG', row, col });
-      return;
-    }
-    if (isFlagged) return;
+  const onRevealTap = useStableCallback(({ row, col }: { row: number; col: number }) => {
     const result = getCellsToReveal(row, col, puzzle.mineField, puzzle.width, puzzle.height);
     if (result.hitMine) {
       const next = gameReducer(state, { type: 'GAME_OVER' });
@@ -236,13 +228,30 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     }
   });
 
-  const onCellLongPress = useStableCallback((row: number, col: number) => {
+  const onFlagTap = useStableCallback(({ row, col }: { row: number; col: number }) => {
     if (state.gameOver) return;
-    if (revealedMap.has(`${row},${col}`)) return;
-    triggerHapticMedium();
+    triggerHapticLight();
     const next = gameReducer(state, { type: 'TOGGLE_FLAG', row, col });
     saveWithTime(next, mode);
     dispatch({ type: 'TOGGLE_FLAG', row, col });
+  });
+
+  const onCellTap = useStableCallback((row: number, col: number) => {
+    if (state.gameOver) return;
+    const key = `${row},${col}`;
+    if (revealedMap.has(key)) return;
+    const isFlagged = state.cells[row][col] === 'flagged';
+    if (mode === 'flag') {
+      onFlagTap({ row, col });
+    }
+    if (isFlagged) return;
+    onRevealTap({ row, col });
+  });
+
+  const onCellLongPress = useStableCallback((row: number, col: number) => {
+    if (state.gameOver) return;
+    if (revealedMap.has(`${row},${col}`)) return;
+    onFlagTap({ row, col });
   });
 
   const toggleMode = useCallback(() => {
@@ -257,10 +266,13 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Minesweeper }>) => {
       if (state.gameOver) return;
       const { row, col, isMine } = hint;
+
       const key = `${row},${col}`;
       if (revealedMap.has(key)) return;
       if (isMine) {
-        onCellLongPress(row, col);
+        onFlagTap({ row, col });
+      } else {
+        onRevealTap({ row, col });
       }
     },
   );

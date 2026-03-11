@@ -18,15 +18,15 @@ function canTriggerHaptic() {
 
 export function triggerHapticLight() {
   if (!canTriggerHaptic()) return;
-  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft);
 }
 
 export function triggerHapticMedium() {
   if (!canTriggerHaptic()) return;
-  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 }
 
 export function triggerHapticHard() {
   if (!canTriggerHaptic()) return;
-  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 }
