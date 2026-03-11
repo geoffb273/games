@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
+import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
+import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/theme';
 import { useSlitherlinkGame } from '@/hooks/game/useSlitherlinkGame';
 
@@ -19,7 +19,7 @@ type SlitherlinkBoardProps = {
 
 export function SlitherlinkBoard({ puzzle }: SlitherlinkBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const { horizontal, vertical, isComplete, onHorizontalEdgePress, onVerticalEdgePress } =
+  const { horizontal, vertical, onHorizontalEdgePress, onVerticalEdgePress, onHint, currentState } =
     useSlitherlinkGame(puzzle);
 
   const { cellSize } = useMemo(() => {
@@ -71,13 +71,12 @@ export function SlitherlinkBoard({ puzzle }: SlitherlinkBoardProps) {
         ))}
       </View>
 
-      {isComplete && (
-        <Animated.View entering={FadeIn.duration(300)}>
-          <Text type="emphasized_body" textAlign="center" color="textSecondary">
-            Puzzle complete!
-          </Text>
-        </Animated.View>
-      )}
+      <HintButton
+        puzzleType={PuzzleType.Slitherlink}
+        puzzleId={puzzle.id}
+        onHint={onHint}
+        slitherlinkCurrentState={currentState}
+      />
     </View>
   );
 }

@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
+import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
@@ -33,6 +34,13 @@ type GameAction =
       type: 'RESET';
       width: number;
       height: number;
+    }
+  | {
+      type: 'SET_EDGE';
+      orientation: EdgeOrientation;
+      row: number;
+      col: number;
+      filled: boolean;
     };
 
 function createEmptyGrid(rows: number, cols: number): EdgeGridState {
@@ -67,6 +75,22 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         vertical: orientation === 'vertical' ? nextGrid : state.vertical,
       };
     }
+    case 'SET_EDGE': {
+      const { orientation, row, col, filled } = action;
+      const source = orientation === 'horizontal' ? state.horizontal : state.vertical;
+      if (source[row]?.[col] == null) {
+        return state;
+      }
+      const nextGrid = source.map((r, ri) =>
+        ri === row
+          ? r.map((c, ci) => (ci === col ? (filled ? EDGE_CYCLE.empty : EDGE_CYCLE.line) : c))
+          : r,
+      );
+      return {
+        horizontal: orientation === 'horizontal' ? nextGrid : state.horizontal,
+        vertical: orientation === 'vertical' ? nextGrid : state.vertical,
+      };
+    }
     case 'RESET':
       return createInitialState(action.width, action.height);
     default:
@@ -84,6 +108,11 @@ export type SlitherlinkGame = {
   isComplete: boolean;
   onHorizontalEdgePress: (row: number, col: number) => void;
   onVerticalEdgePress: (row: number, col: number) => void;
+  onHint: (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Slitherlink }>) => void;
+  currentState: {
+    horizontalEdges: boolean[][];
+    verticalEdges: boolean[][];
+  };
 };
 
 const edgeSchema = z.union([z.literal('empty'), z.literal('line')]);
@@ -211,11 +240,41 @@ export function useSlitherlinkGame(puzzle: SlitherlinkPuzzle): SlitherlinkGame {
     dispatch({ type: 'TOGGLE_EDGE', orientation: 'vertical', row, col });
   });
 
+  const onHint = useStableCallback(
+    (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Slitherlink }>) => {
+      if (isComplete) return;
+
+      const { row, col, edgeType, filled } = hint;
+      const orientation: EdgeOrientation = edgeType === 'HORIZONTAL' ? 'horizontal' : 'vertical';
+
+      triggerHapticLight();
+      const next = gameReducer(state, {
+        type: 'SET_EDGE',
+        orientation,
+        row,
+        col,
+        filled,
+      });
+      saveState(next);
+      dispatch({ type: 'SET_EDGE', orientation, row, col, filled });
+    },
+  );
+
+  const currentState = useMemo(
+    () => ({
+      horizontalEdges: horizontalLines,
+      verticalEdges: verticalLines,
+    }),
+    [horizontalLines, verticalLines],
+  );
+
   return {
     horizontal: state.horizontal,
     vertical: state.vertical,
     isComplete,
     onHorizontalEdgePress,
     onVerticalEdgePress,
+    onHint,
+    currentState,
   };
 }

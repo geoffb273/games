@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { type HashiPuzzle } from '@/api/puzzle/puzzle';
+import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
+import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/theme';
 import { useHashiGame } from '@/hooks/game/useHashiGame';
 
@@ -20,7 +20,7 @@ type HashiBoardProps = {
 
 export function HashiBoard({ puzzle }: HashiBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const { connections, bridgeCounts, isComplete, isValidBridge, onConnectionTap } =
+  const { connections, bridgeCounts, isValidBridge, onConnectionTap, onHint, currentState } =
     useHashiGame(puzzle);
 
   const { cellSize, boardWidth, boardHeight } = useMemo(() => {
@@ -91,13 +91,12 @@ export function HashiBoard({ puzzle }: HashiBoardProps) {
         ))}
       </View>
 
-      {isComplete && (
-        <Animated.View entering={FadeIn.duration(300)}>
-          <Text type="emphasized_body" textAlign="center" color="textSecondary">
-            Puzzle complete!
-          </Text>
-        </Animated.View>
-      )}
+      <HintButton
+        puzzleType={PuzzleType.Hashi}
+        puzzleId={puzzle.id}
+        onHint={onHint}
+        hashiCurrentState={currentState}
+      />
     </View>
   );
 }

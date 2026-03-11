@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
@@ -17,7 +18,8 @@ type GameState = number[];
 
 type GameAction =
   | { type: 'CYCLE_CONNECTION'; connectionIndex: number }
-  | { type: 'RESET'; connectionCount: number };
+  | { type: 'RESET'; connectionCount: number }
+  | { type: 'SET_CONNECTION'; connectionIndex: number; bridges: number };
 
 function createInitialState(connectionCount: number): GameState {
   return Array.from({ length: connectionCount }, () => 0);
@@ -30,6 +32,11 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const current = state[connectionIndex];
       const next = current >= 2 ? 0 : current + 1;
       return state.map((v, i) => (i === connectionIndex ? next : v));
+    }
+    case 'SET_CONNECTION': {
+      const { connectionIndex, bridges } = action;
+      const clamped = Math.max(0, Math.min(2, bridges));
+      return state.map((v, i) => (i === connectionIndex ? clamped : v));
     }
     case 'RESET':
       return createInitialState(action.connectionCount);
@@ -45,6 +52,12 @@ export type HashiGame = {
   /** Returns true if adding a bridge on the given connection would not cross any existing bridges. */
   isValidBridge: (connectionIndex: number) => boolean;
   onConnectionTap: (connectionIndex: number) => void;
+  onHint: (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Hashi }>) => void;
+  currentState: {
+    bridges: number;
+    from: { row: number; col: number };
+    to: { row: number; col: number };
+  }[];
 };
 
 type HashiPersisted = {
@@ -57,13 +70,25 @@ function buildHashiSolution(
   bridgeCounts: number[],
   islands: { row: number; col: number }[],
 ) {
+  return connections.map((conn, i) => ({
+    bridges: bridgeCounts[i],
+    from: { row: islands[conn.a].row, col: islands[conn.a].col },
+    to: { row: islands[conn.b].row, col: islands[conn.b].col },
+  }));
+}
+
+function buildHashiCurrentState(
+  connections: ReturnType<typeof findConnections>,
+  bridgeCounts: number[],
+  islands: { row: number; col: number }[],
+) {
   return connections
     .map((conn, i) => ({
-      bridges: bridgeCounts[i],
+      bridges: bridgeCounts[i] ?? 0,
       from: { row: islands[conn.a].row, col: islands[conn.a].col },
       to: { row: islands[conn.b].row, col: islands[conn.b].col },
     }))
-    .filter((s) => s.bridges > 0);
+    .filter((state) => state.bridges > 0);
 }
 
 export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
@@ -170,11 +195,46 @@ export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
     dispatch({ type: 'CYCLE_CONNECTION', connectionIndex });
   });
 
+  const onHint = useStableCallback(
+    (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Hashi }>) => {
+      if (isComplete) return;
+
+      const { from, to } = hint;
+
+      const connectionIndex = connections.findIndex((conn) => {
+        const a = islands[conn.a];
+        const b = islands[conn.b];
+        const matchesForward =
+          a.row === from.row && a.col === from.col && b.row === to.row && b.col === to.col;
+        const matchesBackward =
+          a.row === to.row && a.col === to.col && b.row === from.row && b.col === from.col;
+        return matchesForward || matchesBackward;
+      });
+
+      if (connectionIndex < 0) return;
+
+      const next = gameReducer(bridgeCounts, {
+        type: 'SET_CONNECTION',
+        connectionIndex,
+        bridges: hint.bridges,
+      });
+      saveWithTime(next);
+      dispatch({ type: 'SET_CONNECTION', connectionIndex, bridges: hint.bridges });
+    },
+  );
+
+  const currentState = useMemo(
+    () => buildHashiCurrentState(connections, bridgeCounts, islands),
+    [connections, bridgeCounts, islands],
+  );
+
   return {
     connections,
     bridgeCounts,
     isComplete,
     isValidBridge,
     onConnectionTap,
+    onHint,
+    currentState,
   };
 }
