@@ -5,7 +5,6 @@ import { createUserPuzzleHint } from '../dao/userPuzzleHintDao';
 import {
   type HanjiPuzzleData,
   type HashiPuzzleData,
-  type IncompleteHashiSolution,
   type MinesweeperPuzzleData,
   type Puzzle,
   type SlitherlinkPuzzleData,
@@ -92,10 +91,11 @@ function pickHashiHint({
   currentState,
 }: {
   solution: HashiPuzzleData['solution'];
-  currentState: IncompleteHashiSolution | null | undefined;
+  currentState: HashiPuzzleData['solution'] | null | undefined;
 }): PuzzleHint | null {
   if (solution.length === 0) return null;
-  if (currentState == null || currentState.length !== solution.length) {
+
+  if (currentState == null || currentState.length === 0) {
     const b = solution[0];
     return {
       puzzleType: 'HASHI',
@@ -104,22 +104,23 @@ function pickHashiHint({
       bridges: b.bridges,
     };
   }
+
   for (let i = 0; i < solution.length; i++) {
-    const expected = solution[i];
-    const received = currentState[i];
-    if (
-      !received ||
-      expected.from.row !== received.from.row ||
-      expected.from.col !== received.from.col ||
-      expected.to.row !== received.to.row ||
-      expected.to.col !== received.to.col ||
-      expected.bridges !== received.bridges
-    ) {
+    const solutionBridge = solution[i];
+    const currentBridge = currentState.find(
+      (s) =>
+        s.from.row === solutionBridge.from.row &&
+        s.from.col === solutionBridge.from.col &&
+        s.to.row === solutionBridge.to.row &&
+        s.to.col === solutionBridge.to.col,
+    );
+
+    if (currentBridge == null || currentBridge.bridges !== solutionBridge.bridges) {
       return {
         puzzleType: 'HASHI',
-        from: expected.from,
-        to: expected.to,
-        bridges: expected.bridges,
+        from: solutionBridge.from,
+        to: solutionBridge.to,
+        bridges: solutionBridge.bridges,
       };
     }
   }

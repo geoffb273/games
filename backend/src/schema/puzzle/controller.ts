@@ -5,7 +5,6 @@ import {
   flowPuzzleDataSchema,
   hanjiPuzzleDataSchema,
   hashiPuzzleDataSchema,
-  incompleteHashiSolutionSchema,
   minesweeperPuzzleDataSchema,
   slitherlinkPuzzleDataSchema,
 } from '@/platform/puzzle/resource/puzzle';
@@ -309,7 +308,7 @@ builder.mutationField('requestPuzzleHint', (t) =>
               puzzleType: 'HASHI',
               hashiCurrentState:
                 hashiCurrentState != null
-                  ? incompleteHashiSolutionSchema.parse(hashiCurrentState)
+                  ? hashiPuzzleDataSchema.shape.solution.parse(hashiCurrentState)
                   : undefined,
             });
           case 'MINESWEEPER':
