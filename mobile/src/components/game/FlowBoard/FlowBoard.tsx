@@ -8,6 +8,7 @@ import { Text } from '@/components/common/Text';
 import { Spacing } from '@/constants/theme';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { useFlowGame } from '@/hooks/game/useFlowGame';
+import { triggerHapticLight } from '@/utils/hapticUtils';
 
 import { FlowCell } from './FlowCell';
 
@@ -193,6 +194,7 @@ function useFlowBoardPan({
       const cell = xyToCell(x, y, cellSize, CELL_GAP, puzzle.width, puzzle.height);
       if (!cell) return;
       const endpoint = getPairAtCell(puzzle.pairs, cell.row, cell.col);
+      triggerHapticLight();
       if (endpoint) {
         drawingPairRef.current = endpoint.number;
         reachedSecondEndpointRef.current = false;
@@ -273,6 +275,7 @@ function useFlowBoardPan({
       reachedSecondEndpointRef.current = false;
       secondEndpointRef.current = null;
       if (pairNumber == null) return;
+      triggerHapticLight();
       const cell = xyToCell(x, y, cellSize, CELL_GAP, puzzle.width, puzzle.height);
       const endpoint = cell ? getPairAtCell(puzzle.pairs, cell.row, cell.col) : null;
       const endedOnOwnEndpoint = endpoint?.number === pairNumber;
