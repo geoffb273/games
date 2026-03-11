@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
-    gap: Spacing.four,
+    gap: Spacing.five,
     paddingTop: Spacing.four,
   },
   boardWrap: {

@@ -5,20 +5,13 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
+import { PuzzleIcon } from '@/components/common/PuzzleIcon';
 import { Text } from '@/components/common/Text';
 import { getPuzzlePalette } from '@/constants/puzzleThemeConstants';
 import { Radii, Spacing, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
 import { ErrorView } from './common/ErrorView';
-
-const PUZZLE_TYPE_ICONS: Record<Puzzle['type'], keyof typeof MaterialCommunityIcons.glyphMap> = {
-  FLOW: 'chart-bubble',
-  HANJI: 'grid-large',
-  HASHI: 'bridge',
-  MINESWEEPER: 'bomb',
-  SLITHERLINK: 'vector-polyline',
-};
 
 const PUZZLE_TYPE_DESCRIPTIONS: Record<Puzzle['type'], string> = {
   FLOW: 'Connect matching colors without crossing paths.',
@@ -51,13 +44,7 @@ export function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
       ]}
     >
       <View style={styles.puzzleCardContent}>
-        <View style={[styles.puzzleLeading, { backgroundColor: palette.chip }]}>
-          <MaterialCommunityIcons
-            name={PUZZLE_TYPE_ICONS[puzzle.type]}
-            size={28}
-            color={theme.accentInk}
-          />
-        </View>
+        <PuzzleIcon type={puzzle.type} size="sm" />
         <View style={styles.puzzleInfo}>
           <Text type="h3" numberOfLines={1}>
             {puzzle.name}
@@ -148,15 +135,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-  },
-  puzzleLeading: {
-    width: 44,
-    height: 44,
-    borderRadius: Radii.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-    marginTop: Spacing.half,
   },
   puzzleInfo: {
     flex: 1,

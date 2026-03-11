@@ -70,11 +70,15 @@ function buildHashiSolution(
   bridgeCounts: number[],
   islands: { row: number; col: number }[],
 ) {
-  return connections.map((conn, i) => ({
-    bridges: bridgeCounts[i],
-    from: { row: islands[conn.a].row, col: islands[conn.a].col },
-    to: { row: islands[conn.b].row, col: islands[conn.b].col },
-  }));
+  return connections
+    .map((conn, i) => {
+      return {
+        bridges: bridgeCounts[i],
+        from: { row: islands[conn.a].row, col: islands[conn.a].col },
+        to: { row: islands[conn.b].row, col: islands[conn.b].col },
+      };
+    })
+    .filter((state) => state.bridges > 0);
 }
 
 function buildHashiCurrentState(

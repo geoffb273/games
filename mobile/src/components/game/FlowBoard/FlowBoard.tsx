@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { FadeIn, runOnJS } from 'react-native-reanimated';
+import { runOnJS } from 'react-native-reanimated';
 
 import { type FlowPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
@@ -75,7 +75,7 @@ type FlowBoardProps = {
 
 export function FlowBoard({ puzzle }: FlowBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const { grid, isComplete, setCell, clearPathForPair } = useFlowGame(puzzle);
+  const { grid, setCell, clearPathForPair } = useFlowGame(puzzle);
 
   useInitialOpenInstructionsEffect({ type: PuzzleType.Flow });
 
@@ -163,14 +163,6 @@ export function FlowBoard({ puzzle }: FlowBoardProps) {
           ))}
         </View>
       </GestureDetector>
-
-      {isComplete && (
-        <Animated.View entering={FadeIn.duration(300)}>
-          <Text type="emphasized_body" textAlign="center" color="textSecondary">
-            Puzzle complete!
-          </Text>
-        </Animated.View>
-      )}
     </View>
   );
 }

@@ -104,8 +104,7 @@ export function useSolvePuzzle() {
       });
 
       if (data?.solvePuzzle.__typename !== 'MutationSolvePuzzleSuccess') {
-        // TODO: ERROR LOGGING
-        throw new Error('Unknown error');
+        throw new Error(data?.solvePuzzle.message ?? 'Unknown error');
       }
 
       return data.solvePuzzle.data;

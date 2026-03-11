@@ -90,7 +90,6 @@ type DailyChallengeProps = {
 
 function DailyChallenge({ challenge, isSelected, onPress }: DailyChallengeProps) {
   const theme = useTheme();
-  const isComplete = challenge.completedPuzzleCount === challenge.puzzleCount;
 
   return (
     <Pressable
@@ -105,9 +104,7 @@ function DailyChallenge({ challenge, isSelected, onPress }: DailyChallengeProps)
     >
       <Text type="body">{formatDate(challenge.date)}</Text>
       <Text type="caption" color="textSecondary">
-        {isComplete
-          ? `All ${challenge.puzzleCount} puzzles complete`
-          : `${challenge.completedPuzzleCount}/${challenge.puzzleCount} complete`}
+        {`${challenge.completedPuzzleCount}/${challenge.puzzleCount} complete`}
       </Text>
     </Pressable>
   );

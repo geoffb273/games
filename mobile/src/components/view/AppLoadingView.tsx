@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeOut, runOnJS } from 'react-native-reanimated';
 
-import { AppLogo } from '@/components/common/AppLogo';
 import { useLatestRef } from '@/hooks/useLatestRef';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { useTheme } from '@/hooks/useTheme';
 import { useTimeoutEffect } from '@/hooks/useTimeoutEffect';
 
-const MIN_LOGO__MS = 500;
+import { LandingPageView } from './LandingPageView';
 
-type LoadingStep = 'hidden' | 'logo' | 'can-hide' | 'hiding';
+const MIN_LANDING__MS = 1000;
+
+type LoadingStep = 'hidden' | 'landing' | 'can-hide' | 'hiding';
 
 export function AppLoadingView({
   isLoading,
@@ -21,7 +22,7 @@ export function AppLoadingView({
 }) {
   const onHiddenStable = useStableCallback(onHidden);
   const theme = useTheme();
-  const [step, setStep] = useState<LoadingStep>(isLoading ? 'logo' : 'hidden');
+  const [step, setStep] = useState<LoadingStep>(isLoading ? 'landing' : 'hidden');
   const stepRef = useLatestRef(step);
 
   useEffect(() => {
@@ -39,25 +40,25 @@ export function AppLoadingView({
       case 'can-hide':
         setStep('hiding');
         return;
-      case 'logo':
+      case 'landing':
         const timeout = setTimeout(() => {
           setStep('can-hide');
-        }, MIN_LOGO__MS);
+        }, MIN_LANDING__MS);
         return () => clearTimeout(timeout);
     }
   }, [isLoading, step]);
 
   useTimeoutEffect(
     () => {
-      if (!isLoading || stepRef.current !== 'logo') return;
+      if (!isLoading || stepRef.current !== 'landing') return;
 
       setStep('can-hide');
     },
     [isLoading, stepRef],
-    MIN_LOGO__MS,
+    MIN_LANDING__MS,
   );
 
-  const showLogo = step === 'logo' || step === 'can-hide';
+  const showLogo = step === 'landing' || step === 'can-hide';
 
   return (
     <Animated.View style={[styles.overlay, { backgroundColor: theme.background }]}>
@@ -70,8 +71,9 @@ export function AppLoadingView({
               runOnJS(setStep)('hidden');
             }
           })}
+          style={styles.logo}
         >
-          <AppLogo />
+          <LandingPageView />
         </Animated.View>
       )}
     </Animated.View>
@@ -81,7 +83,8 @@ export function AppLoadingView({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  },
+  logo: {
+    flex: 1,
   },
 });

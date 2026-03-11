@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
@@ -24,8 +23,7 @@ type HanjiBoardProps = {
 export function HanjiBoard({ puzzle }: HanjiBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const theme = useTheme();
-  const { cells, isComplete, onCellTap, onCellLongPress, onHint, currentState } =
-    useHanjiGame(puzzle);
+  const { cells, onCellTap, onCellLongPress, onHint, currentState } = useHanjiGame(puzzle);
 
   useInitialOpenInstructionsEffect({ type: PuzzleType.Hanji });
 
@@ -125,14 +123,6 @@ export function HanjiBoard({ puzzle }: HanjiBoardProps) {
           ))}
         </View>
       </View>
-
-      {isComplete && (
-        <Animated.View entering={FadeIn.duration(300)}>
-          <Text type="emphasized_body" textAlign="center" color="textSecondary">
-            Puzzle complete!
-          </Text>
-        </Animated.View>
-      )}
 
       <HintButton
         puzzleType={PuzzleType.Hanji}
