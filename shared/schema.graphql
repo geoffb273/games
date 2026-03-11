@@ -43,6 +43,13 @@ type FlowPuzzle implements Puzzle {
   width: Int!
 }
 
+type HanjiHint {
+  col: Int!
+  puzzleType: PuzzleType!
+  row: Int!
+  value: Int!
+}
+
 type HanjiPuzzle implements Puzzle {
   attempt: PuzzleAttempt
   colClues: [[Int!]!]!
@@ -60,9 +67,21 @@ input HashiBridgeInput {
   to: HashiCoordinateInput!
 }
 
+type HashiCoordinate {
+  col: Int!
+  row: Int!
+}
+
 input HashiCoordinateInput {
   col: Int!
   row: Int!
+}
+
+type HashiHint {
+  bridges: Int!
+  from: HashiCoordinate!
+  puzzleType: PuzzleType!
+  to: HashiCoordinate!
 }
 
 type HashiIsland {
@@ -94,6 +113,13 @@ enum MinesweeperCellValue {
   ZERO
 }
 
+type MinesweeperHint {
+  col: Int!
+  isMine: Boolean!
+  puzzleType: PuzzleType!
+  row: Int!
+}
+
 type MinesweeperPuzzle implements Puzzle {
   attempt: PuzzleAttempt
   description: String
@@ -121,6 +147,11 @@ type Mutation {
   createDailyChallenge(input: MutationCreateDailyChallengeInput!): MutationCreateDailyChallengeResult!
   deleteProgress: MutationDeleteProgressResult!
 
+  """
+  Returns one guaranteed part of the puzzle solution as a hint. FLOW is not supported.
+  """
+  requestPuzzleHint(input: MutationRequestPuzzleHintInput!): MutationRequestPuzzleHintResult!
+
   """Solves a puzzle for the logged in user"""
   solvePuzzle(input: MutationSolvePuzzleInput!): MutationSolvePuzzleResult!
 }
@@ -144,6 +175,36 @@ union MutationDeleteProgressResult = MutationDeleteProgressSuccess | Unauthorize
 
 type MutationDeleteProgressSuccess {
   data: Boolean!
+}
+
+input MutationRequestPuzzleHintInput {
+  """
+  Cells the user has already filled (0 or 1). Only provide when puzzle type is HANJI.
+  """
+  hanjiCurrentState: [[Int!]!]
+
+  """
+  Bridges the user has already placed. Only provide when puzzle type is HASHI.
+  """
+  hashiCurrentState: [HashiBridgeInput!]
+
+  """
+  Cells the user has already marked. Only provide when puzzle type is MINESWEEPER.
+  """
+  minesweeperCurrentState: [[Boolean!]!]
+  puzzleId: ID!
+  puzzleType: PuzzleType!
+
+  """
+  Edges the user has already set. Only provide when puzzle type is SLITHERLINK.
+  """
+  slitherlinkCurrentState: SlitherlinkSolutionInput
+}
+
+union MutationRequestPuzzleHintResult = MutationRequestPuzzleHintSuccess | NotFoundError | UnauthorizedError | UnknownError | ValidationError
+
+type MutationRequestPuzzleHintSuccess {
+  data: PuzzleHint!
 }
 
 input MutationSolvePuzzleInput {
@@ -219,6 +280,8 @@ type PuzzleAttempt {
   startedAt: DateTime!
 }
 
+union PuzzleHint = HanjiHint | HashiHint | MinesweeperHint | SlitherlinkHint
+
 enum PuzzleType {
   FLOW
   HANJI
@@ -271,6 +334,45 @@ union QueryPuzzlesResult = NotFoundError | QueryPuzzlesSuccess | UnknownError
 
 type QueryPuzzlesSuccess {
   data: [Puzzle!]!
+}
+
+input RequestPuzzleHintInput {
+  """
+  Cells the user has already filled (0 or 1). Only provide when puzzle type is HANJI. Used to avoid returning a hint for a cell the user already set.
+  """
+  hanjiCurrentState: [[Int!]!]
+
+  """
+  Bridges the user has already placed. Only provide when puzzle type is HASHI. Used to avoid returning a hint for a bridge the user already set.
+  """
+  hashiCurrentState: [HashiBridgeInput!]
+
+  """
+  Cells the user has already marked (mine or not). Only provide when puzzle type is MINESWEEPER. Used to avoid returning a hint for a cell the user already set.
+  """
+  minesweeperCurrentState: [[Boolean!]!]
+  puzzleId: ID!
+
+  """The type of puzzle. FLOW is not supported for hints."""
+  puzzleType: PuzzleType!
+
+  """
+  Edges the user has already set. Only provide when puzzle type is SLITHERLINK. Used to avoid returning a hint for an edge the user already set.
+  """
+  slitherlinkCurrentState: SlitherlinkSolutionInput
+}
+
+enum SlitherlinkEdgeType {
+  HORIZONTAL
+  VERTICAL
+}
+
+type SlitherlinkHint {
+  col: Int!
+  edgeType: SlitherlinkEdgeType!
+  filled: Boolean!
+  puzzleType: PuzzleType!
+  row: Int!
 }
 
 type SlitherlinkPuzzle implements Puzzle {

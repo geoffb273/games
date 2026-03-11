@@ -11,6 +11,7 @@ import { type UserPuzzleAttempt } from '@/platform/puzzle/resource/userPuzzleAtt
 import { computeSolutionCells } from '@/utils/puzzle/minesweeper';
 
 import { builder } from '../builder';
+import { UnknownError } from '../errors';
 
 export const PuzzleAttemptRef = builder.objectRef<UserPuzzleAttempt>('PuzzleAttempt').implement({
   fields: (t) => ({
@@ -218,4 +219,111 @@ export const SlitherlinkSolutionInput = builder.inputType('SlitherlinkSolutionIn
       required: true,
     }),
   }),
+});
+
+// --- Hint types (requestPuzzleHint mutation) ---
+
+export const RequestPuzzleHintInput = builder.inputType('RequestPuzzleHintInput', {
+  fields: (t) => ({
+    puzzleId: t.id({ required: true }),
+    puzzleType: t.field({
+      type: PuzzleTypeEnum,
+      required: true,
+      description: 'The type of puzzle. FLOW is not supported for hints.',
+    }),
+    hanjiCurrentState: t.field({
+      type: [t.listRef('Int')],
+      required: false,
+      description:
+        'Cells the user has already filled (0 or 1). Only provide when puzzle type is HANJI. Used to avoid returning a hint for a cell the user already set.',
+    }),
+    hashiCurrentState: t.field({
+      type: [HashiBridgeInput],
+      required: false,
+      description:
+        'Bridges the user has already placed. Only provide when puzzle type is HASHI. Used to avoid returning a hint for a bridge the user already set.',
+    }),
+    minesweeperCurrentState: t.field({
+      type: [t.listRef('Boolean')],
+      required: false,
+      description:
+        'Cells the user has already marked (mine or not). Only provide when puzzle type is MINESWEEPER. Used to avoid returning a hint for a cell the user already set.',
+    }),
+    slitherlinkCurrentState: t.field({
+      type: SlitherlinkSolutionInput,
+      required: false,
+      description:
+        'Edges the user has already set. Only provide when puzzle type is SLITHERLINK. Used to avoid returning a hint for an edge the user already set.',
+    }),
+  }),
+});
+
+const HashiCoordinateRef = builder.simpleObject('HashiCoordinate', {
+  fields: (t) => ({
+    row: t.int({ nullable: false }),
+    col: t.int({ nullable: false }),
+  }),
+});
+
+export const SlitherlinkEdgeTypeEnum = builder.enumType('SlitherlinkEdgeType', {
+  values: {
+    HORIZONTAL: { value: 'HORIZONTAL' },
+    VERTICAL: { value: 'VERTICAL' },
+  } as const,
+});
+
+const HanjiHintRef = builder.simpleObject('HanjiHint', {
+  fields: (t) => ({
+    puzzleType: t.field({ type: PuzzleTypeEnum, nullable: false }),
+    row: t.int({ nullable: false }),
+    col: t.int({ nullable: false }),
+    value: t.int({ nullable: false }),
+  }),
+});
+
+const HashiHintRef = builder.simpleObject('HashiHint', {
+  fields: (t) => ({
+    puzzleType: t.field({ type: PuzzleTypeEnum, nullable: false }),
+    from: t.field({ type: HashiCoordinateRef, nullable: false }),
+    to: t.field({ type: HashiCoordinateRef, nullable: false }),
+    bridges: t.int({ nullable: false }),
+  }),
+});
+
+const MinesweeperHintRef = builder.simpleObject('MinesweeperHint', {
+  fields: (t) => ({
+    puzzleType: t.field({ type: PuzzleTypeEnum, nullable: false }),
+    row: t.int({ nullable: false }),
+    col: t.int({ nullable: false }),
+    isMine: t.boolean({ nullable: false }),
+  }),
+});
+
+const SlitherlinkHintRef = builder.simpleObject('SlitherlinkHint', {
+  fields: (t) => ({
+    puzzleType: t.field({ type: PuzzleTypeEnum, nullable: false }),
+    row: t.int({ nullable: false }),
+    col: t.int({ nullable: false }),
+    edgeType: t.field({ type: SlitherlinkEdgeTypeEnum, nullable: false }),
+    filled: t.boolean({ nullable: false }),
+  }),
+});
+
+export const PuzzleHintRef = builder.unionType('PuzzleHint', {
+  types: [HanjiHintRef, HashiHintRef, MinesweeperHintRef, SlitherlinkHintRef],
+  resolveType: (value) => {
+    const v = value as { puzzleType: string };
+    switch (v.puzzleType) {
+      case 'HANJI':
+        return HanjiHintRef;
+      case 'HASHI':
+        return HashiHintRef;
+      case 'MINESWEEPER':
+        return MinesweeperHintRef;
+      case 'SLITHERLINK':
+        return SlitherlinkHintRef;
+      default:
+        throw new UnknownError('Unknown puzzle type');
+    }
+  },
 });

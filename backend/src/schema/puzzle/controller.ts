@@ -25,6 +25,7 @@ import {
 import {
   HashiBridgeInput,
   PuzzleAttemptRef,
+  PuzzleHintRef,
   PuzzleRef,
   PuzzleTypeEnum,
   SlitherlinkSolutionInput,
@@ -225,6 +226,52 @@ builder.mutationField('solvePuzzle', (t) =>
         }
         throw error;
       }
+    },
+  }),
+);
+
+builder.mutationField('requestPuzzleHint', (t) =>
+  t.fieldWithInput({
+    description:
+      'Returns one guaranteed part of the puzzle solution as a hint. FLOW is not supported.',
+    type: PuzzleHintRef,
+    nullable: false,
+    input: {
+      puzzleId: t.input.id({ required: true }),
+      puzzleType: t.input.field({
+        type: PuzzleTypeEnum,
+        required: true,
+      }),
+      hanjiCurrentState: t.input.field({
+        type: t.input.listRef(t.input.listRef('Int')),
+        required: false,
+        description:
+          'Cells the user has already filled (0 or 1). Only provide when puzzle type is HANJI.',
+      }),
+      hashiCurrentState: t.input.field({
+        type: [HashiBridgeInput],
+        required: false,
+        description: 'Bridges the user has already placed. Only provide when puzzle type is HASHI.',
+      }),
+      minesweeperCurrentState: t.input.field({
+        type: t.input.listRef(t.input.listRef('Boolean')),
+        required: false,
+        description:
+          'Cells the user has already marked. Only provide when puzzle type is MINESWEEPER.',
+      }),
+      slitherlinkCurrentState: t.input.field({
+        type: SlitherlinkSolutionInput,
+        required: false,
+        description:
+          'Edges the user has already set. Only provide when puzzle type is SLITHERLINK.',
+      }),
+    },
+    errors: {
+      types: [UnknownError, ValidationError, NotFoundError, UnauthorizedError],
+    },
+    resolve: async (_, { input: _input }, { authorization }) => {
+      await authorization.expectUser;
+      throw new UnknownError('Not implemented');
     },
   }),
 );
