@@ -19,6 +19,15 @@ import { userDao } from '@/platform/user/dao/userDao';
 import { userService } from '@/platform/user/service/userService';
 ```
 
+## Resource
+
+- **Resource** modules (`**/resource/*`) hold domain types and Zod schemas only—no Prisma, no DB. Used by services (types, validation) and schema (e.g. input validation, Pothos types).
+- Prefer defining shared domain types and validation in the owning platform's resource; schema types in `schema/*/type.ts` can wrap or re-export them. When adding new domains, mirror the existing resource pattern in that area.
+
+## Prisma and DB access
+
+- **Prisma client** (`@/client/prisma`): use in **DAOs** for all query/transaction work. **Services** may import it only when they need a **transaction** that spans multiple DAO calls. Schema, context, and scripts must not use Prisma for data access; scripts may use it only for lifecycle (e.g. `prisma.$disconnect()`).
+
 ## TypeScript
 
 - Use `type` imports where only types are needed: `import type { X } from '...'`.
@@ -29,6 +38,22 @@ import { userService } from '@/platform/user/service/userService';
 
 - Keep import order: external packages first, then `@/` aliases, then relative. Use `simple-import-sort` style (already in ESLint).
 
+## Schema layer
+
+- **Controllers** (`schema/*/controller.ts`): only import **services** and **resource** (types/schemas); use `authorization` from context when needed. **Dataloaders** (`schema/dataloader/*`): call **services** (not DAOs), receive `Authorization` from context. **Types** (`schema/*/type.ts`): build Pothos types from platform resource types. For new schema features, follow the same layering (controller → service → DAO; dataloader → service).
+
 ## GraphQL (Pothos)
 
 - Keep schema building in schema layer; use services for data and validation (e.g. Zod). Use existing patterns for errors (`@pothos/plugin-errors`) and relay if applicable.
+
+## Errors
+
+- Throw errors from `schema/errors.ts` (e.g. `NotFoundError`, `ValidationError`). DAOs map Prisma errors via `@/utils/errorUtils`; controllers/services throw and declare `errors.types` on `fieldWithInput` (or equivalent). When adding new error kinds, add the class and register it in the schema the same way as existing ones.
+
+## Scripts and entrypoints
+
+- Scripts and entrypoints call **services**, not DAOs. They may use Prisma only for app lifecycle (e.g. `$disconnect()`). Console is acceptable in scripts/entrypoints; in `src/` prefer logger when available.
+
+## Flexibility
+
+- When introducing a new pattern or folder, mirror the conventions of the nearest existing code in that layer (e.g. new service same as existing services, new schema domain same as existing schema domains).

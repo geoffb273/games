@@ -11,9 +11,15 @@ alwaysApply: false
 - Use the `@/` path alias for app code (e.g. `@/components`, `@/generated`, `@/store`). Avoid deep relative paths when an alias is available.
 - Keep import order consistent (external, then `@/`, then relative); match ESLint `simple-import-sort` and `no-relative-import-paths` where configured.
 
+## App structure and routing
+
+- Routes live in `src/app/` (Expo Router, file-based). Keep route files thin: use `useLocalSearchParams` (or similar), pass ids to view components; put data fetching and branching inside view components (e.g. `GameView`), not in the route file.
+- Prefer Stack for main flow and the project’s tab component (e.g. `AppTabs` / `NativeTabs`) for tab bar. When adding new routes or tabs, follow the existing layout and nesting.
+
 ## GraphQL and Apollo Client
 
-- Use generated types and operations from `@/generated` (GraphQL Codegen). Run `pnpm generate` (or `generate:watch`) after schema/operation changes.
+- Put queries, mutations, and their hooks under `src/api/` by domain (e.g. `puzzle/`, `user/`). Co-locate domain types and fragment definitions in the same domain; register fragments with the app’s fragment registry when required.
+- Prefer hooks that return domain-friendly results (e.g. `isLoading`, `isError`, `isNotFound`, mapped data). Handle union/error responses via `__typename` (e.g. `QueryPuzzleSuccess` vs `Error`). Use generated types from `@/generated/gql` / `@/generated/gql/graphql`; run `pnpm generate` after schema or operation changes.
 - Prefer Apollo hooks (`useQuery`, `useMutation`) and the project’s existing Apollo setup (e.g. `apollo.ts`); follow patterns used in existing screens/components.
 
 ## React / Expo
@@ -21,6 +27,25 @@ alwaysApply: false
 - Use functional components and hooks. Extract reusable logic into custom hooks.
 - Use Expo APIs and packages for device features (e.g. SecureStore, linking); avoid ad-hoc native modules unless already in the project.
 
-## State
+## Components
+
+- **Layers**: Use `components/common/` for shared UI (e.g. `Text`, `Button`, `Toggle`, `ErrorView`). Use these instead of raw React Native `Text`/`Switch` where the linter restricts them. Use `components/view/` for screen-level views that take params and handle data and composition; use `components/layout/` for layout wrappers; use `components/game/` (or similar) for feature-specific UI. When adding components, mirror the existing layering and naming in that area.
+- **Styling**: Prefer `useTheme()` for colors and `@/constants/theme` (e.g. `Spacing`, `Radii`, `Fonts`) for layout and typography. Use `StyleSheet.create` for static styles; use style arrays for dynamic values. Avoid unused styles (project ESLint enforces this).
+
+## Hooks
+
+- General-purpose hooks in `src/hooks/`; domain-specific hooks next to their domain (e.g. API hooks in `src/api/`, game logic in `src/hooks/game/`). Prefer a single exported hook per file when it’s the main API (e.g. `usePuzzleQuery`, `useFlowGame`).
+- Use the project’s existing hooks (e.g. `useStableCallback`, `useTheme`, `useLatestRef`) where they fit. When adding new behavior, follow the same placement and naming pattern as nearby code.
+
+## State and persistence
 
 - Use Valtio for client state where the codebase already uses it; use Apollo cache for server state. Don’t introduce a new global state library without alignment with existing patterns.
+- **Valtio**: Use `proxy` + `useSnapshot`; expose a `useX()` that returns `useSnapshot(Store)`. For persisted state, read/write via the app’s storage abstraction (e.g. `getStorage()` from `@/storage/mmkv`); validate with Zod when reading.
+- **Context**: Use React Context for narrow, tree-scoped state (e.g. auth). Prefer the existing pattern: a context file that exports the context and a `useX()` that throws if used outside the provider.
+- Prefer MMKV for the majority of persistent storage. Choose expo-secure-store only when truly necessary.
+
+## TypeScript and quality
+
+- Use type-only imports where possible; add explicit return types for exported hooks and public functions when it helps. Follow ESLint: no `console.*`, no unstable nested components, and use the shared `Text`/`Toggle` instead of raw RN where restricted.
+
+When adding new code, match the structure, naming, and layering of the nearest existing code in that area.
