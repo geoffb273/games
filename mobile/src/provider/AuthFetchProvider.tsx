@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useAuthenticateDevice } from '@/api/user/authenticateDeviceMutation';
-import { useCurrentUserQuery } from '@/api/user/currentUserQuer';
+import { useCurrentUserQuery } from '@/api/user/currentUserQuery';
 import { AuthFetchContext, type AuthFetchContextType } from '@/context/AuthFetchContext';
 import { getOrCreateDeviceId } from '@/store/device';
 import { clearToken, loadToken, saveToken, useAuthToken } from '@/store/token';
