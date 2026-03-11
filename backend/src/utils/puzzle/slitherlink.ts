@@ -12,9 +12,9 @@ type Edge = {
   to: Dot;
 };
 
-const LOOP_MIN_LENGTH_BASELINE = 8;
-const LOOP_MIN_LENGTH_FRACTION = 0.55;
-const LOOP_MIN_TURNS_BASELINE = 5;
+const LOOP_MIN_LENGTH_BASELINE = 12;
+const LOOP_MIN_LENGTH_FRACTION = 0.75;
+const LOOP_MIN_TURNS_BASELINE = 9;
 const SMALL_GRID_PERIMETER_THRESHOLD = 10;
 
 type GenerateSlitherlinkPuzzleDataOptions = {
@@ -483,9 +483,9 @@ function deriveClues(
   return clues;
 }
 
-const TARGET_CLUE_DENSITY_MIN = 0.25;
-const TARGET_CLUE_DENSITY_MAX = 0.4;
-const MAX_CLUE_REMOVAL_ATTEMPTS_MULTIPLIER = 3;
+const TARGET_CLUE_DENSITY_MIN = 0.15;
+const TARGET_CLUE_DENSITY_MAX = 0.3;
+const MAX_CLUE_REMOVAL_ATTEMPTS_MULTIPLIER = 4;
 
 /**
  * Thins a full clue grid into a sparser, more informative one while preserving uniqueness.
