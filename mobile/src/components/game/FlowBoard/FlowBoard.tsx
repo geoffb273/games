@@ -216,6 +216,8 @@ function useFlowBoardPan({
       if (!cell) return;
       const last = lastCellRef.current;
       if (last && last.row === cell.row && last.col === cell.col) return;
+      const endpointAtCell = getPairAtCell(puzzle.pairs, cell.row, cell.col);
+      if (endpointAtCell && endpointAtCell.number !== pairNumber) return;
       const pathOrder = pathOrderRef.current;
       const currentValue = grid[cell.row]?.[cell.col] ?? 0;
 
@@ -259,7 +261,7 @@ function useFlowBoardPan({
         }
       }
     },
-    [cellSize, puzzle.width, puzzle.height, grid, setCell],
+    [cellSize, puzzle.width, puzzle.height, grid, puzzle.pairs, setCell],
   );
 
   const handlePanEnd = useCallback(

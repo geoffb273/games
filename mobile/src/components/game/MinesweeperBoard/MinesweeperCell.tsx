@@ -76,7 +76,7 @@ export const MinesweeperCell = memo(function MinesweeperCell({
 
   const longPressGesture = Gesture.LongPress()
     .enabled(!isRevealed)
-    .minDuration(350)
+    .minDuration(300)
     .onStart(() => {
       'worklet';
       scale.value = withSequence(

@@ -4,6 +4,7 @@ import Animated, {
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
+  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -21,8 +22,6 @@ export type HashiIslandProps = {
   cellSize: number;
 };
 
-Animated.addWhitelistedNativeProps({ text: true });
-
 export const HashiIsland = memo(function HashiIsland({
   requiredBridges,
   currentBridges,
@@ -37,6 +36,8 @@ export const HashiIsland = memo(function HashiIsland({
 
   const backgroundProgress = useSharedValue(isAtMax ? 1 : 0);
   const borderColorProgress = useSharedValue(isOverMax ? 1 : 0);
+  const shakeProgress = useSharedValue(0);
+  const scaleProgress = useSharedValue(1);
 
   useEffect(() => {
     backgroundProgress.value = withTiming(isAtMax ? 1 : 0, {
@@ -51,6 +52,24 @@ export const HashiIsland = memo(function HashiIsland({
     });
   }, [borderColorProgress, isOverMax, isAtMax]);
 
+  useEffect(() => {
+    if (!isOverMax) {
+      shakeProgress.value = 0;
+      scaleProgress.value = 1;
+      return;
+    }
+
+    shakeProgress.value = withSequence(
+      withTiming(-2, { duration: 40 }),
+      withTiming(2, { duration: 40 }),
+      withTiming(-1.5, { duration: 40 }),
+      withTiming(1.5, { duration: 40 }),
+      withTiming(0, { duration: 40 }),
+    );
+
+    scaleProgress.value = withTiming(1.1);
+  }, [isOverMax, scaleProgress, shakeProgress]);
+
   const animatedIslandStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
       backgroundProgress.value,
@@ -62,6 +81,7 @@ export const HashiIsland = memo(function HashiIsland({
       [0, 0.5, 1],
       [theme.text, theme.background, theme.error],
     ),
+    transform: [{ translateX: shakeProgress.value }, { scale: scaleProgress.value }],
   }));
 
   return (

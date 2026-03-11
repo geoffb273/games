@@ -27,14 +27,13 @@ export function FlowCell({ size, pairNumber, cellValue, color }: FlowCellProps) 
           borderColor: theme.borderSubtle,
           borderWidth: 1,
         },
+        showEndpoint && { backgroundColor: color },
       ]}
     >
       {showEndpoint && (
-        <View style={[styles.endpoint, { backgroundColor: color }]}>
-          <Text type="caption" _colorOverride="#fff">
-            {pairNumber}
-          </Text>
-        </View>
+        <Text type="emphasized_body" _colorOverride="#fff">
+          {pairNumber}
+        </Text>
       )}
     </View>
   );
@@ -45,13 +44,5 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  endpoint: {
-    minWidth: 20,
-    minHeight: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
   },
 });

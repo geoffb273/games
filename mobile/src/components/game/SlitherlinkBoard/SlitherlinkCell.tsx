@@ -95,7 +95,12 @@ export function SlitherlinkCell({
 
         <Animated.View style={[styles.clueContainer, clueErrorStyle]}>
           {clue != null && (
-            <Text type="body" textAlign="center" color={isTooManyLines ? 'error' : 'text'}>
+            <Text
+              size="lg"
+              fontWeight={isTooManyLines ? 'semibold' : 'regular'}
+              textAlign="center"
+              color={isTooManyLines ? 'error' : 'text'}
+            >
               {clue}
             </Text>
           )}

@@ -11,7 +11,7 @@ import { useSlitherlinkGame } from '@/hooks/game/useSlitherlinkGame';
 import { SlitherlinkCell } from './SlitherlinkCell';
 
 const CELL_GAP = 2;
-const MAX_CELL_SIZE = 44;
+const MAX_CELL_SIZE = 60;
 const AVAILABLE_HEIGHT_RATIO = 0.6;
 
 type SlitherlinkBoardProps = {
