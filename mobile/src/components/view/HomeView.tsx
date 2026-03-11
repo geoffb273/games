@@ -8,7 +8,7 @@ import { Text } from '@/components/common/Text';
 import { DailyChallengesList } from '@/components/DailyChallengesList';
 import { FlatListLayout } from '@/components/layout/FlatListLayout';
 import { PuzzleCard, PuzzleListEmptyState } from '@/components/PuzzleCard';
-import { Spacing } from '@/constants/theme';
+import { Radii, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
 export function HomeView() {
@@ -47,7 +47,17 @@ export function HomeView() {
       header={
         <View style={styles.headerContainer}>
           <View style={styles.header}>
-            <Text type="h2">Game Brain</Text>
+            <View
+              style={[
+                styles.headerTitleBadge,
+                {
+                  backgroundColor: theme.highlightWash,
+                  borderColor: theme.borderSubtle,
+                },
+              ]}
+            >
+              <Text type="h2">Game Brain</Text>
+            </View>
           </View>
           <DailyChallengesList
             dailyChallenges={dailyChallenges}
@@ -78,11 +88,17 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   header: {
-    paddingHorizontal: Spacing.four,
     gap: Spacing.half,
     paddingBottom: Spacing.two,
   },
+  headerTitleBadge: {
+    borderRadius: Radii.lg,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderWidth: 1,
+  },
   puzzleList: {
+    paddingHorizontal: Spacing.three,
     rowGap: Spacing.one,
     paddingBottom: Spacing.five,
   },

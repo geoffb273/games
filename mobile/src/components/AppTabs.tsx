@@ -1,30 +1,59 @@
 import React from 'react';
-import { useColorScheme } from 'react-native';
 
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { Tabs } from 'expo-router';
+import { FontAwesome } from '@expo/vector-icons';
 
-import { Colors } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
+
+function HomeTabIcon({ color, size }: { color?: string; size?: number }) {
+  const theme = useTheme();
+  return <FontAwesome name="home" size={size ?? 24} color={color ?? theme.text} />;
+}
+
+function SettingsTabIcon({ color, size }: { color?: string; size?: number }) {
+  const theme = useTheme();
+  return <FontAwesome name="cog" size={size ?? 24} color={color ?? theme.textSecondary} />;
+}
+
+function renderHomeTabIcon(props: { color?: string; size?: number }) {
+  return <HomeTabIcon {...props} />;
+}
+
+function renderSettingsTabIcon(props: { color?: string; size?: number }) {
+  return <SettingsTabIcon {...props} />;
+}
 
 export function AppTabs() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const theme = useTheme();
 
   return (
-    <NativeTabs
-      backgroundColor={colors.background}
-      indicatorColor={colors.highlightWash}
-      iconColor={colors.textSecondary}
-      labelStyle={{ selected: { color: colors.text } }}
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: theme.text,
+        tabBarInactiveTintColor: theme.rule,
+        tabBarStyle: {
+          backgroundColor: theme.background,
+          borderTopColor: theme.borderSubtle,
+          paddingTop: Spacing.two,
+        },
+      }}
     >
-      <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="settings">
-        <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'gearshape', selected: 'gearshape.fill' }} />
-      </NativeTabs.Trigger>
-    </NativeTabs>
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: renderHomeTabIcon,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: renderSettingsTabIcon,
+        }}
+      />
+    </Tabs>
   );
 }

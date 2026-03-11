@@ -6,7 +6,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { Text } from '@/components/common/Text';
-import { Radii, Spacing } from '@/constants/theme';
+import { getPuzzlePalette } from '@/constants/puzzleThemeConstants';
+import { Radii, Spacing, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
 import { ErrorView } from './common/ErrorView';
@@ -19,13 +20,24 @@ const PUZZLE_TYPE_ICONS: Record<Puzzle['type'], keyof typeof MaterialCommunityIc
   SLITHERLINK: 'vector-polyline',
 };
 
+const PUZZLE_TYPE_DESCRIPTIONS: Record<Puzzle['type'], string> = {
+  FLOW: 'Connect matching colors without crossing paths.',
+  HANJI: 'Fill the grid to reveal a hidden picture.',
+  HASHI: 'Draw bridges to connect all the islands.',
+  MINESWEEPER: 'Clear the board without detonating any mines.',
+  SLITHERLINK: 'Draw a single loop that satisfies all the clues.',
+};
+
 export function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
   const theme = useTheme();
   const isCompleted = puzzle.attempt != null;
   const isSolved = isCompleted && puzzle.attempt?.completedAt != null;
+  const palette = getPuzzlePalette(puzzle.type, theme.background);
 
   // Pre-load the puzzle to avoid flickering
   usePuzzleQuery({ id: puzzle.id });
+
+  const description = puzzle.description ?? PUZZLE_TYPE_DESCRIPTIONS[puzzle.type];
 
   return (
     <Pressable
@@ -33,16 +45,16 @@ export function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
       style={({ pressed }) => [
         styles.puzzleCard,
         {
-          backgroundColor: pressed ? theme.highlightWash : theme.backgroundElement,
+          backgroundColor: pressed ? palette.chip : palette.card,
           borderColor: theme.borderSubtle,
         },
       ]}
     >
       <View style={styles.puzzleCardContent}>
-        <View style={styles.puzzleLeading}>
+        <View style={[styles.puzzleLeading, { backgroundColor: palette.chip }]}>
           <MaterialCommunityIcons
             name={PUZZLE_TYPE_ICONS[puzzle.type]}
-            size={22}
+            size={28}
             color={theme.accentInk}
           />
         </View>
@@ -50,29 +62,50 @@ export function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
           <Text type="h3" numberOfLines={1}>
             {puzzle.name}
           </Text>
-          {puzzle.description && (
+
+          {description && (
             <Text type="caption" color="textSecondary" numberOfLines={2}>
-              {puzzle.description}
+              {description}
             </Text>
           )}
         </View>
-        {isCompleted && (
-          <View
-            style={[
-              styles.completedBadge,
-              {
-                borderColor: isSolved ? theme.success : theme.warning,
-                backgroundColor: isSolved ? theme.successSurface : theme.warningSurface,
-              },
-            ]}
-          >
-            <Text type="caption" color={isSolved ? 'success' : 'warning'}>
-              {isSolved ? 'Solved' : 'Attempted'}
-            </Text>
-          </View>
-        )}
+        <PuzzleStatusIcon status={isSolved ? 'solved' : isCompleted ? 'lost' : 'incomplete'} />
       </View>
     </Pressable>
+  );
+}
+
+type PuzzleStatus = 'solved' | 'lost' | 'incomplete';
+
+const PUZZLE_STATUS_ICONS: Record<
+  PuzzleStatus,
+  {
+    icon: keyof typeof MaterialCommunityIcons.glyphMap | null;
+    borderColor: ThemeColor;
+    backgroundColor: ThemeColor;
+  }
+> = {
+  solved: { icon: 'check', borderColor: 'success', backgroundColor: 'successSurface' },
+  lost: { icon: 'close', borderColor: 'error', backgroundColor: 'errorSurface' },
+  incomplete: { icon: null, borderColor: 'accentInk', backgroundColor: 'highlightWash' },
+};
+
+function PuzzleStatusIcon({ status }: { status: PuzzleStatus }) {
+  const theme = useTheme();
+  const { icon, borderColor, backgroundColor } = PUZZLE_STATUS_ICONS[status];
+
+  return (
+    <View
+      style={[
+        styles.completedBadge,
+        {
+          borderColor: theme[borderColor],
+          backgroundColor: theme[backgroundColor],
+        },
+      ]}
+    >
+      {icon != null && <MaterialCommunityIcons name={icon} size={16} color={theme[borderColor]} />}
+    </View>
   );
 }
 
@@ -104,10 +137,12 @@ export function PuzzleListEmptyState({
 
 const styles = StyleSheet.create({
   puzzleCard: {
+    flex: 1,
     borderRadius: Radii.md,
     padding: Spacing.three,
     borderWidth: 1,
-    marginHorizontal: Spacing.four,
+    marginHorizontal: Spacing.one,
+    marginVertical: Spacing.one,
   },
   puzzleCardContent: {
     flexDirection: 'row',
@@ -115,11 +150,12 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   puzzleLeading: {
-    width: 34,
-    height: 34,
+    width: 44,
+    height: 44,
     borderRadius: Radii.sm,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
     marginTop: Spacing.half,
   },
   puzzleInfo: {
@@ -127,9 +163,11 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
   },
   completedBadge: {
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: Radii.pill,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.half,
+    height: 20,
+    width: 20,
     borderWidth: 1,
   },
   emptyState: {
