@@ -5,6 +5,7 @@ import { createUserPuzzleHint } from '../dao/userPuzzleHintDao';
 import {
   type HanjiPuzzleData,
   type HashiPuzzleData,
+  type IncompleteHashiSolution,
   type MinesweeperPuzzleData,
   type Puzzle,
   type SlitherlinkPuzzleData,
@@ -91,7 +92,7 @@ function pickHashiHint({
   currentState,
 }: {
   solution: HashiPuzzleData['solution'];
-  currentState: HashiPuzzleData['solution'] | null | undefined;
+  currentState: IncompleteHashiSolution | null | undefined;
 }): PuzzleHint | null {
   if (solution.length === 0) return null;
   if (currentState == null || currentState.length !== solution.length) {

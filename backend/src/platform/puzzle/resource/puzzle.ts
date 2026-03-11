@@ -114,6 +114,16 @@ const hashiBridgeSchema = z.object({
   bridges: z.union([z.literal(1), z.literal(2)]),
 });
 
+const incompleteHashiBridgeSchema = z.object({
+  from: z.object({ row: z.int().min(0), col: z.int().min(0) }),
+  to: z.object({ row: z.int().min(0), col: z.int().min(0) }),
+  bridges: z.union([z.literal(0), z.literal(1), z.literal(2)]),
+});
+
+export const incompleteHashiSolutionSchema = z.array(incompleteHashiBridgeSchema);
+
+export type IncompleteHashiSolution = z.infer<typeof incompleteHashiSolutionSchema>;
+
 export const hashiPuzzleDataSchema = z
   .object({
     width: z.int().min(1),

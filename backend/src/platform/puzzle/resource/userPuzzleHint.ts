@@ -1,6 +1,6 @@
 import type {
   HanjiPuzzleData,
-  HashiPuzzleData,
+  IncompleteHashiSolution,
   MinesweeperPuzzleData,
   SlitherlinkPuzzleData,
 } from './puzzle';
@@ -25,7 +25,7 @@ export type RequestPuzzleHintInput =
     })
   | (BaseRequestPuzzleHintInput & {
       puzzleType: 'HASHI';
-      hashiCurrentState?: HashiPuzzleData['solution'] | null;
+      hashiCurrentState?: IncompleteHashiSolution | null;
     })
   | (BaseRequestPuzzleHintInput & {
       puzzleType: 'MINESWEEPER';
