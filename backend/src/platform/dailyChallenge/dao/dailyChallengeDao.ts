@@ -101,7 +101,7 @@ export async function getPuzzleCountsByDailyChallengeIds({
 /**
  * Batch-loads the number of completed puzzles per daily challenge for a given user.
  *
- * A puzzle is considered "completed" when a UserPuzzleAttempt exists with a non-null completedAt.
+ * A puzzle is considered "completed" when a UserPuzzleAttempt exists
  *
  * @returns a map of dailyChallengeId -> completed puzzle count (missing keys imply 0)
  */
@@ -118,7 +118,6 @@ export async function getCompletedPuzzleCountsByDailyChallengeIds({
       attempts: {
         some: {
           userId,
-          completedAt: { not: null },
         },
       },
     },

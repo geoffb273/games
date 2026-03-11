@@ -47,6 +47,11 @@ export async function getPuzzleCountsByDailyChallengeIds({
   return getPuzzleCountsByDailyChallengeIdsDao({ dailyChallengeIds });
 }
 
+/**
+ * Gets the completed puzzle counts for the given daily challenge ids and user id.
+ *
+ * A completed puzzle is a puzzle that has been completed (i.e. the user has solved it or lost).
+ */
 export async function getCompletedPuzzleCountsByDailyChallengeIds({
   dailyChallengeIds,
   userId,
