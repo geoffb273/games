@@ -2,8 +2,9 @@ import { useMemo } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { type HanjiPuzzle } from '@/api/puzzle/puzzle';
+import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
+import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/theme';
 import { useHanjiGame } from '@/hooks/game/useHanjiGame';
 import { useTheme } from '@/hooks/useTheme';
@@ -22,7 +23,8 @@ type HanjiBoardProps = {
 export function HanjiBoard({ puzzle }: HanjiBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const theme = useTheme();
-  const { cells, isComplete, onCellTap, onCellLongPress } = useHanjiGame(puzzle);
+  const { cells, isComplete, onCellTap, onCellLongPress, onHint, currentState } =
+    useHanjiGame(puzzle);
 
   const { cellSize, rowClueWidth, colClueHeight, boardWidth } = useMemo(() => {
     const maxRowClueLen = Math.max(0, ...puzzle.rowClues.map((r) => r.length));
@@ -128,6 +130,13 @@ export function HanjiBoard({ puzzle }: HanjiBoardProps) {
           </Text>
         </Animated.View>
       )}
+
+      <HintButton
+        puzzleType={PuzzleType.Hanji}
+        puzzleId={puzzle.id}
+        onHint={onHint}
+        hanjiCurrentState={currentState}
+      />
     </View>
   );
 }

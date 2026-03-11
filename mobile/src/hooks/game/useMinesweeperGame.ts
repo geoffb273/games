@@ -83,6 +83,7 @@ export type MinesweeperGame = {
   onCellLongPress: (row: number, col: number) => void;
   toggleMode: () => void;
   onHint: (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Minesweeper }>) => void;
+  currentState: boolean[][];
 };
 
 type MinesweeperPersisted = {
@@ -91,10 +92,10 @@ type MinesweeperPersisted = {
   elapsedMs: number;
 };
 
-export function buildMinesweeperSolution(mineField: (number | 'MINE')[][]): boolean[][] {
+function buildMinesweeperSolution(mineField: (number | 'MINE')[][]): boolean[][] {
   return mineField.map((row) => row.map((cell) => cell === 'MINE'));
 }
-export function buildMinesweeperCurrentState(cells: CellStatus[][]): boolean[][] {
+function buildMinesweeperCurrentState(cells: CellStatus[][]): boolean[][] {
   return cells.map((row) => row.map((cell) => cell === 'flagged'));
 }
 
@@ -277,6 +278,8 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     },
   );
 
+  const currentState = useMemo(() => buildMinesweeperCurrentState(state.cells), [state.cells]);
+
   return {
     revealedMap,
     cells: state.cells,
@@ -287,5 +290,6 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     onCellLongPress,
     toggleMode,
     onHint,
+    currentState,
   };
 }

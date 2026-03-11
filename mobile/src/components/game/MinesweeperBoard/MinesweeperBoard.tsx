@@ -5,7 +5,7 @@ import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/theme';
-import { buildMinesweeperCurrentState, useMinesweeperGame } from '@/hooks/game/useMinesweeperGame';
+import { useMinesweeperGame } from '@/hooks/game/useMinesweeperGame';
 import { useTheme } from '@/hooks/useTheme';
 
 import { MinesweeperCell } from './MinesweeperCell';
@@ -21,8 +21,17 @@ type MinesweeperBoardProps = {
 export function MinesweeperBoard({ puzzle }: MinesweeperBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const theme = useTheme();
-  const { revealedMap, cells, remaining, mode, onCellTap, onCellLongPress, toggleMode, onHint } =
-    useMinesweeperGame(puzzle);
+  const {
+    revealedMap,
+    cells,
+    remaining,
+    mode,
+    onCellTap,
+    onCellLongPress,
+    toggleMode,
+    onHint,
+    currentState,
+  } = useMinesweeperGame(puzzle);
 
   const cellSize = useMemo(() => {
     const availW = screenWidth - Spacing.four * 2;
@@ -87,7 +96,7 @@ export function MinesweeperBoard({ puzzle }: MinesweeperBoardProps) {
         puzzleType={PuzzleType.Minesweeper}
         puzzleId={puzzle.id}
         onHint={onHint}
-        minesweeperCurrentState={buildMinesweeperCurrentState(cells)}
+        minesweeperCurrentState={currentState}
       />
     </View>
   );

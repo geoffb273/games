@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
@@ -47,6 +48,8 @@ export type HanjiGame = {
   isComplete: boolean;
   onCellTap: (row: number, col: number) => void;
   onCellLongPress: (row: number, col: number) => void;
+  onHint: (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Hanji }>) => void;
+  currentState: number[][];
 };
 
 type HanjiPersisted = {
@@ -168,10 +171,28 @@ export function useHanjiGame(puzzle: HanjiPuzzle): HanjiGame {
     }
   });
 
+  const onHint = useStableCallback(
+    (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Hanji }>) => {
+      const { row, col, value } = hint;
+      const desired: HanjiCellState = value === 1 ? 'filled' : 'empty';
+      const current = cells[row]?.[col];
+      if (current == null || current === desired) return;
+
+      triggerHapticMedium();
+      const nextState = gameReducer(cells, { type: 'SET_CELL', row, col, state: desired });
+      saveWithTime(nextState);
+      dispatch({ type: 'SET_CELL', row, col, state: desired });
+    },
+  );
+
+  const currentState = useMemo(() => cellsToHanjiSolution(cells), [cells]);
+
   return {
     cells,
     isComplete,
     onCellTap,
     onCellLongPress,
+    onHint,
+    currentState,
   };
 }
