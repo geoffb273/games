@@ -10,17 +10,23 @@ import { triggerHapticLight } from '@/utils/hapticUtils';
 export function Toggle({
   value,
   onValueChange,
+  disabled = false,
 }: {
   /** The value of the toggle */
   value: boolean;
   /** The function to call when the value changes */
   onValueChange: (value: boolean) => void;
+  disabled?: boolean;
 }) {
   const theme = useTheme();
 
   return (
     <Switch
       value={value}
+      disabled={disabled}
+      accessibilityLabel="Toggle"
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
       onValueChange={(isOn) => {
         onValueChange(isOn);
         triggerHapticLight();

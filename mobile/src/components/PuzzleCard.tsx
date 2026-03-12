@@ -51,7 +51,7 @@ export function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
             {puzzle.name}
           </Text>
 
-          {description && (
+          {description != null && (
             <Text type="caption" color="textSecondary" numberOfLines={2}>
               {description}
             </Text>

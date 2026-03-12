@@ -49,6 +49,7 @@ export const MinesweeperCell = memo(function MinesweeperCell({
   }, [onLongPress, row, col]);
 
   const tap = Gesture.Tap()
+    .withTestId('minesweeper-cell-tap')
     .enabled(!isRevealed)
     .onBegin(() => {
       'worklet';
@@ -64,6 +65,7 @@ export const MinesweeperCell = memo(function MinesweeperCell({
     });
 
   const longPressGesture = Gesture.LongPress()
+    .withTestId('minesweeper-cell-longpress')
     .enabled(!isRevealed)
     .minDuration(300)
     .onStart(() => {

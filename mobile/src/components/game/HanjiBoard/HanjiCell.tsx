@@ -44,6 +44,7 @@ export const HanjiCell = memo(function HanjiCell({
   }, [onLongPress, row, col]);
 
   const tap = Gesture.Tap()
+    .withTestId('hanji-cell-tap')
     .onBegin(() => {
       'worklet';
       scale.value = withSpring(0.9, { damping: 15, stiffness: 400 });
@@ -58,6 +59,7 @@ export const HanjiCell = memo(function HanjiCell({
     });
 
   const longPressGesture = Gesture.LongPress()
+    .withTestId('hanji-cell-longpress')
     .minDuration(350)
     .onStart(() => {
       'worklet';

@@ -87,11 +87,11 @@ export function SlitherlinkCell({
       {showRightEdge && <Dot position="topRight" />}
       {showBottomEdge && showRightEdge && <Dot position="bottomRight" />}
       {/* Top edge row */}
-      <HorizontalEdgeStrip state={top} onPress={onPressTop} />
+      <HorizontalEdgeStrip state={top} onPress={onPressTop} testID="slitherlink-cell-edge-top" />
 
       {/* Middle row: left/right edges + clue */}
       <View style={styles.middleRow}>
-        <VerticalEdgeStrip state={left} onPress={onPressLeft} />
+        <VerticalEdgeStrip state={left} onPress={onPressLeft} testID="slitherlink-cell-edge-left" />
 
         <Animated.View style={[styles.clueContainer, clueErrorStyle]}>
           {clue != null && (
@@ -106,16 +106,36 @@ export function SlitherlinkCell({
           )}
         </Animated.View>
 
-        {showRightEdge && <VerticalEdgeStrip state={right} onPress={onPressRight} />}
+        {showRightEdge && (
+          <VerticalEdgeStrip
+            state={right}
+            onPress={onPressRight}
+            testID="slitherlink-cell-edge-right"
+          />
+        )}
       </View>
 
       {/* Bottom edge row */}
-      {showBottomEdge && <HorizontalEdgeStrip state={bottom} onPress={onPressBottom} />}
+      {showBottomEdge && (
+        <HorizontalEdgeStrip
+          state={bottom}
+          onPress={onPressBottom}
+          testID="slitherlink-cell-edge-bottom"
+        />
+      )}
     </View>
   );
 }
 
-function HorizontalEdgeStrip({ state, onPress }: { state: EdgeState; onPress: () => void }) {
+function HorizontalEdgeStrip({
+  state,
+  onPress,
+  testID,
+}: {
+  state: EdgeState;
+  onPress: () => void;
+  testID?: string;
+}) {
   const theme = useTheme();
   const progress = useSharedValue(0);
 
@@ -136,13 +156,22 @@ function HorizontalEdgeStrip({ state, onPress }: { state: EdgeState; onPress: ()
       style={styles.edgeStripHorizontal}
       onPress={onPress}
       hitSlop={{ top: DOT_SIZE, bottom: DOT_SIZE }}
+      testID={testID}
     >
       <Animated.View style={[styles.line, backgroundColor]} />
     </Pressable>
   );
 }
 
-function VerticalEdgeStrip({ state, onPress }: { state: EdgeState; onPress: () => void }) {
+function VerticalEdgeStrip({
+  state,
+  onPress,
+  testID,
+}: {
+  state: EdgeState;
+  onPress: () => void;
+  testID?: string;
+}) {
   const theme = useTheme();
 
   const progress = useSharedValue(0);
@@ -164,6 +193,7 @@ function VerticalEdgeStrip({ state, onPress }: { state: EdgeState; onPress: () =
       style={styles.edgeStripVertical}
       onPress={onPress}
       hitSlop={{ left: DOT_SIZE / 2, right: DOT_SIZE / 2 }}
+      testID={testID}
     >
       <Animated.View style={[styles.line, backgroundColor]} />
     </Pressable>
