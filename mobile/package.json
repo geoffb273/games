@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "test": "jest --watchAll",
+    "test:ci": "jest --ci",
     "dev": "expo start",
     "build:prod": "eas build --platform ios --profile production",
     "build:preview": "eas build --platform ios --profile preview",

@@ -11,8 +11,8 @@ const CARDINAL: readonly [number, number][] = [
 ];
 
 /**
- * Returns true if the grid has correct dimensions and every pair's two endpoints
- * are connected by a path of cells all having that pair's number.
+ * Returns true if the grid has correct dimensions, every cell is filled (non-zero),
+ * and every pair's two endpoints are connected by a path of cells all having that pair's number.
  */
 export function isFlowComplete(
   width: number,
@@ -22,6 +22,14 @@ export function isFlowComplete(
 ): boolean {
   if (grid.length !== height || (height > 0 && grid[0].length !== width)) {
     return false;
+  }
+
+  for (let r = 0; r < height; r++) {
+    for (let c = 0; c < width; c++) {
+      if (grid[r][c] === 0) {
+        return false;
+      }
+    }
   }
 
   for (const pair of pairs) {

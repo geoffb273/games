@@ -18,7 +18,7 @@ defaults:
 
 jobs:
   check:
-    name: Lint & Typecheck
+    name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -44,3 +44,6 @@ jobs:
 
       - name: Typecheck
         run: pnpm tsc
+
+      - name: Test
+        run: pnpm test:ci

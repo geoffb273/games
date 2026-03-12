@@ -1,5 +1,5 @@
-import type { HashiConnection } from './connections';
-import { doBridgesCross, wouldNewBridgeCrossExisting } from './crossing';
+import type { HashiConnection } from '@/utils/hashi/connections';
+import { doBridgesCross, wouldNewBridgeCrossExisting } from '@/utils/hashi/crossing';
 
 describe('doBridgesCross', () => {
   it('returns false for two horizontal segments on different rows', () => {

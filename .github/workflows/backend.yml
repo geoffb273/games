@@ -18,7 +18,7 @@ defaults:
 
 jobs:
   check:
-    name: Lint, Typecheck & Schema
+    name: Lint, Typecheck, Test & Schema
     runs-on: ubuntu-latest
     env:
       # Placeholders only; not used by lint/tsc/check:schema but required by app bootstrap
@@ -56,6 +56,9 @@ jobs:
 
       - name: Typecheck
         run: pnpm tsc
+
+      - name: Test
+        run: pnpm test
 
       - name: Check schema is in sync
         run: pnpm check:schema
