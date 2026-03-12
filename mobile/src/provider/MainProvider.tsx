@@ -6,14 +6,14 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { ApolloProvider } from '@apollo/client/react';
 
 import client from '@/client/apollo';
-import { Colors } from '@/constants/theme';
+import { ThemeColor } from '@/constants/theme';
 
 import { AuthFetchProvider } from './AuthFetchProvider';
 import { InitialLoadGuard } from './InitialLoadGuard';
 
 export function MainProvider({ children }: { children: ReactNode }) {
   const colorScheme = useColorScheme();
-  const appColors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const appColors = ThemeColor[colorScheme === 'dark' ? 'dark' : 'light'];
   const navigationTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
 
   return (

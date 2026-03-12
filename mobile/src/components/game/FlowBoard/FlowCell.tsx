@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/common/Text';
+import { COLOR } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import { useColorBlindEnabled } from '@/store/colorBlindStore';
 
@@ -37,7 +38,7 @@ export function FlowCell({ size, pairNumber, cellValue, color }: FlowCellProps) 
       ]}
     >
       {showNumber && (
-        <Text type="emphasized_body" _colorOverride="#fff">
+        <Text type="emphasized_body" _colorOverride={COLOR.white}>
           {numberToShow}
         </Text>
       )}

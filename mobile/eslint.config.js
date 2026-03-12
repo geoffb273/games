@@ -77,6 +77,7 @@ module.exports = defineConfig([
       'react/self-closing-comp': 'warn',
       'react/jsx-curly-brace-presence': ['warn', { props: 'never', children: 'never' }],
       'react-native/no-unused-styles': 'error',
+      '@typescript-eslint/no-redeclare': 'off',
     },
   },
 ]);

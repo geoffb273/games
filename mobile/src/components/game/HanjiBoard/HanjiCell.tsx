@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Text } from '@/components/common/Text';
+import { COLOR } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 import type { HanjiCellState } from '@/utils/hanji/lineValidation';
 
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cellRaised: {
-    shadowColor: '#000',
+    shadowColor: COLOR.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
     shadowRadius: 1,

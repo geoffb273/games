@@ -31,7 +31,7 @@ const SIZE: Record<Size, { iconSize: number; chipSize: number }> = {
 
 export function PuzzleIcon({ type, size = 'md', style }: PuzzleIconProps) {
   const theme = useTheme();
-  const palette = getPuzzlePalette(type, theme.background);
+  const palette = getPuzzlePalette(type);
   const { iconSize, chipSize } = SIZE[size];
 
   return (

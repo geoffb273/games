@@ -1,4 +1,62 @@
-export const Colors = {
+export const COLOR = {
+  black: '#000000',
+  white: '#ffffff',
+
+  flow: {
+    pairColors: [
+      '#6B9BD1', // blue
+      '#7DCE7D', // green
+      '#E8A95D', // orange
+      '#D4737A', // red
+      '#9B7BBF', // purple
+      '#5BC0C0', // teal
+      '#E895C4', // pink
+      '#8B7355', // brown
+      '#F2D45C', // yellow
+      '#FF6FA3', // magenta
+    ],
+    emptyCell: '#CCCCCC',
+  },
+
+  minesweeper: {
+    numbers: {
+      1: '#3B82F6',
+      2: '#16A34A',
+      3: '#EF4444',
+      4: '#8B5CF6',
+      5: '#F59E0B',
+      6: '#0D9488',
+      7: '#EC4899',
+      8: '#94A3B8',
+    },
+    flag: '#EF4444',
+  },
+
+  puzzleType: {
+    HANJI: {
+      light: { card: '#FFE9F0', chip: '#FFD1E2' },
+      dark: { card: '#4A1030', chip: '#6A1A45' },
+    },
+    FLOW: {
+      light: { card: '#E5F5FF', chip: '#CCE8FF' },
+      dark: { card: '#0F3447', chip: '#16485F' },
+    },
+    HASHI: {
+      light: { card: '#FFF4E0', chip: '#FFE2B8' },
+      dark: { card: '#41270A', chip: '#5A3710' },
+    },
+    SLITHERLINK: {
+      light: { card: '#EAF8E8', chip: '#D3F0D0' },
+      dark: { card: '#0F3020', chip: '#184431' },
+    },
+    MINESWEEPER: {
+      light: { card: '#F0ECFF', chip: '#DBD3FF' },
+      dark: { card: '#221C48', chip: '#302964' },
+    },
+  },
+} as const;
+
+export const ThemeColor = {
   light: {
     text: '#2A241B',
     background: '#F8F3E8',
@@ -34,8 +92,7 @@ export const Colors = {
     accentInk: '#D8C6A3',
   },
 } as const;
-
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export type ThemeColor = keyof typeof ThemeColor.light & keyof typeof ThemeColor.dark;
 
 export const Fonts = {
   /** iOS `UIFontDescriptorSystemDesignDefault` */
@@ -69,7 +126,7 @@ export const Radii = {
 
 export const Shadows = {
   subtle: {
-    shadowColor: '#000',
+    shadowColor: COLOR.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.07,
     shadowRadius: 3,

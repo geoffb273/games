@@ -25,7 +25,7 @@ export function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
   const theme = useTheme();
   const isCompleted = puzzle.attempt != null;
   const isSolved = isCompleted && puzzle.attempt?.completedAt != null;
-  const palette = getPuzzlePalette(puzzle.type, theme.background);
+  const palette = getPuzzlePalette(puzzle.type);
 
   // Pre-load the puzzle to avoid flickering
   usePuzzleQuery({ id: puzzle.id });

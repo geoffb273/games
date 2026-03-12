@@ -5,7 +5,7 @@ import { runOnJS } from 'react-native-reanimated';
 
 import { type FlowPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
-import { Spacing } from '@/constants/theme';
+import { COLOR, Spacing } from '@/constants/theme';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { useFlowGame } from '@/hooks/game/useFlowGame';
 import { triggerHapticLight } from '@/utils/hapticUtils';
@@ -17,22 +17,8 @@ const MAX_CELL_SIZE = 44;
 const AVAILABLE_HEIGHT_RATIO = 0.6;
 const PAN_MIN_DISTANCE = 4;
 
-/** Distinct colors for flow paths (readable on light and dark backgrounds). */
-const FLOW_PAIR_COLORS = [
-  '#6B9BD1', // blue
-  '#7DCE7D', // green
-  '#E8A95D', // orange
-  '#D4737A', // red
-  '#9B7BBF', // purple
-  '#5BC0C0', // teal
-  '#E895C4', // pink
-  '#8B7355', // brown
-  '#F2D45C', // yellow
-  '#FF6FA3', // magenta
-];
-
 function getPairColor(pairIndex: number): string {
-  return FLOW_PAIR_COLORS[pairIndex % FLOW_PAIR_COLORS.length];
+  return COLOR.flow.pairColors[pairIndex % COLOR.flow.pairColors.length];
 }
 
 function getPairAtCell(
@@ -151,7 +137,7 @@ export function FlowBoard({ puzzle }: FlowBoardProps) {
                 const color =
                   cellValue > 0 || endpoint
                     ? getPairColor(pairIndex >= 0 ? pairIndex : cellValue - 1)
-                    : '#ccc';
+                    : COLOR.flow.emptyCell;
                 return (
                   <FlowCell
                     key={`cell-${r}-${c}`}

@@ -39,6 +39,10 @@ export function useThemePreference(): ThemeState {
   return useSnapshot(ThemeStore);
 }
 
+export function getThemePreference(): ThemePreference {
+  return ThemeStore.preference;
+}
+
 export function setThemePreference(next: ThemePreference): void {
   ThemeStore.preference = next;
   try {

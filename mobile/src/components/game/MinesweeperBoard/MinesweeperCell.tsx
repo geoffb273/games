@@ -13,19 +13,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Text } from '@/components/common/Text';
-import { Spacing } from '@/constants/theme';
+import { COLOR, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
-
-const NUMBER_COLORS: Record<number, string> = {
-  1: '#3B82F6',
-  2: '#16A34A',
-  3: '#EF4444',
-  4: '#8B5CF6',
-  5: '#F59E0B',
-  6: '#0D9488',
-  7: '#EC4899',
-  8: '#94A3B8',
-};
 
 type CellProps = {
   row: number;
@@ -115,7 +104,14 @@ export const MinesweeperCell = memo(function MinesweeperCell({
       >
         {isRevealed && value != null && value > 0 ? (
           <Animated.View entering={FadeIn.duration(200).delay(Math.min(20 * (row + col), 600))}>
-            <Text _colorOverride={NUMBER_COLORS[value] ?? theme.text} size="lg">
+            <Text
+              _colorOverride={
+                (value != null
+                  ? COLOR.minesweeper.numbers[value as keyof typeof COLOR.minesweeper.numbers]
+                  : undefined) ?? theme.text
+              }
+              size="lg"
+            >
               {value}
             </Text>
           </Animated.View>
@@ -159,7 +155,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cellRaised: {
-    shadowColor: '#000',
+    shadowColor: COLOR.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
     shadowRadius: 1,
@@ -171,6 +167,6 @@ const styles = StyleSheet.create({
   },
   flagMarker: {
     fontWeight: '800',
-    color: '#EF4444',
+    color: COLOR.minesweeper.flag,
   },
 });
