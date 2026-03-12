@@ -102,19 +102,19 @@ export const PuzzleTypeColors = {
     dark: { card: COLOR.plum800, chip: COLOR.pink500 },
   },
   FLOW: {
-    light: { card: COLOR.sky50, chip: COLOR.sky50 },
+    light: { card: COLOR.sky50, chip: COLOR.blue500 },
     dark: { card: COLOR.navy900, chip: COLOR.blue500 },
   },
   HASHI: {
-    light: { card: COLOR.sand50, chip: COLOR.sand50 },
+    light: { card: COLOR.sand50, chip: COLOR.amber500 },
     dark: { card: COLOR.umber900, chip: COLOR.amber500 },
   },
   SLITHERLINK: {
-    light: { card: COLOR.mint100, chip: COLOR.mint100 },
+    light: { card: COLOR.mint100, chip: COLOR.teal500 },
     dark: { card: COLOR.forest900, chip: COLOR.mint100 },
   },
   MINESWEEPER: {
-    light: { card: COLOR.indigo50, chip: COLOR.indigo50 },
+    light: { card: COLOR.indigo50, chip: COLOR.slate400 },
     dark: { card: COLOR.indigo800, chip: COLOR.slate400 },
   },
 } as const;

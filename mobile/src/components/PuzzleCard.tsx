@@ -10,6 +10,7 @@ import { Text } from '@/components/common/Text';
 import { usePuzzlePalette } from '@/constants/puzzleThemeConstants';
 import { Radii, Spacing, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
+import { getColorWithOpacity } from '@/utils/colorUtils';
 
 import { ErrorView } from './common/ErrorView';
 
@@ -38,7 +39,7 @@ export function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
       style={({ pressed }) => [
         styles.puzzleCard,
         {
-          backgroundColor: pressed ? palette.chip : palette.card,
+          backgroundColor: pressed ? getColorWithOpacity(palette.chip, 0.5) : palette.card,
           borderColor: theme.borderSubtle,
         },
       ]}
