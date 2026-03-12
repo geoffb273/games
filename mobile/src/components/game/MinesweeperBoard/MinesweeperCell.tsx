@@ -13,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Text } from '@/components/common/Text';
-import { COLOR, Spacing } from '@/constants/theme';
+import { COLOR, MinesweeperColors, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
 type CellProps = {
@@ -107,7 +107,7 @@ export const MinesweeperCell = memo(function MinesweeperCell({
             <Text
               _colorOverride={
                 (value != null
-                  ? COLOR.minesweeper.numbers[value as keyof typeof COLOR.minesweeper.numbers]
+                  ? MinesweeperColors.numbers[value as keyof typeof MinesweeperColors.numbers]
                   : undefined) ?? theme.text
               }
               size="lg"
@@ -167,6 +167,6 @@ const styles = StyleSheet.create({
   },
   flagMarker: {
     fontWeight: '800',
-    color: COLOR.minesweeper.flag,
+    color: MinesweeperColors.flag,
   },
 });

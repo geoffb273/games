@@ -30,7 +30,10 @@ alwaysApply: false
 ## Components
 
 - **Layers**: Use `components/common/` for shared UI (e.g. `Text`, `Button`, `Toggle`, `ErrorView`). Use these instead of raw React Native `Text`/`Switch` where the linter restricts them. Use `components/view/` for screen-level views that take params and handle data and composition; use `components/layout/` for layout wrappers; use `components/game/` (or similar) for feature-specific UI. When adding components, mirror the existing layering and naming in that area.
-- **Styling**: Prefer `useTheme()` for colors and `@/constants/theme` (e.g. `Spacing`, `Radii`, `Fonts`) for layout and typography. Use `StyleSheet.create` for static styles; use style arrays for dynamic values. Avoid unused styles (project ESLint enforces this).
+- **Styling**: Prefer `useTheme()` for colors and `@/constants/theme` (e.g. `COLOR`, `ThemeColor`, `Spacing`, `Radii`, `Fonts`) for layout and typography. Use `StyleSheet.create` for static styles; use style arrays for dynamic values. Avoid unused styles (project ESLint enforces this).
+- **Colors**: When adding any new color:
+  - First, check whether an appropriate value already exists in `COLOR` or `ThemeColor` and reuse it.
+  - If a truly new color is needed, add it to `COLOR` in `src/constants/theme.ts` with a clear, descriptive name before using it anywhere else.
 
 ## Hooks
 

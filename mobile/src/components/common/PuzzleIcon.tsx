@@ -3,7 +3,7 @@ import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
-import { getPuzzlePalette } from '@/constants/puzzleThemeConstants';
+import { usePuzzlePalette } from '@/constants/puzzleThemeConstants';
 import { Radii } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -31,7 +31,7 @@ const SIZE: Record<Size, { iconSize: number; chipSize: number }> = {
 
 export function PuzzleIcon({ type, size = 'md', style }: PuzzleIconProps) {
   const theme = useTheme();
-  const palette = getPuzzlePalette(type);
+  const palette = usePuzzlePalette(type);
   const { iconSize, chipSize } = SIZE[size];
 
   return (

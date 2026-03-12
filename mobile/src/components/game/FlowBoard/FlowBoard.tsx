@@ -5,7 +5,7 @@ import { runOnJS } from 'react-native-reanimated';
 
 import { type FlowPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
-import { COLOR, Spacing } from '@/constants/theme';
+import { FlowColors, Spacing } from '@/constants/theme';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { useFlowGame } from '@/hooks/game/useFlowGame';
 import { triggerHapticLight } from '@/utils/hapticUtils';
@@ -18,7 +18,7 @@ const AVAILABLE_HEIGHT_RATIO = 0.6;
 const PAN_MIN_DISTANCE = 4;
 
 function getPairColor(pairIndex: number): string {
-  return COLOR.flow.pairColors[pairIndex % COLOR.flow.pairColors.length];
+  return FlowColors.pairColors[pairIndex % FlowColors.pairColors.length];
 }
 
 function getPairAtCell(
@@ -137,7 +137,7 @@ export function FlowBoard({ puzzle }: FlowBoardProps) {
                 const color =
                   cellValue > 0 || endpoint
                     ? getPairColor(pairIndex >= 0 ? pairIndex : cellValue - 1)
-                    : COLOR.flow.emptyCell;
+                    : FlowColors.emptyCell;
                 return (
                   <FlowCell
                     key={`cell-${r}-${c}`}

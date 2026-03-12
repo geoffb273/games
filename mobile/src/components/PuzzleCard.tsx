@@ -7,7 +7,7 @@ import { type Puzzle } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { PuzzleIcon } from '@/components/common/PuzzleIcon';
 import { Text } from '@/components/common/Text';
-import { getPuzzlePalette } from '@/constants/puzzleThemeConstants';
+import { usePuzzlePalette } from '@/constants/puzzleThemeConstants';
 import { Radii, Spacing, type ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -25,7 +25,7 @@ export function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
   const theme = useTheme();
   const isCompleted = puzzle.attempt != null;
   const isSolved = isCompleted && puzzle.attempt?.completedAt != null;
-  const palette = getPuzzlePalette(puzzle.type);
+  const palette = usePuzzlePalette(puzzle.type);
 
   // Pre-load the puzzle to avoid flickering
   usePuzzleQuery({ id: puzzle.id });

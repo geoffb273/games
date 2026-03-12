@@ -1,7 +1,7 @@
 import { type Puzzle } from '@/api/puzzle/puzzle';
-import { getThemePreference } from '@/store/themeStore';
+import { useThemePreference } from '@/store/themeStore';
 
-import { COLOR } from './theme';
+import { PuzzleTypeColors } from './theme';
 
 type PuzzleType = Puzzle['type'];
 
@@ -12,8 +12,8 @@ type Palette = {
 
 export type PuzzlePalette = Palette;
 
-export function getPuzzlePalette(type: PuzzleType): Palette {
-  const isDark = getThemePreference() === 'dark';
-  const palette = COLOR.puzzleType[type];
-  return isDark ? palette.dark : palette.light;
+export function usePuzzlePalette(type: PuzzleType): Palette {
+  const { preference } = useThemePreference();
+  const palette = PuzzleTypeColors[type];
+  return preference === 'dark' ? palette.dark : palette.light;
 }

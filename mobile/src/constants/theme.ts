@@ -1,95 +1,158 @@
+import { getColorWithOpacity } from '@/utils/colorUtils';
+
 export const COLOR = {
   black: '#000000',
   white: '#ffffff',
 
-  flow: {
-    pairColors: [
-      '#6B9BD1', // blue
-      '#7DCE7D', // green
-      '#E8A95D', // orange
-      '#D4737A', // red
-      '#9B7BBF', // purple
-      '#5BC0C0', // teal
-      '#E895C4', // pink
-      '#8B7355', // brown
-      '#F2D45C', // yellow
-      '#FF6FA3', // magenta
-    ],
-    emptyCell: '#CCCCCC',
-  },
+  gray300: '#CCCCCC',
+  gray600: '#4A4E55',
+  gray800: '#2E3135',
+  gray900: '#212225',
 
-  minesweeper: {
-    numbers: {
-      1: '#3B82F6',
-      2: '#16A34A',
-      3: '#EF4444',
-      4: '#8B5CF6',
-      5: '#F59E0B',
-      6: '#0D9488',
-      7: '#EC4899',
-      8: '#94A3B8',
-    },
-    flag: '#EF4444',
-  },
+  slate400: '#94A3B8',
 
-  puzzleType: {
-    HANJI: {
-      light: { card: '#FFE9F0', chip: '#FFD1E2' },
-      dark: { card: '#4A1030', chip: '#6A1A45' },
-    },
-    FLOW: {
-      light: { card: '#E5F5FF', chip: '#CCE8FF' },
-      dark: { card: '#0F3447', chip: '#16485F' },
-    },
-    HASHI: {
-      light: { card: '#FFF4E0', chip: '#FFE2B8' },
-      dark: { card: '#41270A', chip: '#5A3710' },
-    },
-    SLITHERLINK: {
-      light: { card: '#EAF8E8', chip: '#D3F0D0' },
-      dark: { card: '#0F3020', chip: '#184431' },
-    },
-    MINESWEEPER: {
-      light: { card: '#F0ECFF', chip: '#DBD3FF' },
-      dark: { card: '#221C48', chip: '#302964' },
-    },
+  cream50: '#F8F3E8',
+  cream100: '#F3E8D5',
+  tan200: '#E5D8C2',
+  beige400: '#CCBCA3',
+
+  gold200: '#D8C6A3',
+
+  blue500: '#3B82F6',
+
+  sky50: '#E5F5FF',
+
+  navy900: '#0F3447',
+
+  indigo50: '#F0ECFF',
+  indigo800: '#302964',
+
+  violet500: '#8B5CF6',
+
+  plum800: '#6A1A45',
+
+  magenta400: '#FF6FA3',
+
+  pink100: '#FFD1E2',
+  pink500: '#EC4899',
+
+  red400: '#D4737A',
+  red500: '#EF4444',
+  red500Vivid: '#FF453A',
+
+  amber500: '#F59E0B',
+  amber700: '#8A5B2C',
+
+  orange500: '#FF9F0A',
+
+  yellow400: '#F2D45C',
+
+  sand50: '#FFF4E0',
+
+  green400: '#30D158',
+  green600: '#16A34A',
+
+  sage600: '#47725B',
+
+  mint100: '#D3F0D0',
+
+  forest900: '#0F3020',
+
+  teal500: '#0D9488',
+
+  brown500: '#8B7355',
+  brown800: '#5E4A2F',
+
+  umber900: '#41270A',
+} as const;
+
+export const FlowColors = {
+  pairColors: [
+    COLOR.blue500,
+    COLOR.green600,
+    COLOR.orange500,
+    COLOR.red400,
+    COLOR.violet500,
+    COLOR.teal500,
+    COLOR.pink500,
+    COLOR.brown500,
+    COLOR.yellow400,
+    COLOR.magenta400,
+  ],
+  emptyCell: COLOR.gray300,
+} as const;
+
+export const MinesweeperColors = {
+  numbers: {
+    1: COLOR.blue500,
+    2: COLOR.green600,
+    3: COLOR.red500,
+    4: COLOR.violet500,
+    5: COLOR.amber500,
+    6: COLOR.teal500,
+    7: COLOR.pink500,
+    8: COLOR.slate400,
+  },
+  flag: COLOR.red500,
+} as const;
+
+export const PuzzleTypeColors = {
+  HANJI: {
+    light: { card: COLOR.pink100, chip: COLOR.pink500 },
+    dark: { card: COLOR.plum800, chip: COLOR.pink500 },
+  },
+  FLOW: {
+    light: { card: COLOR.sky50, chip: COLOR.sky50 },
+    dark: { card: COLOR.navy900, chip: COLOR.blue500 },
+  },
+  HASHI: {
+    light: { card: COLOR.sand50, chip: COLOR.sand50 },
+    dark: { card: COLOR.umber900, chip: COLOR.amber500 },
+  },
+  SLITHERLINK: {
+    light: { card: COLOR.mint100, chip: COLOR.mint100 },
+    dark: { card: COLOR.forest900, chip: COLOR.mint100 },
+  },
+  MINESWEEPER: {
+    light: { card: COLOR.indigo50, chip: COLOR.indigo50 },
+    dark: { card: COLOR.indigo800, chip: COLOR.slate400 },
   },
 } as const;
 
 export const ThemeColor = {
   light: {
-    text: '#2A241B',
-    background: '#F8F3E8',
-    backgroundElement: '#EFE6D6',
-    backgroundSelected: '#E5D8C2',
-    textSecondary: '#5B5144',
-    success: '#47725B',
-    warning: '#8A5B2C',
-    error: '#B84A3A',
-    successSurface: '#47725B22',
-    warningSurface: '#8A5B2C22',
-    errorSurface: '#B84A3A22',
-    borderSubtle: '#D6C7B0',
-    rule: '#CCBCA3',
-    highlightWash: '#F3E8D5',
-    accentInk: '#5E4A2F',
+    text: COLOR.brown800,
+    background: COLOR.cream50,
+    backgroundElement: COLOR.tan200,
+    backgroundSelected: COLOR.tan200,
+    textSecondary: COLOR.brown500,
+    success: COLOR.sage600,
+    warning: COLOR.amber700,
+    error: COLOR.red500,
+    successSurface: getColorWithOpacity(COLOR.sage600, 0.13),
+    warningSurface: getColorWithOpacity(COLOR.orange500, 0.2),
+    errorSurface: getColorWithOpacity(COLOR.red500Vivid, 0.2),
+    borderSubtle: COLOR.beige400,
+    rule: COLOR.beige400,
+    highlightWash: COLOR.cream100,
+    accentInk: COLOR.brown800,
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-    success: '#30D158',
-    warning: '#FF9F0A',
-    error: '#FF453A',
-    successSurface: '#30D15833',
-    warningSurface: '#FF9F0A33',
-    errorSurface: '#FF453A33',
-    borderSubtle: '#383B40',
-    rule: '#4A4E55',
-    highlightWash: '#2A2D33',
-    accentInk: '#D8C6A3',
+    text: COLOR.white,
+    background: COLOR.black,
+    backgroundElement: COLOR.gray900,
+    backgroundSelected: COLOR.gray800,
+    textSecondary: COLOR.slate400,
+    success: COLOR.green400,
+    warning: COLOR.orange500,
+    error: COLOR.red500Vivid,
+    successSurface: getColorWithOpacity(COLOR.sage600, 0.13),
+    warningSurface: getColorWithOpacity(COLOR.orange500, 0.2),
+    errorSurface: getColorWithOpacity(COLOR.red500Vivid, 0.2),
+    borderSubtle: COLOR.gray800,
+    rule: COLOR.gray600,
+    highlightWash: COLOR.gray800,
+    accentInk: COLOR.gold200,
   },
 } as const;
 export type ThemeColor = keyof typeof ThemeColor.light & keyof typeof ThemeColor.dark;
