@@ -1,56 +1,94 @@
-# Welcome to your Expo app 👋
+# Mobile App – Expo / React Native Client
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This directory contains the **mobile client** for the games project. It’s an [Expo](https://expo.dev) / React Native app that talks to the GraphQL backend and is designed to be easy to demo in interviews on a simulator or physical device.
 
-## Get started
+The goal of this app is to show how I structure a **real-world mobile frontend**: typed API layer, predictable state management, and a polished puzzle experience.
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## 🚀 What This App Does
 
-2. Start the app
+- **Puzzle gameplay UI** with responsive layouts and clear feedback
+- **User authentication** and per-user state (e.g., progress, saved games)
+- **GraphQL-powered data layer** using Apollo Client 4
+- **Local state management** with Valtio for UI and non-server state
+- **Production-minded patterns**: error handling, loading states, optimistic updates where it makes sense
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## 🛠 Tech & Libraries
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- **Framework**: Expo (React Native)
+- **Language**: TypeScript
+- **Networking / Data**: Apollo Client 4, GraphQL
+- **State management**: Valtio
+- **Navigation / Routing**: Expo Router (file-based routing in `app/`)
+- **Tooling**: pnpm, ESLint, TypeScript, Prettier
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## 🧑‍💻 Local Development
 
-When you're ready, run:
+From the **repo root**, make sure dependencies are installed:
 
 ```bash
-npm run reset-project
+pnpm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Then start the backend (see root `README.md`), so the mobile app has an API to talk to.
 
-### Other setup steps
+From the **mobile** directory:
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+cd mobile
+pnpm install        # if you prefer, but pnpm workspaces usually handle this from root
+pnpm start          # or: pnpm expo start
+```
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+## 🔌 Environment & Configuration
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+The app expects a GraphQL API endpoint (e.g. the backend from this repo) and may read it from a config or environment file (depending on how you wire it up; adjust this section to match your local setup).
 
-## Join the community
+Typical pattern:
 
-Join our community of developers creating universal apps.
+- Configure the **GraphQL endpoint** in a single place (e.g., an Apollo client setup file).
+- Use that client throughout the app via hooks like `useQuery` / `useMutation` or custom wrappers.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+---
+
+## 📂 Notable Folders
+
+Depending on how you’ve organized the app, you’ll typically see:
+
+- `app/` – file-based routes / screens
+- `src/components/` – shared UI components (e.g., puzzle tiles, cards, buttons)
+- `src/api/` – GraphQL queries/mutations and typed hooks
+- `src/state/` – Valtio stores or related state management helpers
+
+This structure makes it easy for someone reading the code (e.g. an interviewer) to jump straight to:
+
+- **Screens** in `app/` to see flows
+- **Components** in `src/components/` for UI details
+- **API hooks** in `src/api/` to understand how the app talks to the backend
+
+---
+
+## 🧱 Architecture
+
+- **Separation of concerns**
+  - Screens stay thin, delegating data fetching to hooks and logic to state modules.
+  - UI components are mostly presentational and reusable across screens.
+
+- **Data flow**
+  - Apollo Client manages server data and caching.
+  - Valtio handles local-only state (filters, temporary selections, UI toggles).
+
+- **Error & loading UX**
+  - Each screen has explicit loading and error states instead of “blank” screens.
+  - Where helpful, the UI uses optimistic updates or progress indicators so the app feels responsive.
+
+- **Performance considerations**
+  - Avoid unnecessary re-renders by splitting components and using memoization when needed.
+  - Use flat lists and virtualization patterns for larger data sets.
