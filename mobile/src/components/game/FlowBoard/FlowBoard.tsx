@@ -269,21 +269,33 @@ function useFlowBoardPan({
   const handlePanEnd = useCallback(
     (x: number, y: number) => {
       const pairNumber = drawingPairRef.current;
+      if (pairNumber == null) return;
+      triggerHapticLight();
+      const cell = xyToCell(x, y, cellSize, CELL_GAP, puzzle.width, puzzle.height);
+      if (cell == null) {
+        clearPathForPair(pairNumber);
+      } else {
+        const endpoint = getPairAtCell(puzzle.pairs, cell.row, cell.col);
+        const endedOnOwnEndpoint = endpoint?.number === pairNumber;
+        const secondEndpoint = secondEndpointRef.current;
+        const endedAdjacentToSecondEndpoint = !!secondEndpoint && isAdjacent(cell, secondEndpoint);
+
+        if (endedAdjacentToSecondEndpoint && secondEndpoint) {
+          // Auto-complete by filling in the second endpoint cell so the grid
+          // path actually reaches the endpoint for validation.
+          setCell(secondEndpoint.row, secondEndpoint.col, pairNumber);
+        } else if (!endedOnOwnEndpoint) {
+          clearPathForPair(pairNumber);
+        }
+      }
+
       drawingPairRef.current = null;
       lastCellRef.current = null;
       pathOrderRef.current = [];
       reachedSecondEndpointRef.current = false;
       secondEndpointRef.current = null;
-      if (pairNumber == null) return;
-      triggerHapticLight();
-      const cell = xyToCell(x, y, cellSize, CELL_GAP, puzzle.width, puzzle.height);
-      const endpoint = cell ? getPairAtCell(puzzle.pairs, cell.row, cell.col) : null;
-      const endedOnOwnEndpoint = endpoint?.number === pairNumber;
-      if (!endedOnOwnEndpoint) {
-        clearPathForPair(pairNumber);
-      }
     },
-    [cellSize, puzzle.width, puzzle.height, puzzle.pairs, clearPathForPair],
+    [cellSize, puzzle.width, puzzle.height, puzzle.pairs, setCell, clearPathForPair],
   );
 
   const handleTap = useCallback(

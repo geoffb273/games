@@ -244,9 +244,9 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     const isFlagged = state.cells[row][col] === 'flagged';
     if (mode === 'flag') {
       onFlagTap({ row, col });
+    } else if (!isFlagged) {
+      onRevealTap({ row, col });
     }
-    if (isFlagged) return;
-    onRevealTap({ row, col });
   });
 
   const onCellLongPress = useStableCallback((row: number, col: number) => {
