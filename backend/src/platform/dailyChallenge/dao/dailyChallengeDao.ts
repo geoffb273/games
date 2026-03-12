@@ -1,7 +1,7 @@
 import { prisma } from '@/client/prisma';
 import { type Prisma } from '@/generated/prisma';
 import { AlreadyExistsError, NotFoundError } from '@/schema/errors';
-import { asAmericaNewYorkMidnight } from '@/utils/dateUtils';
+import { asAmericaNewYorkMidnight, getTodayInAmericaNewYorkAsUtcMidnight } from '@/utils/dateUtils';
 import { isAlreadyExistsError, isNotFoundError } from '@/utils/errorUtils';
 import { type CursorArgs } from '@/utils/paginationUtils';
 
@@ -16,13 +16,16 @@ const DAILY_CHALLENGE_SELECT = {
 
 /**
  * Gets the latest daily challenge where the date is today or before
+ * in America/New_York (EST/EDT) time.
  *
  * @throws {NotFoundError} if no daily challenge is found
  */
 export async function getLatestDailyChallenge(): Promise<DailyChallenge> {
+  const todayEstAsUtcMidnight = getTodayInAmericaNewYorkAsUtcMidnight();
+
   const dailyChallenge = await prisma.dailyChallenge
     .findFirstOrThrow({
-      where: { date: { lte: new Date() } },
+      where: { date: { lte: todayEstAsUtcMidnight } },
       orderBy: { date: 'desc' },
       select: DAILY_CHALLENGE_SELECT,
     })
@@ -67,12 +70,14 @@ export async function listDailyChallenges({
   skip,
   cursor,
 }: CursorArgs<{ date: Date }>): Promise<DailyChallenge[]> {
+  const todayEstAsUtcMidnight = getTodayInAmericaNewYorkAsUtcMidnight();
+
   const dailyChallenges = await prisma.dailyChallenge.findMany({
     take,
     skip,
     cursor,
     orderBy: { date: 'desc' },
-    where: { date: { lte: new Date() } },
+    where: { date: { lte: todayEstAsUtcMidnight } },
     select: DAILY_CHALLENGE_SELECT,
   });
 

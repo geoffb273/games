@@ -30,3 +30,25 @@ export function asAmericaNewYorkMidnight(date: Date): Date {
   const offsetHours = (12 - hourInTimeZone + 24) % 24;
   return new Date(Date.UTC(year, month - 1, day, offsetHours, 0, 0));
 }
+
+/**
+ * Returns a Date representing midnight UTC for "today" in America/New_York.
+ *
+ * Useful for `@db.Date` fields stored as midnight UTC, when "today"
+ * should be interpreted in the America/New_York timezone.
+ */
+export function getTodayInAmericaNewYorkAsUtcMidnight(now: Date = new Date()): Date {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ_AMERICA_NEW_YORK,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+
+  const parts = formatter.formatToParts(now);
+  const year = Number(parts.find((p) => p.type === 'year')?.value ?? 0);
+  const month = Number(parts.find((p) => p.type === 'month')?.value ?? 1);
+  const day = Number(parts.find((p) => p.type === 'day')?.value ?? 1);
+
+  return new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+}
