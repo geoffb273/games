@@ -19,14 +19,16 @@ const PAN_MIN_DISTANCE = 4;
 
 /** Distinct colors for flow paths (readable on light and dark backgrounds). */
 const FLOW_PAIR_COLORS = [
-  '#6B9BD1',
-  '#7DCE7D',
-  '#E8A95D',
-  '#D4737A',
-  '#9B7BBF',
-  '#5BC0C0',
-  '#E895C4',
-  '#8B7355',
+  '#6B9BD1', // blue
+  '#7DCE7D', // green
+  '#E8A95D', // orange
+  '#D4737A', // red
+  '#9B7BBF', // purple
+  '#5BC0C0', // teal
+  '#E895C4', // pink
+  '#8B7355', // brown
+  '#F2D45C', // yellow
+  '#FF6FA3', // magenta
 ];
 
 function getPairColor(pairIndex: number): string {
