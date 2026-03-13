@@ -39,4 +39,3 @@ export function useDeleteProgress() {
     isError: error != null,
   };
 }
-
