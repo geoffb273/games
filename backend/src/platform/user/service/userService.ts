@@ -1,6 +1,7 @@
 import { prisma } from '@/client/prisma';
 import { type User } from '@/generated/prisma/client';
 import { deleteUserPuzzleAttemptsByUserId } from '@/platform/puzzle/dao/userPuzzleAttemptDao';
+import { deleteUserPuzzleHintsByUserId } from '@/platform/puzzle/dao/userPuzzleHintDao';
 import { signToken } from '@/utils/jwt';
 
 import { deleteUser, findOrCreateByDeviceId, getUser as getUserDao } from '../dao/userDao';
@@ -36,5 +37,6 @@ export async function deleteUserProgress({ userId }: { userId: string }): Promis
   await prisma.$transaction(async () => {
     await deleteUserPuzzleAttemptsByUserId({ userId });
     await deleteUser({ id: userId });
+    await deleteUserPuzzleHintsByUserId({ userId });
   });
 }

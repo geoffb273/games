@@ -64,3 +64,12 @@ export async function createUserPuzzleHint({
       throw error;
     });
 }
+
+/**
+ * Deletes all user puzzle hints for a given user.
+ */
+export async function deleteUserPuzzleHintsByUserId({ userId }: { userId: string }): Promise<void> {
+  await prisma.userPuzzleHint.deleteMany({
+    where: { userId },
+  });
+}
