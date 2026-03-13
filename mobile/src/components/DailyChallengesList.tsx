@@ -4,6 +4,7 @@ import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { type DailyChallenge as DailyChallengeType } from '@/api/dailyChallenge/dailyChallengesQuery';
+import { usePuzzlesQuery } from '@/api/puzzle/puzzlesQuery';
 import { Text } from '@/components/common/Text';
 import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
@@ -90,6 +91,9 @@ type DailyChallengeProps = {
 
 function DailyChallenge({ challenge, isSelected, onPress }: DailyChallengeProps) {
   const theme = useTheme();
+
+  // Prefetch puzzles for the daily challenge
+  usePuzzlesQuery({ dailyChallengeId: challenge.id });
 
   return (
     <Pressable
