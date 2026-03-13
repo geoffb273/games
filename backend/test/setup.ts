@@ -12,8 +12,19 @@ if (!process.env.DATABASE_URL) {
 }
 
 const backendRoot = path.resolve(__dirname, '..');
-execSync('pnpm exec prisma migrate reset --force', {
-  cwd: backendRoot,
-  env: process.env,
-  stdio: 'inherit',
-});
+
+if (process.env.CI) {
+  // In CI, just ensure migrations are applied, don't reset between runs
+  execSync('pnpm exec prisma migrate deploy', {
+    cwd: backendRoot,
+    env: process.env,
+    stdio: 'inherit',
+  });
+} else {
+  // Locally, reset the DB so test data doesn't accumulate
+  execSync('pnpm exec prisma migrate reset --force', {
+    cwd: backendRoot,
+    env: process.env,
+    stdio: 'inherit',
+  });
+}
