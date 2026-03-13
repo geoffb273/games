@@ -120,8 +120,13 @@ describe('generateMinesweeperPuzzleData', () => {
     expect(puzzleData.height).toBe(5);
     expect(puzzleData.mineCount).toBe(4);
 
-    const result = isSolvableByPropagation(
+    const adjacency = computeAdjacencyCounts(
       puzzleData.solution,
+      puzzleData.width,
+      puzzleData.height,
+    );
+    const result = isSolvableByPropagation(
+      adjacency,
       puzzleData.revealedCells,
       puzzleData.width,
       puzzleData.height,
