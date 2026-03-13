@@ -276,6 +276,7 @@ interface Puzzle {
 type PuzzleAttempt {
   completedAt: DateTime
   durationMs: Int
+  hintsUsed: Int!
   id: ID!
   startedAt: DateTime!
 }

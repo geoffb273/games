@@ -19,6 +19,7 @@ export const PuzzleAttemptRef = builder.objectRef<UserPuzzleAttempt>('PuzzleAtte
     startedAt: t.expose('startedAt', { type: 'DateTime', nullable: false }),
     completedAt: t.expose('completedAt', { type: 'DateTime', nullable: true }),
     durationMs: t.exposeInt('durationMs', { nullable: true }),
+    hintsUsed: t.exposeInt('hintsUsed', { nullable: false }),
   }),
 });
 
