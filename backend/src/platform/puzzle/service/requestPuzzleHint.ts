@@ -1,7 +1,7 @@
 import { ValidationError } from '@/schema/errors';
 
 import { getPuzzle as getPuzzleDao } from '../dao/puzzleDao';
-import { createUserPuzzleHint } from '../dao/userPuzzleHintDao';
+import { createUserPuzzleHint } from '../dao/userPuzzleAttemptDao';
 import {
   type HanjiPuzzleData,
   type HashiPuzzleData,
@@ -9,7 +9,7 @@ import {
   type Puzzle,
   type SlitherlinkPuzzleData,
 } from '../resource/puzzle';
-import type { PuzzleHint, RequestPuzzleHintInput } from '../resource/userPuzzleHint';
+import type { PuzzleHint, RequestPuzzleHintInput } from '../resource/userPuzzleAttempt';
 
 /**
  * Returns one guaranteed part of the puzzle solution as a hint. Persists the hint

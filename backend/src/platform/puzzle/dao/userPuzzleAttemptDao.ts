@@ -1,9 +1,9 @@
 import { prisma } from '@/client/prisma';
 import { type Prisma } from '@/generated/prisma';
-import { AlreadyExistsError } from '@/schema/errors';
-import { isAlreadyExistsError } from '@/utils/errorUtils';
+import { AlreadyExistsError, NotFoundError } from '@/schema/errors';
+import { isAlreadyExistsError, isForeignKeyViolationError } from '@/utils/errorUtils';
 
-import { type UserPuzzleAttempt } from '../resource/userPuzzleAttempt';
+import { type UserPuzzleAttempt, type UserPuzzleHint } from '../resource/userPuzzleAttempt';
 
 const USER_PUZZLE_ATTEMPT_SELECT = {
   id: true,
@@ -12,7 +12,16 @@ const USER_PUZZLE_ATTEMPT_SELECT = {
   durationMs: true,
   userId: true,
   puzzleId: true,
+  hintsUsed: true,
 } satisfies Prisma.UserPuzzleAttemptSelect;
+
+const USER_PUZZLE_HINT_SELECT = {
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  userId: true,
+  puzzleId: true,
+} satisfies Prisma.UserPuzzleHintSelect;
 
 /**
  * Batch-loads user puzzle attempts for a given user across multiple puzzle IDs.
@@ -42,10 +51,17 @@ export async function getUserPuzzleAttemptsByPuzzleIds({
  */
 export async function deleteUserPuzzleAttemptsByUserId({
   userId,
+  tx,
 }: {
   userId: string;
+  tx: Prisma.TransactionClient;
 }): Promise<void> {
-  await prisma.userPuzzleAttempt.deleteMany({
+  await tx.userPuzzleAttempt.deleteMany({
+    where: {
+      userId,
+    },
+  });
+  await tx.userPuzzleHint.deleteMany({
     where: {
       userId,
     },
@@ -72,14 +88,50 @@ export async function createUserPuzzleAttempt({
   /** Nullable because the puzzle may have not been solved */
   durationMs?: number | null;
 }): Promise<UserPuzzleAttempt> {
+  const hintsUsed = await prisma.userPuzzleHint.count({
+    where: {
+      userId,
+      puzzleId,
+    },
+  });
+
   return prisma.userPuzzleAttempt
     .create({
-      data: { userId, puzzleId, startedAt, completedAt, durationMs },
+      data: { userId, puzzleId, startedAt, completedAt, durationMs, hintsUsed },
       select: USER_PUZZLE_ATTEMPT_SELECT,
     })
     .catch((error) => {
       if (isAlreadyExistsError(error)) {
         throw new AlreadyExistsError('User puzzle attempt already exists');
+      }
+      throw error;
+    });
+}
+
+/**
+ * Creates a new user puzzle hint (records that the user requested a hint for the puzzle).
+ *
+ * @throws {AlreadyExistsError} if the user has already requested a hint for this puzzle
+ * @throws {NotFoundError} if the user or puzzle does not exist (via foreign key)
+ */
+export async function createUserPuzzleHint({
+  userId,
+  puzzleId,
+}: {
+  userId: string;
+  puzzleId: string;
+}): Promise<UserPuzzleHint> {
+  return prisma.userPuzzleHint
+    .create({
+      data: { userId, puzzleId },
+      select: USER_PUZZLE_HINT_SELECT,
+    })
+    .catch((error) => {
+      if (isAlreadyExistsError(error)) {
+        throw new AlreadyExistsError('User has already requested a hint for this puzzle');
+      }
+      if (isForeignKeyViolationError(error)) {
+        throw new NotFoundError('User or puzzle not found');
       }
       throw error;
     });

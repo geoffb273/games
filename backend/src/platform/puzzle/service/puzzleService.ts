@@ -4,15 +4,10 @@ import {
   getPuzzlesByDailyChallenge as getPuzzlesByDailyChallengeDao,
 } from '../dao/puzzleDao';
 import { getUserPuzzleAttemptsByPuzzleIds as getUserPuzzleAttemptsByPuzzleIdsDao } from '../dao/userPuzzleAttemptDao';
-import { getUserPuzzleHintsByPuzzleIds as getUserPuzzleHintsByPuzzleIdsDao } from '../dao/userPuzzleHintDao';
 import { type Puzzle } from '../resource/puzzle';
 import { type UserPuzzleAttempt } from '../resource/userPuzzleAttempt';
 import { type SolvePuzzleInput } from '../resource/userPuzzleAttempt';
-import {
-  type PuzzleHint,
-  type RequestPuzzleHintInput,
-  type UserPuzzleHint,
-} from '../resource/userPuzzleHint';
+import { type PuzzleHint, type RequestPuzzleHintInput } from '../resource/userPuzzleAttempt';
 import { createPuzzlesForDailyChallenge as createPuzzlesForDailyChallengeCommand } from './createPuzzlesForDailyChallenge';
 import { requestPuzzleHint as requestPuzzleHintCommand } from './requestPuzzleHint';
 import { solvePuzzle as solvePuzzleCommand } from './solvePuzzle';
@@ -62,19 +57,6 @@ export async function getUserPuzzleAttemptsByPuzzleIds({
   puzzleIds: readonly string[];
 }): Promise<Map<string, UserPuzzleAttempt>> {
   return getUserPuzzleAttemptsByPuzzleIdsDao({ userId, puzzleIds });
-}
-
-/**
- * Returns a map of puzzleId -> UserPuzzleHint for the given user and puzzle IDs.
- */
-export async function getUserPuzzleHintsByPuzzleIds({
-  userId,
-  puzzleIds,
-}: {
-  userId: string;
-  puzzleIds: readonly string[];
-}): Promise<Map<string, UserPuzzleHint>> {
-  return getUserPuzzleHintsByPuzzleIdsDao({ userId, puzzleIds });
 }
 
 /**

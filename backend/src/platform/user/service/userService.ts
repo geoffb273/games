@@ -1,7 +1,6 @@
 import { prisma } from '@/client/prisma';
 import { type User } from '@/generated/prisma/client';
 import { deleteUserPuzzleAttemptsByUserId } from '@/platform/puzzle/dao/userPuzzleAttemptDao';
-import { deleteUserPuzzleHintsByUserId } from '@/platform/puzzle/dao/userPuzzleHintDao';
 import { signToken } from '@/utils/jwt';
 
 import { deleteUser, findOrCreateByDeviceId, getUser as getUserDao } from '../dao/userDao';
@@ -34,9 +33,8 @@ export async function authenticateDevice({ deviceId }: { deviceId: string }): Pr
  * @throws {NotFoundError} if the user does not exist
  */
 export async function deleteUserProgress({ userId }: { userId: string }): Promise<void> {
-  await prisma.$transaction(async () => {
-    await deleteUserPuzzleAttemptsByUserId({ userId });
-    await deleteUser({ id: userId });
-    await deleteUserPuzzleHintsByUserId({ userId });
+  await prisma.$transaction(async (tx) => {
+    await deleteUserPuzzleAttemptsByUserId({ userId, tx });
+    await deleteUser({ id: userId, tx });
   });
 }
