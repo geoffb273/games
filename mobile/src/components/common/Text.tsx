@@ -3,7 +3,7 @@ import { type ReactNode } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { type StyleProp, StyleSheet, Text as RNText, type TextStyle } from 'react-native';
 
-import { Fonts } from '@/constants/theme';
+import { Fonts } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 
 type FontWeight = 'bold' | 'semibold' | 'medium' | 'regular';

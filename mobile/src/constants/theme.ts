@@ -39,16 +39,3 @@ export const ThemeColor = {
   },
 } as const;
 export type ThemeColor = keyof typeof ThemeColor.light & keyof typeof ThemeColor.dark;
-
-export const Fonts = {
-  /** iOS `UIFontDescriptorSystemDesignDefault` */
-  sans: 'system-ui',
-  /** iOS `UIFontDescriptorSystemDesignSerif` */
-  serif: 'ui-serif',
-  /** iOS `UIFontDescriptorSystemDesignRounded` */
-  rounded: 'ui-rounded',
-  /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-  mono: 'ui-monospace',
-  /** Kaushan Script – display/logo (loaded via expo-font in app.json) */
-  display: 'KaushanScript_400Regular',
-};

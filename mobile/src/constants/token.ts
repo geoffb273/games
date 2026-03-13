@@ -26,3 +26,16 @@ export const Shadows = {
     elevation: 1,
   },
 } as const;
+
+export const Fonts = {
+  /** iOS `UIFontDescriptorSystemDesignDefault` */
+  sans: 'system-ui',
+  /** iOS `UIFontDescriptorSystemDesignSerif` */
+  serif: 'ui-serif',
+  /** iOS `UIFontDescriptorSystemDesignRounded` */
+  rounded: 'ui-rounded',
+  /** iOS `UIFontDescriptorSystemDesignMonospaced` */
+  mono: 'ui-monospace',
+  /** Kaushan Script – display/logo (loaded via expo-font in app.json) */
+  display: 'KaushanScript_400Regular',
+};
