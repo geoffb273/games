@@ -20,13 +20,26 @@ jobs:
   check:
     name: Lint, Typecheck, Test & Schema
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: games
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
-      # Placeholders only; not used by lint/tsc/check:schema but required by app bootstrap
-      DATABASE_URL: _
-      DIRECT_URL: _
-      JWT_SECRET: _
-      ADMIN_SECRET: _
-      GRAPHQL_HIVE_ACCESS_TOKEN: _
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/games
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/games
+      JWT_SECRET: test
+      ADMIN_SECRET: test
+      GRAPHQL_HIVE_ACCESS_TOKEN: test
     steps:
       - uses: actions/checkout@v4
 
