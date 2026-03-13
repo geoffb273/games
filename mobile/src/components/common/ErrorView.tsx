@@ -2,7 +2,7 @@ import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 
 import { Text } from '@/components/common/Text';
-import { Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 
 import { Button } from './Button';

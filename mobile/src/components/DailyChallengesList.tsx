@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { type DailyChallenge as DailyChallengeType } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { Text } from '@/components/common/Text';
-import { Radii, Spacing } from '@/constants/theme';
+import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 import { getColorWithOpacity } from '@/utils/colorUtils';
 

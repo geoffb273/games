@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Pressable, type PressableProps, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { Text, type TextColor } from '@/components/common/Text';
-import { Radii, Spacing } from '@/constants/theme';
+import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';

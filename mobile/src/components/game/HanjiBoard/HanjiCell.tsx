@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Text } from '@/components/common/Text';
-import { COLOR } from '@/constants/theme';
+import { COLOR } from '@/constants/color';
 import { useTheme } from '@/hooks/useTheme';
 import type { HanjiCellState } from '@/utils/hanji/lineValidation';
 

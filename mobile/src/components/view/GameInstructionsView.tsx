@@ -11,7 +11,7 @@ import { HanjiInstructions } from '@/components/game/instructions/HanjiInstructi
 import { HashiInstructions } from '@/components/game/instructions/HashiInstructions';
 import { MinesweeperInstructions } from '@/components/game/instructions/MinesweeperInstructions';
 import { SlitherlinkInstructions } from '@/components/game/instructions/SlitherlinkInstructions';
-import { Radii, Spacing } from '@/constants/theme';
+import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 import { passiveExhaustiveGuard } from '@/utils/guardUtils';
 

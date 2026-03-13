@@ -2,7 +2,7 @@ import { type ReactElement } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/common/Text';
-import { Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/token';
 
 export function InstructionBulletList({ items }: { items: (string | ReactElement)[] }) {
   return (

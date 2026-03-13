@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Text } from '@/components/common/Text';
-import { Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 import { getColorWithOpacity } from '@/utils/colorUtils';
 

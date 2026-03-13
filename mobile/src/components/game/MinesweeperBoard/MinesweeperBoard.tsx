@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { HintButton } from '@/components/game/HintButton';
-import { Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { useMinesweeperGame } from '@/hooks/game/useMinesweeperGame';
 import { useTheme } from '@/hooks/useTheme';

@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/common/Text';
-import { COLOR } from '@/constants/theme';
+import { COLOR } from '@/constants/color';
 import { useTheme } from '@/hooks/useTheme';
 import { useColorBlindEnabled } from '@/store/colorBlindStore';
 

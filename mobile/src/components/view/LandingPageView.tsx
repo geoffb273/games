@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PuzzleType } from '@/api/puzzle/puzzle';
 import { AppLogo } from '@/components/common/AppLogo';
 import { PuzzleIcon } from '@/components/common/PuzzleIcon';
-import { Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/token';
 
 export function LandingPageView() {
   const { top, bottom } = useSafeAreaInsets();

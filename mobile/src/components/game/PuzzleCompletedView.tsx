@@ -3,7 +3,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
-import { Radii, Spacing } from '@/constants/theme';
+import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 import { formatDuration } from '@/utils/timeUtils';
 

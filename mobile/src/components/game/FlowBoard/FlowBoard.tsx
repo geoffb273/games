@@ -5,12 +5,13 @@ import { runOnJS } from 'react-native-reanimated';
 
 import { type FlowPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
-import { FlowColors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { useFlowGame } from '@/hooks/game/useFlowGame';
 import { triggerHapticLight } from '@/utils/hapticUtils';
 
 import { FlowCell } from './FlowCell';
+import { FlowColors } from './flowColor';
 
 const CELL_GAP = 2;
 const MAX_CELL_SIZE = 44;

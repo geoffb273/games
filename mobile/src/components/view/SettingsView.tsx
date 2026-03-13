@@ -8,7 +8,7 @@ import { useDeleteProgress } from '@/api/user/deleteProgressMutation';
 import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
 import { Toggle } from '@/components/common/Toggle';
-import { Radii, Spacing } from '@/constants/theme';
+import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 import { setColorBlindPreference, useColorBlindPreference } from '@/store/colorBlindStore';
 import { setHapticsPreference, useHapticsPreference } from '@/store/hapticsStore';

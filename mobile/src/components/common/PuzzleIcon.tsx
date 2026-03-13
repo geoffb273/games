@@ -3,8 +3,8 @@ import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
-import { usePuzzlePalette } from '@/constants/puzzleThemeConstants';
-import { Radii } from '@/constants/theme';
+import { Radii } from '@/constants/token';
+import { usePuzzlePalette } from '@/hooks/usePuzzlePalette';
 import { useTheme } from '@/hooks/useTheme';
 
 type PuzzleIconProps = {

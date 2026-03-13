@@ -13,8 +13,11 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Text } from '@/components/common/Text';
-import { COLOR, MinesweeperColors, Spacing } from '@/constants/theme';
+import { COLOR } from '@/constants/color';
+import { Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
+
+import { MinesweeperColors } from './minesweeperColor';
 
 type CellProps = {
   row: number;

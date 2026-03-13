@@ -3,7 +3,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 
-import { Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 
 function HomeTabIcon({ color, size }: { color?: string; size?: number }) {

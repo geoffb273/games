@@ -15,7 +15,7 @@ import { MinesweeperBoard } from '@/components/game/MinesweeperBoard/Minesweeper
 import { PuzzleCompletedView } from '@/components/game/PuzzleCompletedView';
 import { SlitherlinkBoard } from '@/components/game/SlitherlinkBoard/SlitherlinkBoard';
 import { VerticallyCenteredLayout } from '@/components/layout/VerticallyCenteredLayout';
-import { Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/token';
 import { useStableCallback } from '@/hooks/useStableCallback';
 
 type TransitionPhase = 'playing' | 'exiting' | 'completed';

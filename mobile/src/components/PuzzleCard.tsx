@@ -7,8 +7,9 @@ import { type Puzzle } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { PuzzleIcon } from '@/components/common/PuzzleIcon';
 import { Text } from '@/components/common/Text';
-import { usePuzzlePalette } from '@/constants/puzzleThemeConstants';
-import { Radii, Spacing, type ThemeColor } from '@/constants/theme';
+import { type ThemeColor } from '@/constants/theme';
+import { Radii, Spacing } from '@/constants/token';
+import { usePuzzlePalette } from '@/hooks/usePuzzlePalette';
 import { useTheme } from '@/hooks/useTheme';
 import { getColorWithOpacity } from '@/utils/colorUtils';
 

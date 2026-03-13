@@ -8,7 +8,7 @@ import { Text } from '@/components/common/Text';
 import { DailyChallengesList } from '@/components/DailyChallengesList';
 import { FlatListLayout } from '@/components/layout/FlatListLayout';
 import { PuzzleCard, PuzzleListEmptyState } from '@/components/PuzzleCard';
-import { Radii, Spacing } from '@/constants/theme';
+import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 
 export function HomeView() {
