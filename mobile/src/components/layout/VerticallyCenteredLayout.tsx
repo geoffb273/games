@@ -8,6 +8,10 @@ type VerticallyCenteredLayoutProps = {
   children: ReactNode;
 };
 
+/**
+ * A layout component that centers its children vertically accounting
+ * for react navigation header height
+ */
 export function VerticallyCenteredLayout({ children }: VerticallyCenteredLayoutProps) {
   const headerHeight = useHeaderHeight();
 

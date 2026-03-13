@@ -3,6 +3,7 @@ import * as pulumi from '@pulumi/pulumi';
 
 import type { ScheduledLambdaConfig } from './lambda';
 import { buildScheduledLambdaOptions, createScheduledLambda } from './lambda';
+import { createSecretParameter } from './ssmParams';
 
 const config = new pulumi.Config();
 const databaseUrl = config.requireSecret('databaseUrl');
@@ -42,32 +43,14 @@ const ecrRepoUrl = ecrRepo.repositoryUrl;
 const imageUri = pulumi.interpolate`${accountId}.dkr.ecr.${region}.amazonaws.com/${ecrRepo.name}:latest`;
 
 // SSM parameters for secrets
-const ssmPrefix = '/game-brain/backend';
-const dbParam = new aws.ssm.Parameter('databaseUrl', {
-  name: `${ssmPrefix}/databaseUrl`,
-  type: 'SecureString',
-  value: databaseUrl,
-});
-const directParam = new aws.ssm.Parameter('directUrl', {
-  name: `${ssmPrefix}/directUrl`,
-  type: 'SecureString',
-  value: directUrl,
-});
-const jwtParam = new aws.ssm.Parameter('jwtSecret', {
-  name: `${ssmPrefix}/jwtSecret`,
-  type: 'SecureString',
-  value: jwtSecret,
-});
-const adminSecretParam = new aws.ssm.Parameter('adminSecret', {
-  name: `${ssmPrefix}/adminSecret`,
-  type: 'SecureString',
-  value: adminSecret,
-});
-const graphqlHiveAccessTokenParam = new aws.ssm.Parameter('graphqlHiveAccessToken', {
-  name: `${ssmPrefix}/graphqlHiveAccessToken`,
-  type: 'SecureString',
-  value: graphqlHiveAccessToken,
-});
+const dbParam = createSecretParameter('databaseUrl', databaseUrl);
+const directParam = createSecretParameter('directUrl', directUrl);
+const jwtParam = createSecretParameter('jwtSecret', jwtSecret);
+const adminSecretParam = createSecretParameter('adminSecret', adminSecret);
+const graphqlHiveAccessTokenParam = createSecretParameter(
+  'graphqlHiveAccessToken',
+  graphqlHiveAccessToken,
+);
 
 // --- ECS task execution role (ECR pull + SSM read for task secrets) ---
 const taskExecutionRole = new aws.iam.Role('ecsTaskExecutionRole', {
