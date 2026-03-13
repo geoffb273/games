@@ -1,14 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { NotFoundError } from '../../../../src/schema/errors';
-import { prisma } from '../../../../src/client/prisma';
-import {
-  deleteUser,
-  findOrCreateByDeviceId,
-  getUser,
-} from '../../../../src/platform/user/dao/userDao';
+import { NotFoundError } from '@/schema/errors';
+import { prisma } from '@/client/prisma';
+import { deleteUser, findOrCreateByDeviceId, getUser } from '@/platform/user/dao/userDao';
 import { randomUUID } from 'crypto';
-import { User } from '../../../../src/platform/user/resource/user';
+import { User } from '@/platform/user/resource/user';
 
 async function createUser({
   id = randomUUID(),
