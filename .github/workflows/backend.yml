@@ -17,8 +17,8 @@ defaults:
     working-directory: backend
 
 jobs:
-  check:
-    name: Lint, Typecheck, Test & Schema
+  lint_typecheck:
+    name: Lint & Typecheck
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -70,8 +70,102 @@ jobs:
       - name: Typecheck
         run: pnpm tsc
 
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: games
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/games
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/games
+      JWT_SECRET: test
+      ADMIN_SECRET: test
+      GRAPHQL_HIVE_ACCESS_TOKEN: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: backend/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Generate prisma client
+        run: pnpm generate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          DIRECT_URL: ${{ env.DIRECT_URL }}
+          JWT_SECRET: ${{ env.JWT_SECRET }}
+          ADMIN_SECRET: ${{ env.ADMIN_SECRET }}
+          GRAPHQL_HIVE_ACCESS_TOKEN: ${{ env.GRAPHQL_HIVE_ACCESS_TOKEN }}
+
       - name: Test
         run: pnpm test
+
+  schema:
+    name: Check Schema Sync
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: games
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/games
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/games
+      JWT_SECRET: test
+      ADMIN_SECRET: test
+      GRAPHQL_HIVE_ACCESS_TOKEN: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: backend/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Generate prisma client
+        run: pnpm generate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          DIRECT_URL: ${{ env.DIRECT_URL }}
+          JWT_SECRET: ${{ env.JWT_SECRET }}
+          ADMIN_SECRET: ${{ env.ADMIN_SECRET }}
+          GRAPHQL_HIVE_ACCESS_TOKEN: ${{ env.GRAPHQL_HIVE_ACCESS_TOKEN }}
 
       - name: Check schema is in sync
         run: pnpm check:schema
