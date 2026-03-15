@@ -9,7 +9,7 @@ export default tseslint.config(
   eslintConfigPrettier,
   eslintPluginPrettier,
   {
-    files: ['src/**/*.ts'],
+    files: ['src/**/*.ts', 'test/**/*.ts'],
     plugins: {
       'simple-import-sort': simpleImportSort,
     },
@@ -46,6 +46,22 @@ export default tseslint.config(
             {
               group: ['**/dao/*', '**/dao/**'],
               message: 'DAO modules can only be imported from their corresponding service files.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@/test/testUtils',
+              message: 'Do not import test utilities in src. Use them only in test files.',
             },
           ],
         },

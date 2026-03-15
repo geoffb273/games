@@ -14,6 +14,8 @@ export default async function globalSetup() {
 
   const backendRoot = path.resolve(__dirname, '..');
 
+  // Use migrate reset so schema and all migration data (e.g. PuzzleType rows) are applied.
+  // db push only applies schema and does not run migrations, so seed/migration inserts never run.
   if (process.env.CI) {
     execSync('pnpm exec prisma migrate deploy', {
       cwd: backendRoot,
@@ -21,7 +23,7 @@ export default async function globalSetup() {
       stdio: 'inherit',
     });
   } else {
-    execSync('pnpm exec prisma db push --force-reset', {
+    execSync('pnpm exec prisma migrate reset --force', {
       cwd: backendRoot,
       env: process.env,
       stdio: 'inherit',
