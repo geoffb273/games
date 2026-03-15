@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "tsc": "tsc",
+    "tsc": "tsc --noEmit",
     "start": "tsx src/index.ts",
     "generate": "prisma generate",
     "generate:schema": "tsx src/generate-schema.ts",

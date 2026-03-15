@@ -1,25 +1,9 @@
+import { randomUUID } from 'crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { NotFoundError } from '@/schema/errors';
-import { prisma } from '@/client/prisma';
 import { deleteUser, findOrCreateByDeviceId, getUser } from '@/platform/user/dao/userDao';
-import { randomUUID } from 'crypto';
-import { User } from '@/platform/user/resource/user';
-
-async function createUser({
-  id = randomUUID(),
-  deviceId = randomUUID(),
-}: {
-  id?: string;
-  deviceId?: string;
-} = {}): Promise<User> {
-  return prisma.user.create({
-    data: {
-      id,
-      deviceId,
-    },
-  });
-}
+import { NotFoundError } from '@/schema/errors';
+import { createTestUser } from '@/test/testUtils';
 
 describe('userDao', () => {
   afterEach(() => {
@@ -28,7 +12,7 @@ describe('userDao', () => {
 
   describe('getUser', () => {
     it('returns the user when found', async () => {
-      const user = await createUser();
+      const user = await createTestUser();
 
       const result = await getUser({ id: user.id });
 
@@ -43,7 +27,7 @@ describe('userDao', () => {
   describe('findOrCreateByDeviceId', () => {
     it('finds by deviceId', async () => {
       const deviceId = randomUUID();
-      const user = await createUser({ deviceId });
+      const user = await createTestUser({ deviceId });
 
       const result = await findOrCreateByDeviceId({ deviceId });
 
@@ -61,7 +45,7 @@ describe('userDao', () => {
 
   describe('deleteUser', () => {
     it('deletes by id using default tx', async () => {
-      const user = await createUser();
+      const user = await createTestUser();
 
       await deleteUser({ id: user.id });
 
