@@ -23,10 +23,12 @@ import { userService } from '@/platform/user/service/userService';
 
 - **Resource** modules (`**/resource/*`) hold domain types and Zod schemas only—no Prisma, no DB. Used by services (types, validation) and schema (e.g. input validation, Pothos types).
 - Prefer defining shared domain types and validation in the owning platform's resource; schema types in `schema/*/type.ts` can wrap or re-export them. When adding new domains, mirror the existing resource pattern in that area.
+- Treat resource types as the **API/domain-facing shape**, not the raw Prisma model: they may be a subset of DB columns or aggregate multiple rows. When a service returns values that flow to GraphQL, prefer using resource types in the public function signatures.
 
 ## Prisma and DB access
 
 - **Prisma client** (`@/client/prisma`): use in **DAOs** for all query/transaction work. **Services** may import it only when they need a **transaction** that spans multiple DAO calls. Schema, context, and scripts must not use Prisma for data access; scripts may use it only for lifecycle (e.g. `prisma.$disconnect()`).
+- In DAOs, prefer reusable `*_SELECT` constants (e.g. `USER_SELECT satisfies Prisma.UserSelect`) to keep projections consistent and avoid leaking extra columns outside the DAO layer.
 
 ## TypeScript
 
@@ -37,10 +39,13 @@ import { userService } from '@/platform/user/service/userService';
 ## Imports
 
 - Keep import order: external packages first, then `@/` aliases, then relative. Use `simple-import-sort` style (already in ESLint).
+- Prefer `@/` path aliases for anything under `src/` (`@/schema`, `@/platform`, `@/utils`, etc.) instead of deep relative import chains.
 
 ## Schema layer
 
 - **Controllers** (`schema/*/controller.ts`): only import **services** and **resource** (types/schemas); use `authorization` from context when needed. **Dataloaders** (`schema/dataloader/*`): call **services** (not DAOs), receive `Authorization` from context. **Types** (`schema/*/type.ts`): build Pothos types from platform resource types. For new schema features, follow the same layering (controller → service → DAO; dataloader → service).
+- The GraphQL `Context` includes `authorization` and `dataloaders`; build it via the shared `buildContext` helper. In resolvers that require authentication, use `authorization.expectUser` from context rather than parsing tokens or fetching users directly.
+- Dataloaders are created once per request (via `createDataloaders(authorization)`) and accessed through `ctx.dataloaders`; do not construct ad‑hoc dataloaders inside resolvers.
 
 ## GraphQL (Pothos)
 
@@ -53,6 +58,10 @@ import { userService } from '@/platform/user/service/userService';
 ## Scripts and entrypoints
 
 - Scripts and entrypoints call **services**, not DAOs. They may use Prisma only for app lifecycle (e.g. `$disconnect()`). Console is acceptable in scripts/entrypoints; in `src/` prefer logger when available.
+
+## Testing
+
+- For Vitest patterns and conventions (locations, naming, layering-friendly service/DAO tests, and commands), see the `backend-testing` rule (`.cursor/rules/testing/backend-testing.mdc`).
 
 ## Flexibility
 

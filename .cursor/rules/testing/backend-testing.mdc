@@ -1,0 +1,32 @@
+---
+description: Backend Vitest/unit/integration testing conventions
+globs: backend/test/**/*.ts
+alwaysApply: false
+---
+
+# Backend Testing
+
+## Location and naming
+
+- Put backend tests under `backend/test/`, mirroring the `src/` structure by domain (e.g. `platform/`, `utils/`, `schema/` when applicable).
+- Name test files with the `*.test.ts` suffix (e.g. `userService.test.ts`, `puzzleDao.test.ts`).
+- Keep shared helpers in `backend/test/testUtils.ts` and similar utility modules rather than duplicating setup across suites.
+
+## Running tests
+
+- Use the existing Vitest setup in `backend/package.json`:
+  - Local / CI: `cd backend && pnpm test` (runs `vitest run`).
+- When adding new tests, ensure they pass via this command.
+
+## Patterns and libraries
+
+- Prefer plain Vitest (`describe`, `it`/`test`, `expect`) for unit tests; use factories/test helpers for building inputs and fixtures.
+- For service and DAO tests, follow the existing layering rules: test public service/DAO behavior, not internal Prisma details; use test databases or mocks consistent with current patterns.
+- Keep tests deterministic: avoid relying on real network or external services; prefer mocking or in-memory substitutes where needed.
+
+## Structure and style
+
+- Group related tests with `describe` blocks; use clear, behavior-based `it`/`test` names that describe inputs and outputs.
+- Co-locate test utilities under `backend/test/` when they are shared between suites.
+- Match the project’s TypeScript and import conventions in tests (e.g. use `@/` aliases where configured, keep import order consistent).
+

@@ -1,0 +1,32 @@
+---
+description: Mobile Jest/unit/integration testing conventions
+globs: mobile/test/**/*.ts,mobile/test/**/*.tsx
+alwaysApply: false
+---
+
+# Mobile Testing
+
+## Location and naming
+
+- Put Jest tests under `mobile/test/`, mirroring the `src/` structure by domain (e.g. `components/`, `hooks/`, `utils/`, `game/`).
+- Name test files with the `*.test.ts` / `*.test.tsx` suffix (e.g. `HashiIsland.test.tsx`, `useHanjiGame.test.ts`).
+
+## Running tests
+
+- Use the existing Jest setup in `mobile/package.json`:
+  - Local development: `cd mobile && pnpm test` (watch mode).
+  - CI / non-interactive: `cd mobile && pnpm test:ci`.
+- When adding new tests, ensure they pass under both commands.
+
+## Patterns and libraries
+
+- Use `jest-expo` as configured; prefer `@testing-library/react-native` for component tests (`render`, queries, and user events) instead of shallow rendering; prefer user-style events over low-level `fireEvent` when possible.
+- For components, testing should be done on components rendered and functionality. DO NOT test styling
+- For hooks, prefer `renderHook` (from `@testing-library/react-native` / testing-library ecosystem) over fake components; keep implementation details hidden behind public hook APIs.
+- Keep tests focused and deterministic; avoid depending on network, timers, or storage without explicit mocking.
+
+## Structure and style
+
+- Group related tests with `describe` blocks; use clear, behavior-based `it`/`test` names.
+- Co-locate helper test utilities under `mobile/test/utils/` when they are shared between suites.
+- Match the project’s TypeScript and import conventions in tests (e.g. use `@/` aliases for app code where applicable).

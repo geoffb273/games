@@ -16,6 +16,12 @@ alwaysApply: false
 - Routes live in `src/app/` (Expo Router, file-based). Keep route files thin: use `useLocalSearchParams` (or similar), pass ids to view components; put data fetching and branching inside view components (e.g. `GameView`), not in the route file.
 - Prefer Stack for main flow and the project’s tab component (e.g. `AppTabs` / `NativeTabs`) for tab bar. When adding new routes or tabs, follow the existing layout and nesting.
 
+## Providers and global context
+
+- Mount all app-wide providers in `src/provider/MainProvider.tsx` (e.g. navigation theme, Apollo, auth, guards) and wrap the app once in `src/app/_layout.tsx`.
+- Put cross-cutting concerns that need a provider (e.g. auth, initial load guards, analytics) under `src/provider/` and compose them in `MainProvider` instead of wrapping screens individually.
+- For auth and fetch state, prefer a dedicated context (e.g. `AuthFetchContext`) with a small, discriminated union value (`status: 'loading' | 'authenticated' | 'error'`) rather than exposing raw Apollo state.
+
 ## GraphQL and Apollo Client
 
 - Put queries, mutations, and their hooks under `src/api/` by domain (e.g. `puzzle/`, `user/`). Co-locate domain types and fragment definitions in the same domain; register fragments with the app’s fragment registry when required.
@@ -30,10 +36,16 @@ alwaysApply: false
 ## Components
 
 - **Layers**: Use `components/common/` for shared UI (e.g. `Text`, `Button`, `Toggle`, `ErrorView`). Use these instead of raw React Native `Text`/`Switch` where the linter restricts them. Use `components/view/` for screen-level views that take params and handle data and composition; use `components/layout/` for layout wrappers; use `components/game/` (or similar) for feature-specific UI. When adding components, mirror the existing layering and naming in that area.
-- **Styling**: Prefer `useTheme()` for colors and `@/constants/theme` (e.g. `COLOR`, `ThemeColor`, `Spacing`, `Radii`, `Fonts`) for layout and typography. Use `StyleSheet.create` for static styles; use style arrays for dynamic values. Avoid unused styles (project ESLint enforces this).
+- **Styling**: Prefer `useTheme()` for colors and `@/constants/theme` (`ThemeColor`) for semantic color roles. Use design tokens from `@/constants/token` (e.g. `Spacing`, `Radii`, `Fonts`) for layout and typography. Use `StyleSheet.create` for static styles; use style arrays for dynamic values. Avoid unused styles (project ESLint enforces this).
 - **Colors**: When adding any new color:
   - First, check whether an appropriate value already exists in `COLOR` or `ThemeColor` and reuse it.
   - If a truly new color is needed, add it to `COLOR` in `src/constants/theme.ts` with a clear, descriptive name before using it anywhere else.
+
+### Common primitives and typography
+
+- Use `components/common/Text` for all text and prefer its semantic `type` variants (`body`, `emphasized_body`, `caption`, `h1`, `h2`, `h3`, `lead`) instead of hand-picking font sizes/weights.
+- Use `components/common/Button` for tappable primary/secondary actions. Choose among its built-in `variant`s (`primary`, `secondary`, `outline`, `ghost`) instead of inventing new button styles.
+- For generic error states (especially around data fetching), prefer `components/common/ErrorView` with an optional `onRetry` handler rather than custom ad-hoc error UIs.
 
 ## Hooks
 
@@ -50,5 +62,9 @@ alwaysApply: false
 ## TypeScript and quality
 
 - Use type-only imports where possible; add explicit return types for exported hooks and public functions when it helps. Follow ESLint: no `console.*`, no unstable nested components, and use the shared `Text`/`Toggle` instead of raw RN where restricted.
+
+## Testing
+
+- For Jest and `@testing-library/react-native` patterns (locations, naming, `renderHook`, user events, and CI commands), see the `mobile-testing` rule (`.cursor/rules/testing/mobile-testing.mdc`).
 
 When adding new code, match the structure, naming, and layering of the nearest existing code in that area.
