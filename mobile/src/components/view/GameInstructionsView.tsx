@@ -10,7 +10,7 @@ import { FlowInstructions } from '@/components/game/instructions/FlowInstruction
 import { HanjiInstructions } from '@/components/game/instructions/HanjiInstructions/HanjiInstructions';
 import { HashiInstructions } from '@/components/game/instructions/HashiInstructions/HashiInstructions';
 import { MinesweeperInstructions } from '@/components/game/instructions/MinesweeperInstructions/MinesweeperInstructions';
-import { SlitherlinkInstructions } from '@/components/game/instructions/SlitherlinkInstructions';
+import { SlitherlinkInstructions } from '@/components/game/instructions/SlitherlinkInstructions/SlitherlinkInstructions';
 import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 import { passiveExhaustiveGuard } from '@/utils/guardUtils';

@@ -17,9 +17,15 @@ type SlitherlinkBoardProps = {
   puzzle: SlitherlinkPuzzle;
   cellSize: number;
   onSolve: (input: SlitherlinkOnSolveInput) => Promise<void>;
+  variant?: 'play' | 'instructions';
 };
 
-export function SlitherlinkBoard({ puzzle, cellSize, onSolve }: SlitherlinkBoardProps) {
+export function SlitherlinkBoard({
+  puzzle,
+  cellSize,
+  onSolve,
+  variant = 'play',
+}: SlitherlinkBoardProps) {
   const { horizontal, vertical, onHorizontalEdgePress, onVerticalEdgePress, onHint, currentState } =
     useSlitherlinkGame({ puzzle, onSolve });
 
@@ -63,19 +69,20 @@ export function SlitherlinkBoard({ puzzle, cellSize, onSolve }: SlitherlinkBoard
         ))}
       </View>
 
-      <HintButton
-        puzzleType={PuzzleType.Slitherlink}
-        puzzleId={puzzle.id}
-        onHint={onHint}
-        slitherlinkCurrentState={currentState}
-      />
+      {variant === 'play' && (
+        <HintButton
+          puzzleType={PuzzleType.Slitherlink}
+          puzzleId={puzzle.id}
+          onHint={onHint}
+          slitherlinkCurrentState={currentState}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
     gap: Spacing.four,
     paddingTop: Spacing.four,

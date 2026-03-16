@@ -1,9 +1,12 @@
 import React from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/common/Text';
+import { InstructionBulletList } from '@/components/game/instructions/InstructionBulletList';
+import { InstructionSection } from '@/components/game/instructions/InstructionSection';
+import { Spacing } from '@/constants/token';
 
-import { InstructionBulletList } from './InstructionBulletList';
-import { InstructionSection } from './InstructionSection';
+import { InstructionsSlitherlinkBoard } from './InstructionsSlitherlinkBoard';
 
 export function SlitherlinkInstructions() {
   return (
@@ -24,6 +27,15 @@ export function SlitherlinkInstructions() {
             'Lines run only along the grid edges between dots; they never cut through cells or cross each other.',
           ]}
         />
+
+        <View style={styles.previewContainer}>
+          <Text type="caption" color="textSecondary">
+            Here&apos;s a tiny example board so you can see how the clues and loop edges work:
+          </Text>
+          <View style={styles.previewBoard}>
+            <InstructionsSlitherlinkBoard />
+          </View>
+        </View>
       </InstructionSection>
 
       <InstructionSection title="Controls">
@@ -32,10 +44,6 @@ export function SlitherlinkInstructions() {
             <>
               <Text type="emphasized_body">Tap</Text> an edge between two dots to toggle a loop line
               on or off.
-            </>,
-            <>
-              <Text type="emphasized_body">Long-press</Text> an edge to mark it as definitely empty,
-              helping you remember where the loop cannot go.
             </>,
             'Use marked edges to rule out paths and focus on where the loop must pass.',
           ]}
@@ -63,3 +71,15 @@ export function SlitherlinkInstructions() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  previewContainer: {
+    marginTop: Spacing.two,
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  previewBoard: {
+    marginTop: Spacing.one,
+    alignItems: 'center',
+  },
+});
