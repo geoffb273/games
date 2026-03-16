@@ -22,6 +22,8 @@ type HanjiBoardProps = {
   colClueHeight: number;
   boardWidth: number;
   onSolve: HanjiOnSolve;
+  variant?: 'play' | 'instructions';
+  isDisabled?: boolean;
 };
 
 export function HanjiBoard({
@@ -31,11 +33,16 @@ export function HanjiBoard({
   colClueHeight,
   boardWidth,
   onSolve,
+  variant = 'play',
+  isDisabled = false,
 }: HanjiBoardProps) {
   const theme = useTheme();
-  const { cells, onCellTap, onCellLongPress, onHint, currentState } = useHanjiGame(puzzle, onSolve);
+  const { cells, onCellTap, onCellLongPress, onHint, currentState } = useHanjiGame({
+    puzzle,
+    onSolve,
+  });
 
-  useInitialOpenInstructionsEffect({ type: PuzzleType.Hanji });
+  useInitialOpenInstructionsEffect({ type: PuzzleType.Hanji, enabled: variant === 'play' });
 
   return (
     <View style={styles.container}>
@@ -103,6 +110,7 @@ export function HanjiBoard({
                   state={cells[rowIdx][colIdx]}
                   onTap={onCellTap}
                   onLongPress={onCellLongPress}
+                  isDisabled={isDisabled}
                 />
               ))}
             </View>
@@ -110,19 +118,20 @@ export function HanjiBoard({
         </View>
       </View>
 
-      <HintButton
-        puzzleType={PuzzleType.Hanji}
-        puzzleId={puzzle.id}
-        onHint={onHint}
-        hanjiCurrentState={currentState}
-      />
+      {variant === 'play' && (
+        <HintButton
+          puzzleType={PuzzleType.Hanji}
+          puzzleId={puzzle.id}
+          onHint={onHint}
+          hanjiCurrentState={currentState}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
     gap: Spacing.four,
     paddingTop: Spacing.four,

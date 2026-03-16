@@ -1,9 +1,12 @@
 import React from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/common/Text';
+import { InstructionBulletList } from '@/components/game/instructions/InstructionBulletList';
+import { InstructionSection } from '@/components/game/instructions/InstructionSection';
+import { Spacing } from '@/constants/token';
 
-import { InstructionBulletList } from './InstructionBulletList';
-import { InstructionSection } from './InstructionSection';
+import { InstructionsHanjiBoard } from './InstructionsHanjiBoard';
 
 export function HanjiInstructions() {
   return (
@@ -24,6 +27,15 @@ export function HanjiInstructions() {
           consecutive filled cells, then a gap, then one filled cell. The order of numbers matches
           the order of runs from left to right (rows) or top to bottom (columns).
         </Text>
+
+        <View style={styles.previewContainer}>
+          <Text type="caption" color="textSecondary">
+            Here&apos;s a tiny example board so you can see how the clues line up:
+          </Text>
+          <View style={styles.previewBoard}>
+            <InstructionsHanjiBoard />
+          </View>
+        </View>
       </InstructionSection>
 
       <InstructionSection title="Controls">
@@ -61,3 +73,15 @@ export function HanjiInstructions() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  previewContainer: {
+    marginTop: Spacing.two,
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  previewBoard: {
+    marginTop: Spacing.one,
+    alignItems: 'center',
+  },
+});

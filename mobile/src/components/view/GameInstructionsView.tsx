@@ -7,7 +7,7 @@ import { PuzzleType } from '@/api/puzzle/puzzle';
 import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
 import { FlowInstructions } from '@/components/game/instructions/FlowInstructions/FlowInstructions';
-import { HanjiInstructions } from '@/components/game/instructions/HanjiInstructions';
+import { HanjiInstructions } from '@/components/game/instructions/HanjiInstructions/HanjiInstructions';
 import { HashiInstructions } from '@/components/game/instructions/HashiInstructions';
 import { MinesweeperInstructions } from '@/components/game/instructions/MinesweeperInstructions';
 import { SlitherlinkInstructions } from '@/components/game/instructions/SlitherlinkInstructions';

@@ -31,7 +31,7 @@ export function lineMatchesClues(line: HanjiCellState[], clues: number[]): boole
 }
 
 /**
- * True when every cell is filled or marked, and every row and column
+ * True when every row and column
  * has filled runs that match the puzzle clues.
  */
 export function isPuzzleComplete(
@@ -41,11 +41,6 @@ export function isPuzzleComplete(
   width: number,
   height: number,
 ): boolean {
-  for (let r = 0; r < height; r++) {
-    for (let c = 0; c < width; c++) {
-      if (grid[r][c] === 'empty') return false;
-    }
-  }
   for (let r = 0; r < height; r++) {
     if (!lineMatchesClues(grid[r], rowClues[r])) return false;
   }
