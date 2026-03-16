@@ -37,7 +37,10 @@ export function HanjiBoard({
   isDisabled = false,
 }: HanjiBoardProps) {
   const theme = useTheme();
-  const { cells, onCellTap, onCellLongPress, onHint, currentState } = useHanjiGame(puzzle, onSolve);
+  const { cells, onCellTap, onCellLongPress, onHint, currentState } = useHanjiGame({
+    puzzle,
+    onSolve,
+  });
 
   useInitialOpenInstructionsEffect({ type: PuzzleType.Hanji, enabled: variant === 'play' });
 
