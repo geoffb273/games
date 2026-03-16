@@ -45,7 +45,7 @@ export function PuzzleCompletedView({ puzzleType, solved, durationMs }: PuzzleCo
       </View>
 
       <Text type="h2" textAlign="center">
-        {solved ? 'Chapter Complete' : 'Chapter Paused'}
+        {solved ? 'Chapter Complete' : 'Chapter Failed'}
       </Text>
 
       <View style={[styles.rule, { backgroundColor: theme.rule }]} />
@@ -55,7 +55,7 @@ export function PuzzleCompletedView({ puzzleType, solved, durationMs }: PuzzleCo
           ? formattedDuration
             ? `Completed in ${formattedDuration}.`
             : 'A thoughtful finish to this puzzle.'
-          : 'Take another pass when you are ready.'}
+          : `Better luck next time. Try again with tomorrow's puzzle.`}
       </Text>
 
       <Text type="caption" color={solved ? 'success' : 'warning'} textAlign="center">
