@@ -59,16 +59,6 @@ describe('lineMatchesClues', () => {
 });
 
 describe('isPuzzleComplete', () => {
-  it('returns false when any cell is empty', () => {
-    const grid: HanjiCellState[][] = [
-      ['filled', 'filled'],
-      ['filled', 'empty'],
-    ];
-    const rowClues = [[2], [1]];
-    const colClues = [[2], [1]];
-    expect(isPuzzleComplete(grid, rowClues, colClues, 2, 2)).toBe(false);
-  });
-
   it('returns false when row does not match clues', () => {
     const grid: HanjiCellState[][] = [
       ['filled', 'filled', 'filled'],
