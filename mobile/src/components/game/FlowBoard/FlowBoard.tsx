@@ -59,6 +59,8 @@ function isAdjacent(a: { row: number; col: number }, b: { row: number; col: numb
   return Math.abs(a.row - b.row) + Math.abs(a.col - b.col) === 1;
 }
 
+type FlowBoardVariant = 'play' | 'instructions';
+
 type FlowBoardProps = {
   puzzle: FlowPuzzle;
   cellSize: number;
@@ -73,12 +75,20 @@ type FlowBoardProps = {
     completedAt: Date;
     startedAt: Date;
   }) => Promise<void>;
+  isDisabled?: boolean;
+  variant?: FlowBoardVariant;
 };
 
-export function FlowBoard({ puzzle, cellSize, onSolve }: FlowBoardProps) {
+export function FlowBoard({
+  puzzle,
+  cellSize,
+  onSolve,
+  variant = 'play',
+  isDisabled = false,
+}: FlowBoardProps) {
   const { grid, setCell, clearPathForPair } = useFlowGame({ puzzle, onSolve });
 
-  useInitialOpenInstructionsEffect({ type: PuzzleType.Flow });
+  useInitialOpenInstructionsEffect({ type: PuzzleType.Flow, enabled: variant === 'play' });
 
   const { handlePanBegin, handlePanMove, handlePanEnd, handleTap } = useFlowBoardPan({
     puzzle,
@@ -92,6 +102,7 @@ export function FlowBoard({ puzzle, cellSize, onSolve }: FlowBoardProps) {
     () =>
       Gesture.Pan()
         .minDistance(PAN_MIN_DISTANCE)
+        .enabled(!isDisabled)
         .onBegin((e) => {
           'worklet';
           runOnJS(handlePanBegin)(e.x, e.y);
@@ -104,16 +115,18 @@ export function FlowBoard({ puzzle, cellSize, onSolve }: FlowBoardProps) {
           'worklet';
           runOnJS(handlePanEnd)(e.x, e.y);
         }),
-    [handlePanBegin, handlePanMove, handlePanEnd],
+    [isDisabled, handlePanBegin, handlePanMove, handlePanEnd],
   );
 
   const tapGesture = useMemo(
     () =>
-      Gesture.Tap().onEnd((e) => {
-        'worklet';
-        runOnJS(handleTap)(e.x, e.y);
-      }),
-    [handleTap],
+      Gesture.Tap()
+        .enabled(!isDisabled)
+        .onEnd((e) => {
+          'worklet';
+          runOnJS(handleTap)(e.x, e.y);
+        }),
+    [handleTap, isDisabled],
   );
 
   const composed = useMemo(
@@ -306,7 +319,6 @@ function useFlowBoardPan({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
     gap: Spacing.four,
     paddingTop: Spacing.four,
