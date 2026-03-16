@@ -2,11 +2,8 @@ import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import { z } from 'zod';
 
-import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
-import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
-import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { triggerHapticHard, triggerHapticLight } from '@/utils/hapticUtils';
@@ -60,6 +57,13 @@ export type HashiGame = {
   }[];
 };
 
+export type HashiOnSolve = (params: {
+  hashiSolution: ReturnType<typeof buildHashiSolution>;
+  durationMs: number;
+  completedAt: Date;
+  startedAt: Date;
+}) => Promise<void>;
+
 type HashiPersisted = {
   bridgeCounts: GameState;
   elapsedMs: number;
@@ -95,9 +99,15 @@ function buildHashiCurrentState(
     .filter((state) => state.bridges > 0);
 }
 
-export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
-  const { id: puzzleId, islands } = puzzle;
-  const connections = useMemo(() => findConnections(puzzle.islands), [puzzle.islands]);
+export function useHashiGame({
+  puzzle: { id: puzzleId, islands, attempt },
+  onSolve,
+}: {
+  puzzle: HashiPuzzle;
+  onSolve: HashiOnSolve;
+}): HashiGame {
+  const stableOnSolve = useStableCallback(onSolve);
+  const connections = useMemo(() => findConnections(islands), [islands]);
   const bridgeCountsSchema = useMemo(
     () =>
       z.array(z.number().int().min(0).max(2)).refine((arr) => arr.length === connections.length, {
@@ -127,19 +137,16 @@ export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
     { count: connections.length, persisted: persistedState?.bridgeCounts },
     ({ count, persisted }) => persisted ?? createInitialState(count),
   );
-  const { solvePuzzle } = useSolvePuzzle();
-  const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzleId });
-  const { refetch } = useDailyChallengesQuery();
   const startedAtRef = useRef<Date>(
     persistedState != null
       ? new Date(Date.now() - persistedState.elapsedMs)
-      : (puzzle.attempt?.startedAt ?? new Date()),
+      : (attempt?.startedAt ?? new Date()),
   );
   const submittedRef = useRef(false);
 
   const isComplete = useMemo(
-    () => isHashiComplete(puzzle.islands, connections, bridgeCounts),
-    [puzzle.islands, connections, bridgeCounts],
+    () => isHashiComplete(islands, connections, bridgeCounts),
+    [islands, connections, bridgeCounts],
   );
 
   const saveWithTime = (next: GameState) => {
@@ -154,37 +161,20 @@ export function useHashiGame(puzzle: HashiPuzzle): HashiGame {
     triggerHapticHard();
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
-    updateOptimisticallyPuzzleAttempt({
-      startedAt: startedAtRef.current,
-      completedAt,
-      durationMs,
-    });
 
-    clearState();
-
-    solvePuzzle({
-      puzzleId,
-      puzzleType: PuzzleType.Hashi,
-      startedAt: startedAtRef.current,
-      completedAt,
-      durationMs,
+    stableOnSolve({
       hashiSolution: buildHashiSolution(connections, bridgeCounts, islands),
+      durationMs,
+      completedAt,
+      startedAt: startedAtRef.current,
     })
-      .then(refetch)
       .catch(() => {
         submittedRef.current = false;
+      })
+      .finally(() => {
+        clearState();
       });
-  }, [
-    bridgeCounts,
-    clearState,
-    connections,
-    islands,
-    isComplete,
-    puzzleId,
-    refetch,
-    solvePuzzle,
-    updateOptimisticallyPuzzleAttempt,
-  ]);
+  }, [bridgeCounts, clearState, connections, islands, isComplete, stableOnSolve]);
 
   const isValidBridge = useCallback(
     (connectionIndex: number): boolean =>

@@ -1,55 +1,41 @@
-import { useMemo } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
-import { useHanjiGame } from '@/hooks/game/useHanjiGame';
+import { type HanjiOnSolve, useHanjiGame } from '@/hooks/game/useHanjiGame';
 import { useTheme } from '@/hooks/useTheme';
 
 import { HanjiCell } from './HanjiCell';
 
-const CELL_GAP = 2;
-const MAX_CELL_SIZE = 44;
-const AVAILABLE_HEIGHT_RATIO = 0.6;
-const CLUE_LINE_HEIGHT = 14;
+export const CELL_GAP = 2;
+export const MAX_CELL_SIZE = 44;
+export const AVAILABLE_HEIGHT_RATIO = 0.6;
+export const CLUE_LINE_HEIGHT = 14;
 
 type HanjiBoardProps = {
   puzzle: HanjiPuzzle;
+  cellSize: number;
+  rowClueWidth: number;
+  colClueHeight: number;
+  boardWidth: number;
+  onSolve: HanjiOnSolve;
 };
 
-export function HanjiBoard({ puzzle }: HanjiBoardProps) {
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+export function HanjiBoard({
+  puzzle,
+  cellSize,
+  rowClueWidth,
+  colClueHeight,
+  boardWidth,
+  onSolve,
+}: HanjiBoardProps) {
   const theme = useTheme();
-  const { cells, onCellTap, onCellLongPress, onHint, currentState } = useHanjiGame(puzzle);
+  const { cells, onCellTap, onCellLongPress, onHint, currentState } = useHanjiGame(puzzle, onSolve);
 
   useInitialOpenInstructionsEffect({ type: PuzzleType.Hanji });
-
-  const { cellSize, rowClueWidth, colClueHeight, boardWidth } = useMemo(() => {
-    const maxRowClueLen = Math.max(0, ...puzzle.rowClues.map((r) => r.length));
-    const maxColClueLen = Math.max(0, ...puzzle.colClues.map((c) => c.length));
-    const rClueW = maxRowClueLen > 0 ? maxRowClueLen * 10 + Spacing.two : 0;
-    const cClueH = maxColClueLen > 0 ? maxColClueLen * CLUE_LINE_HEIGHT + Spacing.one : 0;
-
-    const availW = screenWidth - Spacing.four * 2 - rClueW - CELL_GAP;
-    const availH = screenHeight * AVAILABLE_HEIGHT_RATIO - cClueH - CELL_GAP - Spacing.four * 2;
-    const fromW = Math.floor((availW - CELL_GAP * (puzzle.width - 1)) / puzzle.width);
-    const fromH = Math.floor((availH - CELL_GAP * (puzzle.height - 1)) / puzzle.height);
-    const rawCellSize = Math.min(fromW, fromH, MAX_CELL_SIZE);
-    const cSize = Math.max(12, rawCellSize);
-
-    const gridWidth = puzzle.width * cSize + CELL_GAP * (puzzle.width - 1);
-    const totalWidth = rClueW + CELL_GAP + gridWidth;
-
-    return {
-      cellSize: cSize,
-      rowClueWidth: Math.max(rClueW, 24),
-      colClueHeight: Math.max(cClueH, 20),
-      boardWidth: totalWidth,
-    };
-  }, [screenWidth, screenHeight, puzzle.width, puzzle.height, puzzle.rowClues, puzzle.colClues]);
 
   return (
     <View style={styles.container}>

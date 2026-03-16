@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 
@@ -13,10 +13,10 @@ import { triggerHapticLight } from '@/utils/hapticUtils';
 import { FlowCell } from './FlowCell';
 import { FlowColors } from './flowColor';
 
-const CELL_GAP = 2;
-const MAX_CELL_SIZE = 44;
-const AVAILABLE_HEIGHT_RATIO = 0.6;
-const PAN_MIN_DISTANCE = 4;
+export const CELL_GAP = 2;
+export const MAX_CELL_SIZE = 44;
+export const AVAILABLE_HEIGHT_RATIO = 0.6;
+export const PAN_MIN_DISTANCE = 4;
 
 function getPairColor(pairIndex: number): string {
   return FlowColors.pairColors[pairIndex % FlowColors.pairColors.length];
@@ -61,22 +61,24 @@ function isAdjacent(a: { row: number; col: number }, b: { row: number; col: numb
 
 type FlowBoardProps = {
   puzzle: FlowPuzzle;
+  cellSize: number;
+  onSolve: ({
+    flowSolution,
+    durationMs,
+    completedAt,
+    startedAt,
+  }: {
+    flowSolution: number[][];
+    durationMs: number;
+    completedAt: Date;
+    startedAt: Date;
+  }) => Promise<void>;
 };
 
-export function FlowBoard({ puzzle }: FlowBoardProps) {
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const { grid, setCell, clearPathForPair } = useFlowGame(puzzle);
+export function FlowBoard({ puzzle, cellSize, onSolve }: FlowBoardProps) {
+  const { grid, setCell, clearPathForPair } = useFlowGame({ puzzle, onSolve });
 
   useInitialOpenInstructionsEffect({ type: PuzzleType.Flow });
-
-  const { cellSize } = useMemo(() => {
-    const availW = screenWidth - Spacing.four * 2;
-    const availH = screenHeight * AVAILABLE_HEIGHT_RATIO;
-    const fromW = Math.floor((availW - CELL_GAP * (puzzle.width - 1)) / puzzle.width);
-    const fromH = Math.floor((availH - CELL_GAP * (puzzle.height - 1)) / puzzle.height);
-    const size = Math.min(fromW, fromH, MAX_CELL_SIZE);
-    return { cellSize: size };
-  }, [screenWidth, screenHeight, puzzle.width, puzzle.height]);
 
   const { handlePanBegin, handlePanMove, handlePanEnd, handleTap } = useFlowBoardPan({
     puzzle,
