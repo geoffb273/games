@@ -18,9 +18,15 @@ type MinesweeperBoardProps = {
   puzzle: MinesweeperPuzzle;
   cellSize: number;
   onSolve: (input: MinesweeperOnSolveInput) => Promise<void>;
+  variant?: 'play' | 'instructions';
 };
 
-export function MinesweeperBoard({ puzzle, cellSize, onSolve }: MinesweeperBoardProps) {
+export function MinesweeperBoard({
+  puzzle,
+  cellSize,
+  onSolve,
+  variant = 'play',
+}: MinesweeperBoardProps) {
   const theme = useTheme();
   const {
     revealedMap,
@@ -34,7 +40,10 @@ export function MinesweeperBoard({ puzzle, cellSize, onSolve }: MinesweeperBoard
     currentState,
   } = useMinesweeperGame({ puzzle, onSolve });
 
-  useInitialOpenInstructionsEffect({ type: PuzzleType.Minesweeper });
+  useInitialOpenInstructionsEffect({
+    type: PuzzleType.Minesweeper,
+    enabled: variant === 'play',
+  });
 
   return (
     <View style={styles.container}>
@@ -88,19 +97,20 @@ export function MinesweeperBoard({ puzzle, cellSize, onSolve }: MinesweeperBoard
           </View>
         ))}
       </View>
-      <HintButton
-        puzzleType={PuzzleType.Minesweeper}
-        puzzleId={puzzle.id}
-        onHint={onHint}
-        minesweeperCurrentState={currentState}
-      />
+      {variant === 'play' && (
+        <HintButton
+          puzzleType={PuzzleType.Minesweeper}
+          puzzleId={puzzle.id}
+          onHint={onHint}
+          minesweeperCurrentState={currentState}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
     gap: Spacing.four,
     paddingTop: Spacing.four,
