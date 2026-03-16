@@ -1,9 +1,12 @@
 import React from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/common/Text';
+import { InstructionBulletList } from '@/components/game/instructions/InstructionBulletList';
+import { InstructionSection } from '@/components/game/instructions/InstructionSection';
+import { Spacing } from '@/constants/token';
 
-import { InstructionBulletList } from './InstructionBulletList';
-import { InstructionSection } from './InstructionSection';
+import { InstructionsMinesweeperBoard } from './InstructionsMinesweeperBoard';
 
 export function MinesweeperInstructions() {
   return (
@@ -40,6 +43,14 @@ export function MinesweeperInstructions() {
           are in the 8 surrounding squares. Use these clues to decide where it is safe to reveal
           next and where mines must be flagged.
         </Text>
+        <View style={styles.previewContainer}>
+          <Text type="caption" color="textSecondary">
+            Here&apos;s a tiny example board so you can see how revealing and flags work:
+          </Text>
+          <View style={styles.previewBoard}>
+            <InstructionsMinesweeperBoard />
+          </View>
+        </View>
       </InstructionSection>
 
       <InstructionSection title="Hints">
@@ -62,3 +73,15 @@ export function MinesweeperInstructions() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  previewContainer: {
+    marginTop: Spacing.two,
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  previewBoard: {
+    marginTop: Spacing.one,
+    alignItems: 'center',
+  },
+});
