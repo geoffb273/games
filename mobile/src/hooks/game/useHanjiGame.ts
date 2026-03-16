@@ -65,7 +65,13 @@ export type HanjiOnSolve = (params: {
   startedAt: Date;
 }) => Promise<void>;
 
-export function useHanjiGame(puzzle: HanjiPuzzle, onSolve: HanjiOnSolve): HanjiGame {
+export function useHanjiGame({
+  puzzle,
+  onSolve,
+}: {
+  puzzle: HanjiPuzzle;
+  onSolve: HanjiOnSolve;
+}): HanjiGame {
   const stableOnSolve = useStableCallback(onSolve);
   const { width, height, rowClues, colClues, id: puzzleId } = puzzle;
 

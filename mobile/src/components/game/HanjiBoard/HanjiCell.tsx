@@ -22,6 +22,7 @@ type HanjiCellProps = {
   state: HanjiCellState;
   onTap: (row: number, col: number) => void;
   onLongPress: (row: number, col: number) => void;
+  isDisabled?: boolean;
 };
 
 export const HanjiCell = memo(function HanjiCell({
@@ -31,6 +32,7 @@ export const HanjiCell = memo(function HanjiCell({
   state,
   onTap,
   onLongPress,
+  isDisabled = false,
 }: HanjiCellProps) {
   const theme = useTheme();
   const scale = useSharedValue(1);
@@ -45,6 +47,7 @@ export const HanjiCell = memo(function HanjiCell({
 
   const tap = Gesture.Tap()
     .withTestId('hanji-cell-tap')
+    .enabled(!isDisabled)
     .onBegin(() => {
       'worklet';
       scale.value = withSpring(0.9, { damping: 15, stiffness: 400 });
@@ -61,6 +64,7 @@ export const HanjiCell = memo(function HanjiCell({
   const longPressGesture = Gesture.LongPress()
     .withTestId('hanji-cell-longpress')
     .minDuration(350)
+    .enabled(!isDisabled)
     .onStart(() => {
       'worklet';
       scale.value = withSequence(
