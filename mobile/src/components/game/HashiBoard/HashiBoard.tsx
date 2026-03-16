@@ -21,6 +21,8 @@ type HashiBoardProps = {
   boardWidth: number;
   boardHeight: number;
   onSolve: HashiOnSolve;
+  variant?: 'play' | 'instructions';
+  isDisabled?: boolean;
 };
 
 export function HashiBoard({
@@ -29,11 +31,13 @@ export function HashiBoard({
   boardWidth,
   boardHeight,
   onSolve,
+  variant = 'play',
+  isDisabled = false,
 }: HashiBoardProps) {
   const { connections, bridgeCounts, isValidBridge, onConnectionTap, onHint, currentState } =
     useHashiGame({ puzzle, onSolve });
 
-  useInitialOpenInstructionsEffect({ type: PuzzleType.Hashi });
+  useInitialOpenInstructionsEffect({ type: PuzzleType.Hashi, enabled: variant === 'play' });
 
   const islandPositions = useMemo(() => {
     return puzzle.islands.map((island) => ({
@@ -67,7 +71,7 @@ export function HashiBoard({
             x2={islandPositions[conn.b].x}
             y2={islandPositions[conn.b].y}
             count={bridgeCounts[ci] as 0 | 1 | 2}
-            disabled={bridgeCounts[ci] < 2 && !isValidBridge(ci)}
+            disabled={isDisabled || (bridgeCounts[ci] < 2 && !isValidBridge(ci))}
             onPress={() => onConnectionTap(ci)}
           />
         ))}
@@ -85,19 +89,20 @@ export function HashiBoard({
         ))}
       </View>
 
-      <HintButton
-        puzzleType={PuzzleType.Hashi}
-        puzzleId={puzzle.id}
-        onHint={onHint}
-        hashiCurrentState={currentState}
-      />
+      {variant === 'play' && (
+        <HintButton
+          puzzleType={PuzzleType.Hashi}
+          puzzleId={puzzle.id}
+          onHint={onHint}
+          hashiCurrentState={currentState}
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
     gap: Spacing.five,
     paddingTop: Spacing.four,

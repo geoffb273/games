@@ -1,9 +1,12 @@
 import React from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/common/Text';
+import { InstructionBulletList } from '@/components/game/instructions/InstructionBulletList';
+import { InstructionSection } from '@/components/game/instructions/InstructionSection';
+import { Spacing } from '@/constants/token';
 
-import { InstructionBulletList } from './InstructionBulletList';
-import { InstructionSection } from './InstructionSection';
+import { InstructionsHashiBoard } from './InstructionsHashiBoard';
 
 export function HashiInstructions() {
   return (
@@ -29,14 +32,22 @@ export function HashiInstructions() {
             'Each pair of islands can have at most two bridges between them.',
           ]}
         />
+        <View style={styles.previewContainer}>
+          <Text type="caption" color="textSecondary">
+            Here&apos;s a tiny example board so you can see how the islands and bridges work:
+          </Text>
+          <View style={styles.previewBoard}>
+            <InstructionsHashiBoard />
+          </View>
+        </View>
       </InstructionSection>
 
       <InstructionSection title="Controls">
         <InstructionBulletList
           items={[
-            'Tap an island, then tap another island in the same row or column to draw a bridge between them.',
+            'Tap in between two islands to draw a bridge between them.',
             'Tap an existing bridge to add a second bridge (double) between the same two islands, if the island numbers allow it.',
-            'Tap a double bridge once to remove one bridge; tap again to remove both.',
+            'Tap a double bridge once to remove both bridges',
           ]}
         />
       </InstructionSection>
@@ -60,3 +71,15 @@ export function HashiInstructions() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  previewContainer: {
+    marginTop: Spacing.two,
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  previewBoard: {
+    marginTop: Spacing.one,
+    alignItems: 'center',
+  },
+});
