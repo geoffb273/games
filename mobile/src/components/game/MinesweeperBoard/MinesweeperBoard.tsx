@@ -1,26 +1,26 @@
-import { useMemo } from 'react';
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
-import { useMinesweeperGame } from '@/hooks/game/useMinesweeperGame';
+import { type MinesweeperOnSolveInput, useMinesweeperGame } from '@/hooks/game/useMinesweeperGame';
 import { useTheme } from '@/hooks/useTheme';
 
 import { MinesweeperCell } from './MinesweeperCell';
 
-const CELL_GAP = 2;
-const MAX_CELL_SIZE = 44;
-const AVAILABLE_HEIGHT_RATIO = 0.6;
+export const CELL_GAP = 2;
+export const MAX_CELL_SIZE = 44;
+export const AVAILABLE_HEIGHT_RATIO = 0.6;
 
 type MinesweeperBoardProps = {
   puzzle: MinesweeperPuzzle;
+  cellSize: number;
+  onSolve: (input: MinesweeperOnSolveInput) => Promise<void>;
 };
 
-export function MinesweeperBoard({ puzzle }: MinesweeperBoardProps) {
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+export function MinesweeperBoard({ puzzle, cellSize, onSolve }: MinesweeperBoardProps) {
   const theme = useTheme();
   const {
     revealedMap,
@@ -32,17 +32,9 @@ export function MinesweeperBoard({ puzzle }: MinesweeperBoardProps) {
     toggleMode,
     onHint,
     currentState,
-  } = useMinesweeperGame(puzzle);
+  } = useMinesweeperGame({ puzzle, onSolve });
 
   useInitialOpenInstructionsEffect({ type: PuzzleType.Minesweeper });
-
-  const cellSize = useMemo(() => {
-    const availW = screenWidth - Spacing.four * 2;
-    const availH = screenHeight * AVAILABLE_HEIGHT_RATIO;
-    const fromW = Math.floor((availW - CELL_GAP * (puzzle.width - 1)) / puzzle.width);
-    const fromH = Math.floor((availH - CELL_GAP * (puzzle.height - 1)) / puzzle.height);
-    return Math.min(fromW, fromH, MAX_CELL_SIZE);
-  }, [screenWidth, screenHeight, puzzle.width, puzzle.height]);
 
   return (
     <View style={styles.container}>

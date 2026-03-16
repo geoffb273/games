@@ -1,40 +1,29 @@
-import { useMemo } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
-import { useSlitherlinkGame } from '@/hooks/game/useSlitherlinkGame';
+import { type SlitherlinkOnSolveInput, useSlitherlinkGame } from '@/hooks/game/useSlitherlinkGame';
 
 import { SlitherlinkCell } from './SlitherlinkCell';
 
-const CELL_GAP = 2;
-const MAX_CELL_SIZE = 60;
-const AVAILABLE_HEIGHT_RATIO = 0.6;
+export const CELL_GAP = 2;
+export const MAX_CELL_SIZE = 60;
+export const AVAILABLE_HEIGHT_RATIO = 0.6;
 
 type SlitherlinkBoardProps = {
   puzzle: SlitherlinkPuzzle;
+  cellSize: number;
+  onSolve: (input: SlitherlinkOnSolveInput) => Promise<void>;
 };
 
-export function SlitherlinkBoard({ puzzle }: SlitherlinkBoardProps) {
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+export function SlitherlinkBoard({ puzzle, cellSize, onSolve }: SlitherlinkBoardProps) {
   const { horizontal, vertical, onHorizontalEdgePress, onVerticalEdgePress, onHint, currentState } =
-    useSlitherlinkGame(puzzle);
+    useSlitherlinkGame({ puzzle, onSolve });
 
   useInitialOpenInstructionsEffect({ type: PuzzleType.Slitherlink });
-
-  const { cellSize } = useMemo(() => {
-    const availW = screenWidth - Spacing.four * 2;
-    const availH = screenHeight * AVAILABLE_HEIGHT_RATIO;
-    const fromW = Math.floor((availW - CELL_GAP * (puzzle.width - 1)) / puzzle.width);
-    const fromH = Math.floor((availH - CELL_GAP * (puzzle.height - 1)) / puzzle.height);
-    const size = Math.min(fromW, fromH, MAX_CELL_SIZE);
-    return {
-      cellSize: size,
-    };
-  }, [screenWidth, screenHeight, puzzle.width, puzzle.height]);
 
   return (
     <View style={styles.container}>

@@ -2,11 +2,8 @@ import { useEffect, useMemo, useReducer, useRef } from 'react';
 
 import { z } from 'zod';
 
-import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
 import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
-import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
-import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { triggerHapticHard, triggerHapticLight } from '@/utils/hapticUtils';
@@ -115,9 +112,23 @@ export type SlitherlinkGame = {
   };
 };
 
+export type SlitherlinkOnSolveInput = {
+  slitherlinkSolution: { horizontalEdges: boolean[][]; verticalEdges: boolean[][] };
+  durationMs: number;
+  completedAt: Date;
+  startedAt: Date;
+};
+
 const edgeSchema = z.union([z.literal('empty'), z.literal('line')]);
 
-export function useSlitherlinkGame(puzzle: SlitherlinkPuzzle): SlitherlinkGame {
+export function useSlitherlinkGame({
+  puzzle,
+  onSolve,
+}: {
+  puzzle: SlitherlinkPuzzle;
+  onSolve: (input: SlitherlinkOnSolveInput) => Promise<void>;
+}): SlitherlinkGame {
+  const stableOnSolve = useStableCallback(onSolve);
   const { id: puzzleId, width, height, clues } = puzzle;
 
   const horizontalSchema = useMemo(
@@ -169,10 +180,6 @@ export function useSlitherlinkGame(puzzle: SlitherlinkPuzzle): SlitherlinkGame {
           ),
   );
 
-  const { solvePuzzle } = useSolvePuzzle();
-  const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzleId });
-  const { refetch } = useDailyChallengesQuery();
-
   const startedAtRef = useRef<Date>(puzzle.attempt?.startedAt ?? new Date());
   const submittedRef = useRef(false);
 
@@ -192,39 +199,22 @@ export function useSlitherlinkGame(puzzle: SlitherlinkPuzzle): SlitherlinkGame {
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
 
-    updateOptimisticallyPuzzleAttempt({
-      startedAt: startedAtRef.current,
-      completedAt,
-      durationMs,
-    });
-
-    clearState();
-
-    solvePuzzle({
-      puzzleId,
-      puzzleType: PuzzleType.Slitherlink,
-      startedAt: startedAtRef.current,
-      completedAt,
-      durationMs,
+    stableOnSolve({
       slitherlinkSolution: {
         horizontalEdges: horizontalLines,
         verticalEdges: verticalLines,
       },
+      durationMs,
+      completedAt,
+      startedAt: startedAtRef.current,
     })
-      .then(refetch)
       .catch(() => {
         submittedRef.current = false;
+      })
+      .finally(() => {
+        clearState();
       });
-  }, [
-    clearState,
-    horizontalLines,
-    isComplete,
-    puzzleId,
-    refetch,
-    solvePuzzle,
-    updateOptimisticallyPuzzleAttempt,
-    verticalLines,
-  ]);
+  }, [clearState, horizontalLines, isComplete, stableOnSolve, verticalLines]);
 
   const onHorizontalEdgePress = useStableCallback((row: number, col: number) => {
     triggerHapticLight();

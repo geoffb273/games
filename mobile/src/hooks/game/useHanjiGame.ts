@@ -2,11 +2,8 @@ import { useEffect, useMemo, useReducer, useRef } from 'react';
 
 import { z } from 'zod';
 
-import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
-import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
-import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { type HanjiCellState, isPuzzleComplete } from '@/utils/hanji/lineValidation';
@@ -61,7 +58,15 @@ function cellsToHanjiSolution(cells: GameState): number[][] {
   return cells.map((row) => row.map((c) => (c === 'filled' ? 1 : 0)));
 }
 
-export function useHanjiGame(puzzle: HanjiPuzzle): HanjiGame {
+export type HanjiOnSolve = (params: {
+  hanjiSolution: number[][];
+  durationMs: number;
+  completedAt: Date;
+  startedAt: Date;
+}) => Promise<void>;
+
+export function useHanjiGame(puzzle: HanjiPuzzle, onSolve: HanjiOnSolve): HanjiGame {
+  const stableOnSolve = useStableCallback(onSolve);
   const { width, height, rowClues, colClues, id: puzzleId } = puzzle;
 
   const cellSchema = z.union([z.literal('empty'), z.literal('filled'), z.literal('marked')]);
@@ -96,9 +101,6 @@ export function useHanjiGame(puzzle: HanjiPuzzle): HanjiGame {
     { width, height, persisted: persistedState?.cells },
     ({ width: w, height: h, persisted }) => persisted ?? createInitialState(w, h),
   );
-  const { solvePuzzle } = useSolvePuzzle();
-  const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzleId });
-  const { refetch } = useDailyChallengesQuery();
   const startedAtRef = useRef<Date>(
     persistedState != null
       ? new Date(Date.now() - persistedState.elapsedMs)
@@ -122,34 +124,20 @@ export function useHanjiGame(puzzle: HanjiPuzzle): HanjiGame {
     triggerHapticHard();
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
-    updateOptimisticallyPuzzleAttempt({
-      startedAt: startedAtRef.current,
-      completedAt,
-      durationMs,
-    });
-    clearState();
 
-    solvePuzzle({
-      puzzleId,
-      puzzleType: PuzzleType.Hanji,
-      startedAt: startedAtRef.current,
-      completedAt,
-      durationMs,
+    stableOnSolve({
       hanjiSolution: cellsToHanjiSolution(cells),
+      durationMs,
+      completedAt,
+      startedAt: startedAtRef.current,
     })
-      .then(refetch)
       .catch(() => {
         submittedRef.current = false;
+      })
+      .finally(() => {
+        clearState();
       });
-  }, [
-    cells,
-    clearState,
-    isComplete,
-    puzzleId,
-    refetch,
-    solvePuzzle,
-    updateOptimisticallyPuzzleAttempt,
-  ]);
+  }, [cells, clearState, isComplete, stableOnSolve]);
 
   const onCellTap = useStableCallback((row: number, col: number) => {
     const current = cells[row][col];

@@ -2,11 +2,8 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'r
 
 import { z } from 'zod';
 
-import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
-import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
-import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { triggerHapticHard, triggerHapticLight } from '@/utils/hapticUtils';
@@ -92,9 +89,18 @@ type MinesweeperPersisted = {
   elapsedMs: number;
 };
 
-function buildMinesweeperSolution(mineField: (number | 'MINE')[][]): boolean[][] {
+export function buildMinesweeperSolution(mineField: (number | 'MINE')[][]): boolean[][] {
   return mineField.map((row) => row.map((cell) => cell === 'MINE'));
 }
+
+export type MinesweeperOnSolveInput = {
+  minesweeperSolution: boolean[][];
+  startedAt: Date;
+  completedAt?: Date;
+  durationMs?: number;
+  success: boolean;
+};
+
 function buildMinesweeperCurrentState(cells: CellStatus[][]): boolean[][] {
   return cells.map((row) => row.map((cell) => cell === 'flagged'));
 }
@@ -106,7 +112,14 @@ const revealedCellSchema = z.object({
   value: z.number().int(),
 });
 
-export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
+export function useMinesweeperGame({
+  puzzle,
+  onSolve,
+}: {
+  puzzle: MinesweeperPuzzle;
+  onSolve: (input: MinesweeperOnSolveInput) => Promise<void>;
+}): MinesweeperGame {
+  const stableOnSolve = useStableCallback(onSolve);
   const { id: puzzleId, width, height, mineCount, mineField } = puzzle;
 
   const stateSchema = useMemo(
@@ -148,9 +161,6 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     (initial) => ('cells' in initial ? initial : createInitialState(initial)),
   );
   const [mode, setMode] = useState<InteractionMode>(persistedState?.mode ?? 'flag');
-  const { solvePuzzle } = useSolvePuzzle();
-  const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzleId });
-  const { refetch } = useDailyChallengesQuery();
   const startedAtRef = useRef<Date>(
     persistedState != null
       ? new Date(Date.now() - persistedState.elapsedMs)
@@ -187,33 +197,21 @@ export function useMinesweeperGame(puzzle: MinesweeperPuzzle): MinesweeperGame {
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
     const success = isWin;
-    updateOptimisticallyPuzzleAttempt({
-      startedAt: startedAtRef.current,
-      ...(success && { completedAt, durationMs }),
-    });
-    clearState();
 
-    solvePuzzle({
-      puzzleId,
-      puzzleType: PuzzleType.Minesweeper,
-      startedAt: startedAtRef.current,
-      ...(success && { completedAt, durationMs }),
+    stableOnSolve({
       minesweeperSolution: buildMinesweeperSolution(mineField),
+      startedAt: startedAtRef.current,
+      completedAt: success ? completedAt : undefined,
+      durationMs: success ? durationMs : undefined,
+      success,
     })
-      .then(refetch)
       .catch(() => {
         submittedRef.current = false;
+      })
+      .finally(() => {
+        clearState();
       });
-  }, [
-    clearState,
-    isWin,
-    mineField,
-    puzzleId,
-    refetch,
-    solvePuzzle,
-    state.gameOver,
-    updateOptimisticallyPuzzleAttempt,
-  ]);
+  }, [clearState, isWin, mineField, state.gameOver, stableOnSolve]);
 
   const onRevealTap = useStableCallback(({ row, col }: { row: number; col: number }) => {
     const result = getCellsToReveal(row, col, puzzle.mineField, puzzle.width, puzzle.height);

@@ -1,48 +1,39 @@
 import { useMemo } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
-import { useHashiGame } from '@/hooks/game/useHashiGame';
+import { type HashiOnSolve, useHashiGame } from '@/hooks/game/useHashiGame';
 
 import { HashiBridge } from './HashiBridge';
 import { HashiIsland } from './HashiIsland';
 
-const CELL_GAP = 2;
-const MAX_CELL_SIZE = 44;
-const AVAILABLE_HEIGHT_RATIO = 0.6;
+export const CELL_GAP = 2;
+export const MAX_CELL_SIZE = 44;
+export const AVAILABLE_HEIGHT_RATIO = 0.6;
 
 type HashiBoardProps = {
   puzzle: HashiPuzzle;
+  cellSize: number;
+  boardWidth: number;
+  boardHeight: number;
+  onSolve: HashiOnSolve;
 };
 
-export function HashiBoard({ puzzle }: HashiBoardProps) {
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+export function HashiBoard({
+  puzzle,
+  cellSize,
+  boardWidth,
+  boardHeight,
+  onSolve,
+}: HashiBoardProps) {
   const { connections, bridgeCounts, isValidBridge, onConnectionTap, onHint, currentState } =
-    useHashiGame(puzzle);
+    useHashiGame({ puzzle, onSolve });
 
   useInitialOpenInstructionsEffect({ type: PuzzleType.Hashi });
-
-  const { cellSize, boardWidth, boardHeight } = useMemo(() => {
-    const availW = screenWidth - Spacing.four * 2 - CELL_GAP;
-    const availH = screenHeight * AVAILABLE_HEIGHT_RATIO - CELL_GAP - Spacing.four * 2;
-    const fromW = Math.floor((availW - CELL_GAP * (puzzle.width - 1)) / puzzle.width);
-    const fromH = Math.floor((availH - CELL_GAP * (puzzle.height - 1)) / puzzle.height);
-    const rawCellSize = Math.min(fromW, fromH, MAX_CELL_SIZE);
-    const cSize = Math.max(20, rawCellSize);
-
-    const gridWidth = puzzle.width * cSize + CELL_GAP * (puzzle.width - 1);
-    const gridHeight = puzzle.height * cSize + CELL_GAP * (puzzle.height - 1);
-
-    return {
-      cellSize: cSize,
-      boardWidth: gridWidth,
-      boardHeight: gridHeight,
-    };
-  }, [screenWidth, screenHeight, puzzle.width, puzzle.height]);
 
   const islandPositions = useMemo(() => {
     return puzzle.islands.map((island) => ({

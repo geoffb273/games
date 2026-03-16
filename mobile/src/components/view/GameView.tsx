@@ -7,13 +7,13 @@ import { useNavigation } from 'expo-router';
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { ErrorView } from '@/components/common/ErrorView';
-import { FlowBoard } from '@/components/game/FlowBoard/FlowBoard';
-import { HanjiBoard } from '@/components/game/HanjiBoard/HanjiBoard';
-import { HashiBoard } from '@/components/game/HashiBoard/HashiBoard';
+import { GameViewFlowBoard } from '@/components/game/GameViewFlowBoard';
+import { GameViewHanjiBoard } from '@/components/game/GameViewHanjiBoard';
+import { GameViewHashiBoard } from '@/components/game/GameViewHashiBoard';
+import { GameViewMinesweeperBoard } from '@/components/game/GameViewMinesweeperBoard';
+import { GameViewSlitherlinkBoard } from '@/components/game/GameViewSlitherlinkBoard';
 import { GameInstructionsButton } from '@/components/game/instructions/GameInstructionsButton';
-import { MinesweeperBoard } from '@/components/game/MinesweeperBoard/MinesweeperBoard';
 import { PuzzleCompletedView } from '@/components/game/PuzzleCompletedView';
-import { SlitherlinkBoard } from '@/components/game/SlitherlinkBoard/SlitherlinkBoard';
 import { VerticallyCenteredLayout } from '@/components/layout/VerticallyCenteredLayout';
 import { Spacing } from '@/constants/token';
 import { useStableCallback } from '@/hooks/useStableCallback';
@@ -96,15 +96,15 @@ function PuzzleBoard({ puzzle, markBoardShown }: { puzzle: Puzzle; markBoardShow
 
   switch (puzzle.type) {
     case 'FLOW':
-      return <FlowBoard puzzle={puzzle} />;
+      return <GameViewFlowBoard puzzle={puzzle} />;
     case 'HANJI':
-      return <HanjiBoard puzzle={puzzle} />;
+      return <GameViewHanjiBoard puzzle={puzzle} />;
     case 'HASHI':
-      return <HashiBoard puzzle={puzzle} />;
+      return <GameViewHashiBoard puzzle={puzzle} />;
     case 'MINESWEEPER':
-      return <MinesweeperBoard puzzle={puzzle} />;
+      return <GameViewMinesweeperBoard puzzle={puzzle} />;
     case 'SLITHERLINK':
-      return <SlitherlinkBoard puzzle={puzzle} />;
+      return <GameViewSlitherlinkBoard puzzle={puzzle} />;
   }
 }
 

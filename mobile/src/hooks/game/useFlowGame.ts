@@ -2,10 +2,7 @@ import { useEffect, useMemo, useReducer, useRef } from 'react';
 
 import { z } from 'zod';
 
-import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { type FlowPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
-import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
-import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { isFlowComplete } from '@/utils/flow/validation';
@@ -49,7 +46,24 @@ type FlowPersisted = {
   elapsedMs: number;
 };
 
-export function useFlowGame(puzzle: FlowPuzzle): FlowGame {
+export function useFlowGame({
+  puzzle,
+  onSolve,
+}: {
+  puzzle: FlowPuzzle;
+  onSolve: ({
+    durationMs,
+    completedAt,
+    startedAt,
+    flowSolution,
+  }: {
+    durationMs: number;
+    completedAt: Date;
+    startedAt: Date;
+    flowSolution: number[][];
+  }) => Promise<void>;
+}): FlowGame {
+  const stableOnSolve = useStableCallback(onSolve);
   const { id: puzzleId, width, height, pairs } = puzzle;
   const gridSchema = useMemo(
     () =>
@@ -82,9 +96,7 @@ export function useFlowGame(puzzle: FlowPuzzle): FlowGame {
     { width, height, persisted: persistedState?.grid },
     ({ width: w, height: h, persisted }) => persisted ?? createInitialGrid(w, h),
   );
-  const { solvePuzzle } = useSolvePuzzle();
-  const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzleId });
-  const { refetch } = useDailyChallengesQuery();
+
   const startedAtRef = useRef<Date>(
     persistedState != null
       ? new Date(Date.now() - persistedState.elapsedMs)
@@ -110,35 +122,19 @@ export function useFlowGame(puzzle: FlowPuzzle): FlowGame {
     const completedAt = new Date();
     const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
 
-    updateOptimisticallyPuzzleAttempt({
-      startedAt: startedAtRef.current,
-      completedAt,
+    stableOnSolve({
       durationMs,
-    });
-
-    clearState();
-
-    solvePuzzle({
-      puzzleId,
-      puzzleType: PuzzleType.Flow,
-      startedAt: startedAtRef.current,
       completedAt,
-      durationMs,
+      startedAt: startedAtRef.current,
       flowSolution: grid.map((row) => row.slice()),
     })
-      .then(refetch)
       .catch(() => {
         submittedRef.current = false;
+      })
+      .finally(() => {
+        clearState();
       });
-  }, [
-    clearState,
-    isComplete,
-    grid,
-    puzzleId,
-    solvePuzzle,
-    updateOptimisticallyPuzzleAttempt,
-    refetch,
-  ]);
+  }, [clearState, grid, isComplete, stableOnSolve]);
 
   const setCell = useStableCallback((row: number, col: number, value: number) => {
     triggerHapticLight();
