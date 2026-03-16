@@ -59,7 +59,13 @@ function writeState(next: InstructionsSeenMap): void {
   }
 }
 
-export function useInitialOpenInstructionsEffect({ type }: { type: PuzzleType }): void {
+export function useInitialOpenInstructionsEffect({
+  type,
+  enabled = true,
+}: {
+  type: PuzzleType;
+  enabled?: boolean;
+}): void {
   const router = useRouter();
 
   const [state, setState] = useState<InstructionsSeenMap>(() => readInitialState());
@@ -88,6 +94,7 @@ export function useInitialOpenInstructionsEffect({ type }: { type: PuzzleType })
   const hasTriggeredRef = useRef(false);
 
   useEffect(() => {
+    if (!enabled) return;
     if (hasTriggeredRef.current) return;
     if (hasSeen(type)) return;
 
@@ -97,5 +104,5 @@ export function useInitialOpenInstructionsEffect({ type }: { type: PuzzleType })
       pathname: '/game/[type]/instructions',
       params: { type },
     });
-  }, [hasSeen, markSeen, type, router]);
+  }, [enabled, hasSeen, markSeen, type, router]);
 }

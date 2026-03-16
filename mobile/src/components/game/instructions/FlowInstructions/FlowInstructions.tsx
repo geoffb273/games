@@ -1,9 +1,12 @@
 import React from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/common/Text';
+import { InstructionBulletList } from '@/components/game/instructions/InstructionBulletList';
+import { InstructionSection } from '@/components/game/instructions/InstructionSection';
+import { Spacing } from '@/constants/token';
 
-import { InstructionBulletList } from './InstructionBulletList';
-import { InstructionSection } from './InstructionSection';
+import { InstructionsFlowBoard } from './InstructionsFlowBoard';
 
 export function FlowInstructions() {
   return (
@@ -25,6 +28,15 @@ export function FlowInstructions() {
             'To solve the puzzle, every cell on the board must be filled with a path and all color pairs must be connected.',
           ]}
         />
+
+        <View style={styles.previewContainer}>
+          <Text type="caption" color="textSecondary">
+            Here&apos;s a tiny example board so you can see the dots you&apos;ll be connecting:
+          </Text>
+          <View style={styles.previewBoard}>
+            <InstructionsFlowBoard />
+          </View>
+        </View>
       </InstructionSection>
 
       <InstructionSection title="Controls">
@@ -57,3 +69,15 @@ export function FlowInstructions() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  previewContainer: {
+    marginTop: Spacing.two,
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  previewBoard: {
+    marginTop: Spacing.one,
+    alignItems: 'center',
+  },
+});
