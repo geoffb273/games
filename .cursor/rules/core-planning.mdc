@@ -21,6 +21,7 @@ alwaysApply: true
 - Prefer editing existing files over creating new ones unless the change is a new module/feature.
 - Run the project linter after edits (`pnpm lint` in backend or mobile); match existing style (import order, type-only imports, naming).
 - Use existing patterns: e.g. backend uses service/DAO layering; mobile uses `@/` path alias and generated GraphQL types.
+- Prefer object inputs to functions over multiple parameters.
 
 ## Scope
 
