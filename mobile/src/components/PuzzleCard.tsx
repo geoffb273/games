@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
@@ -28,6 +28,7 @@ export function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
   const isCompleted = puzzle.attempt != null;
   const isSolved = isCompleted && puzzle.attempt?.completedAt != null;
   const palette = usePuzzlePalette(puzzle.type);
+  const router = useRouter();
 
   // Pre-load the puzzle to avoid flickering
   usePuzzleQuery({ id: puzzle.id });
