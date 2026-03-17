@@ -30,3 +30,7 @@ alwaysApply: false
 - Group related tests with `describe` blocks; use clear, behavior-based `it`/`test` names.
 - Co-locate helper test utilities under `mobile/test/utils/` when they are shared between suites.
 - Match the project’s TypeScript and import conventions in tests (e.g. use `@/` aliases for app code where applicable).
+
+## Links
+
+https://oss.callstack.com/react-native-testing-library/docs/guides/llm-guidelines
