@@ -87,7 +87,7 @@ describe('MinesweeperCell', () => {
     });
   });
 
-  it('calls onWaveComplete when completion wave animation completes for last cell', () => {
+  it('calls onWaveComplete when explosion animation completes for last cell', () => {
     jest.useFakeTimers();
     const onWaveComplete = jest.fn();
 
@@ -98,8 +98,33 @@ describe('MinesweeperCell', () => {
         col={0}
         isRevealed
         value={0}
-        isCompletionWaveActive
+        isCompletionAnimationActive
         isLastInWave
+        completionAnimationType="explosion"
+        onWaveComplete={onWaveComplete}
+      />,
+    );
+
+    jest.runAllTimers();
+
+    expect(onWaveComplete).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
+  });
+
+  it('calls onWaveComplete when wave animation completes for last cell', () => {
+    jest.useFakeTimers();
+    const onWaveComplete = jest.fn();
+
+    render(
+      <MinesweeperCell
+        {...defaultProps}
+        row={1}
+        col={2}
+        isRevealed
+        value={0}
+        isCompletionAnimationActive
+        isLastInWave
+        completionAnimationType="wave"
         onWaveComplete={onWaveComplete}
       />,
     );

@@ -51,15 +51,16 @@ export function MinesweeperBoard({
     enabled: variant === 'play',
   });
 
-  const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
-  const hasTriggeredCompletionWaveRef = useRef(false);
+  const [isCompletionAnimationActive, setIsCompletionAnimationActive] = useState(false);
+  const hasTriggeredCompletionAnimationRef = useRef(false);
 
   useEffect(() => {
-    if (variant !== 'play' || !isWin || hasTriggeredCompletionWaveRef.current) return;
+    if (variant !== 'play' || (!isWin && !isLoss) || hasTriggeredCompletionAnimationRef.current)
+      return;
 
-    hasTriggeredCompletionWaveRef.current = true;
-    setIsCompletionWaveActive(true);
-  }, [isWin, variant]);
+    hasTriggeredCompletionAnimationRef.current = true;
+    setIsCompletionAnimationActive(true);
+  }, [isLoss, isWin, variant]);
 
   return (
     <View style={styles.container}>
@@ -107,10 +108,11 @@ export function MinesweeperBoard({
                   value={revealedValue ?? null}
                   onTap={onCellTap}
                   onLongPress={onCellLongPress}
-                  isCompletionWaveActive={isCompletionWaveActive}
+                  completionAnimationType={isLoss ? 'explosion' : 'wave'}
+                  isCompletionAnimationActive={isCompletionAnimationActive}
                   isLastInWave={row === puzzle.height - 1 && col === puzzle.width - 1}
                   onWaveComplete={onAnimationComplete}
-                  isDisabled={isCompletionWaveActive || isWin || isLoss}
+                  isDisabled={isCompletionAnimationActive || isWin || isLoss}
                 />
               );
             })}
@@ -125,13 +127,16 @@ export function MinesweeperBoard({
           minesweeperCurrentState={currentState}
         />
       )}
-      {variant === 'play' && isWin && <GameCompleteText />}
+      {variant === 'play' && (isWin || isLoss) && (
+        <GameCompleteText variant={isWin ? 'success' : 'failure'} />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    justifyContent: 'center',
     alignItems: 'center',
     gap: Spacing.four,
     paddingTop: Spacing.four,
