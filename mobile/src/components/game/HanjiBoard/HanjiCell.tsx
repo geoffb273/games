@@ -24,7 +24,7 @@ type HanjiCellProps = {
   onTap: (row: number, col: number) => void;
   onLongPress: (row: number, col: number) => void;
   isDisabled?: boolean;
-  completionWaveActive?: boolean;
+  isCompletionWaveActive?: boolean;
   /** Whether this cell is the last in the wave. If so, it will notify call `onWaveComplete` when the animation is complete. */
   isLastInWave: boolean;
   /** Callback to call when the animation is complete. Only called if `isLastInWave` is true. */
@@ -41,7 +41,7 @@ export const HanjiCell = memo(function HanjiCell({
   onTap,
   onLongPress,
   isDisabled = false,
-  completionWaveActive = false,
+  isCompletionWaveActive = false,
   isLastInWave = false,
   onWaveComplete,
 }: HanjiCellProps) {
@@ -51,7 +51,7 @@ export const HanjiCell = memo(function HanjiCell({
 
   // Completion scale animation: each filled cell scales in sequence. Last cell notifies parent when done.
   useEffect(() => {
-    if (!completionWaveActive || state !== 'filled') return;
+    if (!isCompletionWaveActive || state !== 'filled') return;
 
     const notifyComplete = isLastInWave
       ? (finished?: boolean) => {
@@ -67,7 +67,7 @@ export const HanjiCell = memo(function HanjiCell({
       withTiming(1.15, { duration: 400 }),
       withTiming(1, { duration: 400 }, notifyComplete),
     );
-  }, [col, completionWaveActive, isLastInWave, stableOnWaveComplete, row, scale, state]);
+  }, [col, isLastInWave, stableOnWaveComplete, row, scale, state, isCompletionWaveActive]);
 
   const handleTap = useCallback(() => {
     onTap(row, col);

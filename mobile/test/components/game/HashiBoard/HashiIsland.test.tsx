@@ -18,6 +18,8 @@ const defaultProps = {
   x: 50,
   y: 50,
   cellSize: 40,
+  isLastInWave: false,
+  isCompletionWaveActive: false,
 };
 
 describe('HashiIsland', () => {
@@ -53,5 +55,26 @@ describe('HashiIsland', () => {
     const text = screen.getByText('2');
     const style = StyleSheet.flatten(text.props.style);
     expect(style.color).toBe(mockTheme.text);
+  });
+
+  it('calls onWaveComplete when completion wave animation completes for last island', () => {
+    jest.useFakeTimers();
+    const onWaveComplete = jest.fn();
+
+    render(
+      <HashiIsland
+        {...defaultProps}
+        requiredBridges={2}
+        currentBridges={0}
+        isLastInWave
+        isCompletionWaveActive
+        onWaveComplete={onWaveComplete}
+      />,
+    );
+
+    jest.runAllTimers();
+
+    expect(onWaveComplete).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
   });
 });

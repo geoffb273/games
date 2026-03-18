@@ -117,7 +117,7 @@ function PuzzleBoard({
     case 'HANJI':
       return <GameViewHanjiBoard puzzle={puzzle} onAnimationComplete={onBoardAnimationComplete} />;
     case 'HASHI':
-      return <GameViewHashiBoard puzzle={puzzle} />;
+      return <GameViewHashiBoard puzzle={puzzle} onAnimationComplete={onBoardAnimationComplete} />;
     case 'MINESWEEPER':
       return <GameViewMinesweeperBoard puzzle={puzzle} />;
     case 'SLITHERLINK':
@@ -169,9 +169,11 @@ function usePuzzleBoardTransition({
     }
   }, [puzzle, phase]);
 
-  // Start exit phase only when we have an attempt AND (for Hanji) the board has fired onAnimationComplete.
+  // Start exit phase only when we have an attempt AND (for Hanji and Hashi) the board has fired onAnimationComplete.
   const readyToExit =
-    puzzle != null && puzzle.attempt != null && (puzzle.type !== 'HANJI' || animationCompleteFired);
+    puzzle != null &&
+    puzzle.attempt != null &&
+    ((puzzle.type !== 'HANJI' && puzzle.type !== 'HASHI') || animationCompleteFired);
 
   useEffect(() => {
     if (!readyToExit) return;

@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
+import { GameCompleteText } from '@/components/game/GameCompleteText';
 import { HintButton } from '@/components/game/HintButton';
-import { Radii, Spacing } from '@/constants/token';
+import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { type HanjiOnSolve, useHanjiGame } from '@/hooks/game/useHanjiGame';
 import { useTheme } from '@/hooks/useTheme';
@@ -40,7 +40,7 @@ export function HanjiBoard({
   isDisabled = false,
   onAnimationComplete,
 }: HanjiBoardProps) {
-  const [completionWaveActive, setCompletionWaveActive] = useState(false);
+  const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
   const hasTriggeredShimmerRef = useRef(false);
 
   const theme = useTheme();
@@ -54,7 +54,7 @@ export function HanjiBoard({
     if (variant !== 'play' || !isComplete || hasTriggeredShimmerRef.current) return;
 
     hasTriggeredShimmerRef.current = true;
-    setCompletionWaveActive(true);
+    setIsCompletionWaveActive(true);
   }, [isComplete, variant]);
 
   const lastFilledCell = useMemo(() => {
@@ -149,7 +149,7 @@ export function HanjiBoard({
                   onTap={onCellTap}
                   onLongPress={onCellLongPress}
                   isDisabled={isDisabled || isComplete}
-                  completionWaveActive={completionWaveActive}
+                  isCompletionWaveActive={isCompletionWaveActive}
                   isLastInWave={rowIdx === lastFilledCell?.row && colIdx === lastFilledCell?.col}
                   onWaveComplete={onAnimationComplete}
                 />
@@ -166,16 +166,7 @@ export function HanjiBoard({
           hanjiCurrentState={currentState}
         />
       )}
-      {variant === 'play' && isComplete && (
-        <Animated.View
-          entering={FadeIn.duration(1000)}
-          style={[styles.successText, { backgroundColor: theme.success }]}
-        >
-          <Text type="h3" textAlign="center" color="successText">
-            Complete
-          </Text>
-        </Animated.View>
-      )}
+      {variant === 'play' && isComplete && <GameCompleteText />}
     </View>
   );
 }
@@ -220,11 +211,5 @@ const styles = StyleSheet.create({
   },
   gridRow: {
     flexDirection: 'row',
-  },
-  successText: {
-    position: 'absolute',
-    borderRadius: Radii.pill,
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
   },
 });

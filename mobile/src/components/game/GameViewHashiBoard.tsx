@@ -18,9 +18,10 @@ import {
 
 type GameViewHashiBoardProps = {
   puzzle: HashiPuzzle;
+  onAnimationComplete: () => void;
 };
 
-export function GameViewHashiBoard({ puzzle }: GameViewHashiBoardProps) {
+export function GameViewHashiBoard({ puzzle, onAnimationComplete }: GameViewHashiBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzle.id });
@@ -69,6 +70,7 @@ export function GameViewHashiBoard({ puzzle }: GameViewHashiBoardProps) {
       boardWidth={boardWidth}
       boardHeight={boardHeight}
       onSolve={onSolve}
+      onAnimationComplete={onAnimationComplete}
     />
   );
 }
