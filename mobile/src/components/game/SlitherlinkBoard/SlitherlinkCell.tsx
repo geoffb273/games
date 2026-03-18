@@ -108,10 +108,10 @@ export function SlitherlinkCell({
 
     scale.value = withSequence(
       withTiming(1, { duration: waveDelayNumber * COMPLETION_WAVE_DELAY_MS }),
-      withTiming(1.1, { duration: 300 }),
-      withTiming(0.95, { duration: 200 }),
-      withTiming(1.15, { duration: 400 }),
-      withTiming(1, { duration: 400 }, notifyComplete),
+      withTiming(1.1, { duration: 400 }),
+      withTiming(0.95, { duration: 300 }),
+      withTiming(1.15, { duration: 500 }),
+      withTiming(1, { duration: 500 }, notifyComplete),
     );
   }, [isCompletionWaveActive, isLastInWave, scale, stableOnWaveComplete, waveDelayNumber]);
 
