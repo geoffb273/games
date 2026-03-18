@@ -1,7 +1,8 @@
-import { memo, useCallback, useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { memo, useCallback, useEffect, useMemo } from 'react';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  Easing,
   FadeIn,
   runOnJS,
   useAnimatedStyle,
@@ -29,7 +30,8 @@ type CellProps = {
   value: number | null;
   onTap: (row: number, col: number) => void;
   onLongPress: (row: number, col: number) => void;
-  isCompletionWaveActive?: boolean;
+  isCompletionAnimationActive?: boolean;
+  completionAnimationType?: 'wave' | 'explosion';
   /** Whether this cell is the last in the completion wave. */
   isLastInWave?: boolean;
   /** Called when the completion wave finishes (only triggered from the last cell). */
@@ -48,14 +50,23 @@ export const MinesweeperCell = memo(function MinesweeperCell({
   value,
   onTap,
   onLongPress,
-  isCompletionWaveActive = false,
+  isCompletionAnimationActive = false,
+  completionAnimationType = 'explosion',
   isLastInWave = false,
   onWaveComplete,
   isDisabled = false,
 }: CellProps) {
+  const { width, height } = useWindowDimensions();
   const theme = useTheme();
   const scale = useSharedValue(1);
+  const translate = useSharedValue(0);
   const stableOnWaveComplete = useStableCallback(() => onWaveComplete?.());
+
+  const directions = useMemo(() => {
+    const yDirection = (Math.random() - 0.5) * 2;
+    const xDirection = (Math.random() - 0.5) * 2;
+    return { x: xDirection, y: yDirection };
+  }, []);
 
   const handleTap = useCallback(() => {
     onTap(row, col);
@@ -67,7 +78,7 @@ export const MinesweeperCell = memo(function MinesweeperCell({
 
   // Completion wave animation: sequentially scales all cells on a win.
   useEffect(() => {
-    if (!isCompletionWaveActive) return;
+    if (!isCompletionAnimationActive) return;
 
     const notifyComplete = isLastInWave
       ? (finished?: boolean) => {
@@ -76,14 +87,31 @@ export const MinesweeperCell = memo(function MinesweeperCell({
         }
       : undefined;
 
-    scale.value = withSequence(
-      withTiming(1, { duration: (row + col) * COMPLETION_WAVE_DELAY_MS }),
-      withTiming(1.1, { duration: 300 }),
-      withTiming(0.95, { duration: 200 }),
-      withTiming(1.25, { duration: 400 }),
-      withTiming(1, { duration: 400 }, notifyComplete),
-    );
-  }, [col, isCompletionWaveActive, isLastInWave, row, scale, stableOnWaveComplete]);
+    if (completionAnimationType === 'wave') {
+      scale.value = withSequence(
+        withTiming(1, { duration: (row + col) * COMPLETION_WAVE_DELAY_MS }),
+        withTiming(1.1, { duration: 300 }),
+        withTiming(0.95, { duration: 200 }),
+        withTiming(1.25, { duration: 400 }),
+        withTiming(1, { duration: 400 }, notifyComplete),
+      );
+    } else {
+      translate.value = withTiming(
+        1,
+        { duration: 2000, easing: Easing.out(Easing.exp) },
+        notifyComplete,
+      );
+    }
+  }, [
+    col,
+    completionAnimationType,
+    isCompletionAnimationActive,
+    isLastInWave,
+    row,
+    scale,
+    stableOnWaveComplete,
+    translate,
+  ]);
 
   const tap = Gesture.Tap()
     .withTestId('minesweeper-cell-tap')
@@ -117,11 +145,15 @@ export const MinesweeperCell = memo(function MinesweeperCell({
   const gesture = Gesture.Exclusive(longPressGesture, tap);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [
+      { scale: scale.value },
+      { translateX: translate.value * directions.x * width },
+      { translateY: translate.value * directions.y * height },
+    ],
   }));
 
   const innerAnimatedStyle = useAnimatedStyle(() => ({
-    transform: isCompletionWaveActive ? [{ scale: scale.value }] : [{ scale: 1 }],
+    transform: isCompletionAnimationActive ? [{ scale: scale.value }] : [{ scale: 1 }],
   }));
 
   const bg = isRevealed
