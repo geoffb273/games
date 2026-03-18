@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
+import { GameCompleteText } from '@/components/game/GameCompleteText';
 import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
@@ -23,6 +24,7 @@ type HashiBoardProps = {
   onSolve: HashiOnSolve;
   variant?: 'play' | 'instructions';
   isDisabled?: boolean;
+  onAnimationComplete?: () => void;
 };
 
 export function HashiBoard({
@@ -33,9 +35,25 @@ export function HashiBoard({
   onSolve,
   variant = 'play',
   isDisabled = false,
+  onAnimationComplete,
 }: HashiBoardProps) {
-  const { connections, bridgeCounts, isValidBridge, onConnectionTap, onHint, currentState } =
-    useHashiGame({ puzzle, onSolve });
+  const {
+    connections,
+    bridgeCounts,
+    isValidBridge,
+    onConnectionTap,
+    onHint,
+    currentState,
+    isComplete,
+  } = useHashiGame({ puzzle, onSolve });
+  const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
+  const hasEndGameAnimationTriggered = useRef(false);
+
+  useEffect(() => {
+    if (!isComplete || variant !== 'play' || hasEndGameAnimationTriggered.current) return;
+    setIsCompletionWaveActive(true);
+    hasEndGameAnimationTriggered.current = true;
+  }, [isComplete, variant]);
 
   useInitialOpenInstructionsEffect({ type: PuzzleType.Hashi, enabled: variant === 'play' });
 
@@ -55,6 +73,18 @@ export function HashiBoard({
     }, new Array(puzzle.islands.length).fill(0));
   }, [puzzle.islands.length, connections, bridgeCounts]);
 
+  const lastIslandIndex = useMemo(() => {
+    if (puzzle.islands.length === 0) return -1;
+
+    return puzzle.islands.reduce((currentMaxIndex, island, index, islands) => {
+      const currentMaxIsland = islands[currentMaxIndex];
+      const currentMaxPosition = currentMaxIsland.row + currentMaxIsland.col;
+      const islandPosition = island.row + island.col;
+
+      return islandPosition > currentMaxPosition ? index : currentMaxIndex;
+    }, 0);
+  }, [puzzle.islands]);
+
   return (
     <View style={styles.container}>
       <Text type="h3" textAlign="center">
@@ -71,7 +101,9 @@ export function HashiBoard({
             x2={islandPositions[conn.b].x}
             y2={islandPositions[conn.b].y}
             count={bridgeCounts[ci] as 0 | 1 | 2}
-            disabled={isDisabled || (bridgeCounts[ci] < 2 && !isValidBridge(ci))}
+            disabled={
+              isCompletionWaveActive || isDisabled || (bridgeCounts[ci] < 2 && !isValidBridge(ci))
+            }
             onPress={() => onConnectionTap(ci)}
           />
         ))}
@@ -85,6 +117,9 @@ export function HashiBoard({
             x={islandPositions[i].x}
             y={islandPositions[i].y}
             cellSize={cellSize}
+            isCompletionWaveActive={isCompletionWaveActive}
+            isLastInWave={i === lastIslandIndex}
+            onWaveComplete={onAnimationComplete}
           />
         ))}
       </View>
@@ -97,12 +132,14 @@ export function HashiBoard({
           hashiCurrentState={currentState}
         />
       )}
+      {variant === 'play' && isComplete && <GameCompleteText />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    justifyContent: 'center',
     alignItems: 'center',
     gap: Spacing.five,
     paddingTop: Spacing.four,

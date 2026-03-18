@@ -2,6 +2,7 @@ import { memo, useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import Animated, {
   interpolateColor,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -9,10 +10,12 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Text } from '@/components/common/Text';
+import { useStableCallback } from '@/hooks/useStableCallback';
 import { useTheme } from '@/hooks/useTheme';
 
 const ISLAND_RADIUS_RATIO = 0.4;
 const COLOR_ANIMATION_DURATION = 200;
+const COMPLETION_WAVE_DELAY_MS = 50;
 
 export type HashiIslandProps = {
   requiredBridges: number;
@@ -20,6 +23,12 @@ export type HashiIslandProps = {
   x: number;
   y: number;
   cellSize: number;
+  /** Whether this island is the last in the wave. If so, it will notify call `onWaveComplete` when the animation is complete. */
+  isLastInWave: boolean;
+  /** Callback to call when the animation is complete. Only called if `isLastInWave` is true. */
+  onWaveComplete?: () => void;
+  /** Whether the completion wave is active. */
+  isCompletionWaveActive: boolean;
 };
 
 export const HashiIsland = memo(function HashiIsland({
@@ -28,6 +37,9 @@ export const HashiIsland = memo(function HashiIsland({
   x,
   y,
   cellSize,
+  isLastInWave,
+  onWaveComplete,
+  isCompletionWaveActive,
 }: HashiIslandProps) {
   const theme = useTheme();
   const radius = cellSize * ISLAND_RADIUS_RATIO;
@@ -38,6 +50,29 @@ export const HashiIsland = memo(function HashiIsland({
   const borderColorProgress = useSharedValue(isOverMax ? 1 : 0);
   const shakeProgress = useSharedValue(0);
   const scaleProgress = useSharedValue(1);
+
+  const stableOnWaveComplete = useStableCallback(() => onWaveComplete?.());
+
+  const delayNumber = (x + y) / cellSize;
+
+  useEffect(() => {
+    if (!isCompletionWaveActive) return;
+
+    const notifyComplete = isLastInWave
+      ? (finished?: boolean) => {
+          'worklet';
+          if (finished) runOnJS(stableOnWaveComplete)();
+        }
+      : undefined;
+
+    scaleProgress.value = withSequence(
+      withTiming(1, { duration: delayNumber * COMPLETION_WAVE_DELAY_MS }),
+      withTiming(1.2, { duration: 400 }),
+      withTiming(0.9, { duration: 200 }),
+      withTiming(1.4, { duration: 600 }),
+      withTiming(1, { duration: 400 }, notifyComplete),
+    );
+  }, [scaleProgress, isLastInWave, stableOnWaveComplete, delayNumber, isCompletionWaveActive]);
 
   useEffect(() => {
     backgroundProgress.value = withTiming(isAtMax ? 1 : 0, {
@@ -52,23 +87,23 @@ export const HashiIsland = memo(function HashiIsland({
     });
   }, [borderColorProgress, isOverMax, isAtMax]);
 
-  useEffect(() => {
-    if (!isOverMax) {
-      shakeProgress.value = 0;
-      scaleProgress.value = 1;
-      return;
-    }
+  // useEffect(() => {
+  //   if (!isOverMax) {
+  //     shakeProgress.value = 0;
+  //     scaleProgress.value = 1;
+  //     return;
+  //   }
 
-    shakeProgress.value = withSequence(
-      withTiming(-2, { duration: 40 }),
-      withTiming(2, { duration: 40 }),
-      withTiming(-1.5, { duration: 40 }),
-      withTiming(1.5, { duration: 40 }),
-      withTiming(0, { duration: 40 }),
-    );
+  //   shakeProgress.value = withSequence(
+  //     withTiming(-2, { duration: 40 }),
+  //     withTiming(2, { duration: 40 }),
+  //     withTiming(-1.5, { duration: 40 }),
+  //     withTiming(1.5, { duration: 40 }),
+  //     withTiming(0, { duration: 40 }),
+  //   );
 
-    scaleProgress.value = withTiming(1.1);
-  }, [isOverMax, scaleProgress, shakeProgress]);
+  //   scaleProgress.value = withTiming(1.1);
+  // }, [isOverMax, scaleProgress, shakeProgress]);
 
   const animatedIslandStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
