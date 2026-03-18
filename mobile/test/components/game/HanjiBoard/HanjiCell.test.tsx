@@ -76,7 +76,7 @@ describe('HanjiCell', () => {
         row={0}
         col={0}
         state="filled"
-        completionWaveActive
+        isCompletionWaveActive
         isLastInWave
         onWaveComplete={onWaveComplete}
       />,
