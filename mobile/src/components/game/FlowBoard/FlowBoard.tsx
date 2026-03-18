@@ -191,7 +191,7 @@ export function FlowBoard({
           ))}
         </View>
       </GestureDetector>
-      {variant === 'play' && isComplete && <GameCompleteText />}
+      {variant === 'play' && isComplete && <GameCompleteText variant="success" />}
     </View>
   );
 }

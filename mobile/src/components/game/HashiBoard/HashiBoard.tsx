@@ -132,7 +132,7 @@ export function HashiBoard({
           hashiCurrentState={currentState}
         />
       )}
-      {variant === 'play' && isComplete && <GameCompleteText />}
+      {variant === 'play' && isComplete && <GameCompleteText variant="success" />}
     </View>
   );
 }
