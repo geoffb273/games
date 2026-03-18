@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -12,6 +12,7 @@ import Animated, {
 
 import { Text } from '@/components/common/Text';
 import { COLOR } from '@/constants/color';
+import { useStableCallback } from '@/hooks/useStableCallback';
 import { useTheme } from '@/hooks/useTheme';
 import type { HanjiCellState } from '@/utils/hanji/lineValidation';
 
@@ -23,7 +24,14 @@ type HanjiCellProps = {
   onTap: (row: number, col: number) => void;
   onLongPress: (row: number, col: number) => void;
   isDisabled?: boolean;
+  completionWaveActive?: boolean;
+  /** Whether this cell is the last in the wave. If so, it will notify call `onWaveComplete` when the animation is complete. */
+  isLastInWave: boolean;
+  /** Callback to call when the animation is complete. Only called if `isLastInWave` is true. */
+  onWaveComplete?: () => void;
 };
+
+const COMPLETION_WAVE_DELAY_MS = 50;
 
 export const HanjiCell = memo(function HanjiCell({
   row,
@@ -33,9 +41,33 @@ export const HanjiCell = memo(function HanjiCell({
   onTap,
   onLongPress,
   isDisabled = false,
+  completionWaveActive = false,
+  isLastInWave = false,
+  onWaveComplete,
 }: HanjiCellProps) {
   const theme = useTheme();
   const scale = useSharedValue(1);
+  const stableOnWaveComplete = useStableCallback(() => onWaveComplete?.());
+
+  // Completion scale animation: each filled cell scales in sequence. Last cell notifies parent when done.
+  useEffect(() => {
+    if (!completionWaveActive || state !== 'filled') return;
+
+    const notifyComplete = isLastInWave
+      ? (finished?: boolean) => {
+          'worklet';
+          if (finished) runOnJS(stableOnWaveComplete)();
+        }
+      : undefined;
+
+    scale.value = withSequence(
+      withTiming(1, { duration: (row + col) * COMPLETION_WAVE_DELAY_MS }),
+      withTiming(1.1, { duration: 300 }),
+      withTiming(0.95, { duration: 200 }),
+      withTiming(1.15, { duration: 400 }),
+      withTiming(1, { duration: 400 }, notifyComplete),
+    );
+  }, [col, completionWaveActive, isLastInWave, stableOnWaveComplete, row, scale, state]);
 
   const handleTap = useCallback(() => {
     onTap(row, col);
@@ -123,8 +155,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 1,
     elevation: 2,
-  },
-  marked: {
-    fontWeight: '700',
   },
 });

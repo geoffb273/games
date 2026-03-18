@@ -30,7 +30,14 @@ type TextStyleProps =
       type: SemanticType;
     };
 
-export type TextColor = 'text' | 'textSecondary' | 'success' | 'warning' | 'background' | 'error';
+export type TextColor =
+  | 'text'
+  | 'textSecondary'
+  | 'success'
+  | 'warning'
+  | 'background'
+  | 'error'
+  | 'successText';
 
 type TextProps = {
   children: ReactNode;
