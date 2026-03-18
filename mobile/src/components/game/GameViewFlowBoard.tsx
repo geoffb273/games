@@ -12,9 +12,10 @@ import { AVAILABLE_HEIGHT_RATIO, CELL_GAP, FlowBoard, MAX_CELL_SIZE } from './Fl
 
 type GameViewFlowBoardProps = {
   puzzle: FlowPuzzle;
+  onAnimationComplete: () => void;
 };
 
-export function GameViewFlowBoard({ puzzle }: GameViewFlowBoardProps) {
+export function GameViewFlowBoard({ puzzle, onAnimationComplete }: GameViewFlowBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzle.id });
@@ -58,5 +59,12 @@ export function GameViewFlowBoard({ puzzle }: GameViewFlowBoardProps) {
     },
   );
 
-  return <FlowBoard puzzle={puzzle} cellSize={cellSize} onSolve={onSolve} />;
+  return (
+    <FlowBoard
+      puzzle={puzzle}
+      cellSize={cellSize}
+      onSolve={onSolve}
+      onAnimationComplete={onAnimationComplete}
+    />
+  );
 }

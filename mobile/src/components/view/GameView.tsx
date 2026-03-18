@@ -113,7 +113,7 @@ function PuzzleBoard({
 
   switch (puzzle.type) {
     case 'FLOW':
-      return <GameViewFlowBoard puzzle={puzzle} />;
+      return <GameViewFlowBoard puzzle={puzzle} onAnimationComplete={onBoardAnimationComplete} />;
     case 'HANJI':
       return <GameViewHanjiBoard puzzle={puzzle} onAnimationComplete={onBoardAnimationComplete} />;
     case 'HASHI':
@@ -173,15 +173,9 @@ function usePuzzleBoardTransition({
     }
   }, [puzzle, phase]);
 
-  // Start exit phase only when we have an attempt AND (for Hanji and Hashi) the board has fired onAnimationComplete.
-  const readyToExit =
-    puzzle != null &&
-    puzzle.attempt != null &&
-    ((puzzle.type !== 'HANJI' &&
-      puzzle.type !== 'HASHI' &&
-      puzzle.type !== 'MINESWEEPER' &&
-      puzzle.type !== 'SLITHERLINK') ||
-      animationCompleteFired);
+  // Start exit phase only when we have an attempt and
+  // the board has fired onAnimationComplete.
+  const readyToExit = puzzle != null && puzzle.attempt != null && animationCompleteFired;
 
   useEffect(() => {
     if (!readyToExit) return;

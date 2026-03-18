@@ -1,10 +1,11 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 
 import { type FlowPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
+import { GameCompleteText } from '@/components/game/GameCompleteText';
 import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { useFlowGame } from '@/hooks/game/useFlowGame';
@@ -77,6 +78,7 @@ type FlowBoardProps = {
   }) => Promise<void>;
   isDisabled?: boolean;
   variant?: FlowBoardVariant;
+  onAnimationComplete?: () => void;
 };
 
 export function FlowBoard({
@@ -85,10 +87,25 @@ export function FlowBoard({
   onSolve,
   variant = 'play',
   isDisabled = false,
+  onAnimationComplete,
 }: FlowBoardProps) {
-  const { grid, setCell, clearPathForPair } = useFlowGame({ puzzle, onSolve });
+  const { grid, isComplete, setCell, clearPathForPair } = useFlowGame({ puzzle, onSolve });
+  const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
+  const hasEndGameAnimationTriggered = useRef(false);
 
   useInitialOpenInstructionsEffect({ type: PuzzleType.Flow, enabled: variant === 'play' });
+
+  useEffect(() => {
+    if (!isComplete || variant !== 'play' || hasEndGameAnimationTriggered.current) return;
+
+    hasEndGameAnimationTriggered.current = true;
+    setIsCompletionWaveActive(true);
+  }, [isComplete, variant]);
+
+  const handleBoardWaveComplete = useCallback(() => {
+    setIsCompletionWaveActive(false);
+    onAnimationComplete?.();
+  }, [onAnimationComplete]);
 
   const { handlePanBegin, handlePanMove, handlePanEnd, handleTap } = useFlowBoardPan({
     puzzle,
@@ -102,7 +119,7 @@ export function FlowBoard({
     () =>
       Gesture.Pan()
         .minDistance(PAN_MIN_DISTANCE)
-        .enabled(!isDisabled)
+        .enabled(!isDisabled && !isComplete && !isCompletionWaveActive)
         .onBegin((e) => {
           'worklet';
           runOnJS(handlePanBegin)(e.x, e.y);
@@ -115,18 +132,18 @@ export function FlowBoard({
           'worklet';
           runOnJS(handlePanEnd)(e.x, e.y);
         }),
-    [isDisabled, handlePanBegin, handlePanMove, handlePanEnd],
+    [isDisabled, isComplete, isCompletionWaveActive, handlePanBegin, handlePanMove, handlePanEnd],
   );
 
   const tapGesture = useMemo(
     () =>
       Gesture.Tap()
-        .enabled(!isDisabled)
+        .enabled(!isDisabled && !isComplete && !isCompletionWaveActive)
         .onEnd((e) => {
           'worklet';
           runOnJS(handleTap)(e.x, e.y);
         }),
-    [handleTap, isDisabled],
+    [handleTap, isComplete, isCompletionWaveActive, isDisabled],
   );
 
   const composed = useMemo(
@@ -154,6 +171,7 @@ export function FlowBoard({
                   cellValue > 0 || endpoint
                     ? getPairColor(pairIndex >= 0 ? pairIndex : cellValue - 1)
                     : FlowColors.emptyCell;
+                const isLastInWave = r === puzzle.height - 1 && c === puzzle.width - 1;
                 return (
                   <FlowCell
                     key={`cell-${r}-${c}`}
@@ -161,6 +179,11 @@ export function FlowBoard({
                     pairNumber={pairNumber}
                     cellValue={cellValue}
                     color={color}
+                    row={r}
+                    col={c}
+                    isCompletionWaveActive={isCompletionWaveActive}
+                    isLastInWave={isLastInWave}
+                    onWaveComplete={handleBoardWaveComplete}
                   />
                 );
               })}
@@ -168,6 +191,7 @@ export function FlowBoard({
           ))}
         </View>
       </GestureDetector>
+      {variant === 'play' && isComplete && <GameCompleteText />}
     </View>
   );
 }
@@ -319,6 +343,7 @@ function useFlowBoardPan({
 
 const styles = StyleSheet.create({
   container: {
+    justifyContent: 'center',
     alignItems: 'center',
     gap: Spacing.four,
     paddingTop: Spacing.four,
