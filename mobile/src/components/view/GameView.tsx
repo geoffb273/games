@@ -121,7 +121,9 @@ function PuzzleBoard({
     case 'MINESWEEPER':
       return <GameViewMinesweeperBoard puzzle={puzzle} />;
     case 'SLITHERLINK':
-      return <GameViewSlitherlinkBoard puzzle={puzzle} />;
+      return (
+        <GameViewSlitherlinkBoard puzzle={puzzle} onAnimationComplete={onBoardAnimationComplete} />
+      );
   }
 }
 
@@ -173,7 +175,8 @@ function usePuzzleBoardTransition({
   const readyToExit =
     puzzle != null &&
     puzzle.attempt != null &&
-    ((puzzle.type !== 'HANJI' && puzzle.type !== 'HASHI') || animationCompleteFired);
+    ((puzzle.type !== 'HANJI' && puzzle.type !== 'HASHI' && puzzle.type !== 'SLITHERLINK') ||
+      animationCompleteFired);
 
   useEffect(() => {
     if (!readyToExit) return;
