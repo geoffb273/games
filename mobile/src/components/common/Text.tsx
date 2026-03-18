@@ -37,7 +37,8 @@ export type TextColor =
   | 'warning'
   | 'background'
   | 'error'
-  | 'successText';
+  | 'successText'
+  | 'warningText';
 
 type TextProps = {
   children: ReactNode;

@@ -103,7 +103,7 @@ export function SlitherlinkBoard({
           slitherlinkCurrentState={currentState}
         />
       )}
-      {variant === 'play' && isComplete && <GameCompleteText />}
+      {variant === 'play' && isComplete && <GameCompleteText variant="success" />}
     </View>
   );
 }

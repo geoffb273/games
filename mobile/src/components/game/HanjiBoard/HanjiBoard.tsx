@@ -166,7 +166,7 @@ export function HanjiBoard({
           hanjiCurrentState={currentState}
         />
       )}
-      {variant === 'play' && isComplete && <GameCompleteText />}
+      {variant === 'play' && isComplete && <GameCompleteText variant="success" />}
     </View>
   );
 }
