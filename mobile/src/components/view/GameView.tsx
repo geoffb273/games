@@ -25,8 +25,13 @@ const BOARD_EXIT_DURATION_MS = 300;
 export function GameView({ id }: { id: string }) {
   const { puzzle, isLoading, isError, isNotFound, refetch } = usePuzzleQuery({ id });
 
-  const { shouldShowCompleted, showPlaceholder, boardExitAnimation, markBoardShown } =
-    usePuzzleBoardTransition({ puzzle, puzzleId: id });
+  const {
+    shouldShowCompleted,
+    showPlaceholder,
+    boardExitAnimation,
+    markBoardShown,
+    onBoardAnimationComplete,
+  } = usePuzzleBoardTransition({ puzzle, puzzleId: id });
 
   const isPuzzleMissing = !isLoading && puzzle == null;
 
@@ -71,12 +76,24 @@ export function GameView({ id }: { id: string }) {
 
   return (
     <Animated.View exiting={boardExitAnimation} style={styles.boardExitWrapper}>
-      <PuzzleBoard puzzle={puzzle} markBoardShown={markBoardShown} />
+      <PuzzleBoard
+        puzzle={puzzle}
+        markBoardShown={markBoardShown}
+        onBoardAnimationComplete={onBoardAnimationComplete}
+      />
     </Animated.View>
   );
 }
 
-function PuzzleBoard({ puzzle, markBoardShown }: { puzzle: Puzzle; markBoardShown: () => void }) {
+function PuzzleBoard({
+  puzzle,
+  markBoardShown,
+  onBoardAnimationComplete,
+}: {
+  puzzle: Puzzle;
+  markBoardShown: () => void;
+  onBoardAnimationComplete: () => void;
+}) {
   // Marks that the board has been shown so we can transition to the completed view on completion
   useEffect(() => {
     markBoardShown();
@@ -98,7 +115,7 @@ function PuzzleBoard({ puzzle, markBoardShown }: { puzzle: Puzzle; markBoardShow
     case 'FLOW':
       return <GameViewFlowBoard puzzle={puzzle} />;
     case 'HANJI':
-      return <GameViewHanjiBoard puzzle={puzzle} />;
+      return <GameViewHanjiBoard puzzle={puzzle} onAnimationComplete={onBoardAnimationComplete} />;
     case 'HASHI':
       return <GameViewHashiBoard puzzle={puzzle} />;
     case 'MINESWEEPER':
@@ -113,12 +130,13 @@ type UsePuzzleBoardTransitionResult = {
   showPlaceholder: boolean;
   boardExitAnimation: ReturnType<(typeof FadeOut)['duration']>;
   markBoardShown: () => void;
+  onBoardAnimationComplete: () => void;
 };
 
 /**
  * Handles the transition between the playing state (no attempt) and the exiting state (with attempt).
  *
- * @returns An object containing the shouldShowCompleted, showPlaceholder, boardExitAnimation, and markBoardShown functions.
+ * @returns An object containing the shouldShowCompleted, showPlaceholder, boardExitAnimation, markBoardShown, and onBoardAnimationComplete functions.
  */
 function usePuzzleBoardTransition({
   puzzle,
@@ -129,6 +147,7 @@ function usePuzzleBoardTransition({
 }): UsePuzzleBoardTransitionResult {
   const [phase, setPhase] = useState<TransitionPhase | null>(null);
   const [showBoardForExit, setShowBoardForExit] = useState(false);
+  const [animationCompleteFired, setAnimationCompleteFired] = useState(false);
   const hasShownBoardRef = useRef(false);
   const prevPuzzleIdRef = useRef<string | null>(null);
 
@@ -138,6 +157,7 @@ function usePuzzleBoardTransition({
       prevPuzzleIdRef.current = puzzleId;
       setPhase(null);
       setShowBoardForExit(false);
+      setAnimationCompleteFired(false);
       hasShownBoardRef.current = false;
     }
   }, [puzzleId]);
@@ -149,9 +169,12 @@ function usePuzzleBoardTransition({
     }
   }, [puzzle, phase]);
 
-  // When we transition from playing (no attempt) to having attempt, start exit phase
+  // Start exit phase only when we have an attempt AND (for Hanji) the board has fired onAnimationComplete.
+  const readyToExit =
+    puzzle != null && puzzle.attempt != null && (puzzle.type !== 'HANJI' || animationCompleteFired);
+
   useEffect(() => {
-    if (puzzle?.attempt == null || puzzle == null) return;
+    if (!readyToExit) return;
     if (!hasShownBoardRef.current) {
       setPhase('completed');
       return;
@@ -160,7 +183,7 @@ function usePuzzleBoardTransition({
       setPhase('exiting');
       setShowBoardForExit(true);
     }
-  }, [puzzle, phase]);
+  }, [phase, readyToExit]);
 
   // Unmount board wrapper on next frame so Reanimated runs exiting animation
   useEffect(() => {
@@ -191,6 +214,10 @@ function usePuzzleBoardTransition({
 
   const showPlaceholder = phase === 'exiting' && !showBoardForExit;
 
+  const onBoardAnimationComplete = useCallback(() => {
+    setAnimationCompleteFired(true);
+  }, []);
+
   const markBoardShown = () => {
     hasShownBoardRef.current = true;
   };
@@ -200,6 +227,7 @@ function usePuzzleBoardTransition({
     showPlaceholder,
     boardExitAnimation,
     markBoardShown,
+    onBoardAnimationComplete,
   };
 }
 

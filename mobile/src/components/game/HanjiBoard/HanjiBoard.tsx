@@ -1,9 +1,11 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { HintButton } from '@/components/game/HintButton';
-import { Spacing } from '@/constants/token';
+import { Radii, Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { type HanjiOnSolve, useHanjiGame } from '@/hooks/game/useHanjiGame';
 import { useTheme } from '@/hooks/useTheme';
@@ -24,6 +26,7 @@ type HanjiBoardProps = {
   onSolve: HanjiOnSolve;
   variant?: 'play' | 'instructions';
   isDisabled?: boolean;
+  onAnimationComplete?: () => void;
 };
 
 export function HanjiBoard({
@@ -35,12 +38,47 @@ export function HanjiBoard({
   onSolve,
   variant = 'play',
   isDisabled = false,
+  onAnimationComplete,
 }: HanjiBoardProps) {
+  const [completionWaveActive, setCompletionWaveActive] = useState(false);
+  const hasTriggeredShimmerRef = useRef(false);
+
   const theme = useTheme();
-  const { cells, onCellTap, onCellLongPress, onHint, currentState } = useHanjiGame({
+  const { cells, onCellTap, onCellLongPress, onHint, currentState, isComplete } = useHanjiGame({
     puzzle,
     onSolve,
   });
+
+  // Detect a fresh completion for this puzzle while in play variant, so we can play a one-off completion wave
+  useEffect(() => {
+    if (variant !== 'play' || !isComplete || hasTriggeredShimmerRef.current) return;
+
+    hasTriggeredShimmerRef.current = true;
+    setCompletionWaveActive(true);
+  }, [isComplete, variant]);
+
+  const lastFilledCell = useMemo(() => {
+    let cellPos: { row: number; col: number } | null = null;
+
+    for (let row = 0; row < puzzle.height; row++) {
+      for (let col = 0; col < puzzle.width; col++) {
+        if (cells[row][col] !== 'filled') continue;
+
+        if (cellPos == null) {
+          cellPos = { row, col };
+          continue;
+        }
+
+        const { row: lastRow, col: lastCol } = cellPos;
+
+        if (lastRow + lastCol < row + col) {
+          cellPos = { row, col };
+        }
+      }
+    }
+
+    return cellPos;
+  }, [cells, puzzle.height, puzzle.width]);
 
   useInitialOpenInstructionsEffect({ type: PuzzleType.Hanji, enabled: variant === 'play' });
 
@@ -110,14 +148,16 @@ export function HanjiBoard({
                   state={cells[rowIdx][colIdx]}
                   onTap={onCellTap}
                   onLongPress={onCellLongPress}
-                  isDisabled={isDisabled}
+                  isDisabled={isDisabled || isComplete}
+                  completionWaveActive={completionWaveActive}
+                  isLastInWave={rowIdx === lastFilledCell?.row && colIdx === lastFilledCell?.col}
+                  onWaveComplete={onAnimationComplete}
                 />
               ))}
             </View>
           ))}
         </View>
       </View>
-
       {variant === 'play' && (
         <HintButton
           puzzleType={PuzzleType.Hanji}
@@ -125,6 +165,16 @@ export function HanjiBoard({
           onHint={onHint}
           hanjiCurrentState={currentState}
         />
+      )}
+      {variant === 'play' && isComplete && (
+        <Animated.View
+          entering={FadeIn.duration(1000)}
+          style={[styles.successText, { backgroundColor: theme.success }]}
+        >
+          <Text type="h3" textAlign="center" color="successText">
+            Complete
+          </Text>
+        </Animated.View>
       )}
     </View>
   );
@@ -135,6 +185,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.four,
     paddingTop: Spacing.four,
+    justifyContent: 'center',
   },
   boardWrap: {
     flexDirection: 'row',
@@ -169,5 +220,11 @@ const styles = StyleSheet.create({
   },
   gridRow: {
     flexDirection: 'row',
+  },
+  successText: {
+    position: 'absolute',
+    borderRadius: Radii.pill,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.two,
   },
 });

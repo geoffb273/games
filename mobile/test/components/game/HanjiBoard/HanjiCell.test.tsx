@@ -19,6 +19,7 @@ const defaultProps = {
   size: 40,
   onTap: jest.fn(),
   onLongPress: jest.fn(),
+  isLastInWave: false,
 };
 
 describe('HanjiCell', () => {
@@ -63,5 +64,27 @@ describe('HanjiCell', () => {
       expect(onLongPress).toHaveBeenCalledTimes(1);
       expect(onLongPress).toHaveBeenCalledWith(1, 2);
     });
+  });
+
+  it('calls onWaveComplete when completion wave animation completes for last cell', () => {
+    jest.useFakeTimers();
+    const onWaveComplete = jest.fn();
+
+    render(
+      <HanjiCell
+        {...defaultProps}
+        row={0}
+        col={0}
+        state="filled"
+        completionWaveActive
+        isLastInWave
+        onWaveComplete={onWaveComplete}
+      />,
+    );
+
+    jest.runAllTimers();
+
+    expect(onWaveComplete).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
   });
 });

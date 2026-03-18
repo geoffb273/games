@@ -18,9 +18,10 @@ import {
 
 type GameViewHanjiBoardProps = {
   puzzle: HanjiPuzzle;
+  onAnimationComplete: () => void;
 };
 
-export function GameViewHanjiBoard({ puzzle }: GameViewHanjiBoardProps) {
+export function GameViewHanjiBoard({ puzzle, onAnimationComplete }: GameViewHanjiBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzle.id });
@@ -87,6 +88,7 @@ export function GameViewHanjiBoard({ puzzle }: GameViewHanjiBoardProps) {
       colClueHeight={colClueHeight}
       boardWidth={boardWidth}
       onSolve={onSolve}
+      onAnimationComplete={onAnimationComplete}
     />
   );
 }
