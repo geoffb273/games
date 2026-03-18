@@ -18,9 +18,13 @@ import {
 
 type GameViewMinesweeperBoardProps = {
   puzzle: MinesweeperPuzzle;
+  onAnimationComplete: () => void;
 };
 
-export function GameViewMinesweeperBoard({ puzzle }: GameViewMinesweeperBoardProps) {
+export function GameViewMinesweeperBoard({
+  puzzle,
+  onAnimationComplete,
+}: GameViewMinesweeperBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzle.id });
@@ -56,5 +60,12 @@ export function GameViewMinesweeperBoard({ puzzle }: GameViewMinesweeperBoardPro
     },
   );
 
-  return <MinesweeperBoard puzzle={puzzle} cellSize={cellSize} onSolve={onSolve} />;
+  return (
+    <MinesweeperBoard
+      puzzle={puzzle}
+      cellSize={cellSize}
+      onSolve={onSolve}
+      onAnimationComplete={onAnimationComplete}
+    />
+  );
 }

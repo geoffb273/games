@@ -73,7 +73,6 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 export type MinesweeperGame = {
   revealedMap: Map<string, number>;
   cells: CellStatus[][];
-  gameOver: boolean;
   remaining: number;
   mode: InteractionMode;
   onCellTap: (row: number, col: number) => void;
@@ -81,6 +80,8 @@ export type MinesweeperGame = {
   toggleMode: () => void;
   onHint: (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Minesweeper }>) => void;
   currentState: boolean[][];
+  isWin: boolean;
+  isLoss: boolean;
 };
 
 type MinesweeperPersisted = {
@@ -281,7 +282,6 @@ export function useMinesweeperGame({
   return {
     revealedMap,
     cells: state.cells,
-    gameOver: state.gameOver,
     remaining,
     mode,
     onCellTap,
@@ -289,5 +289,7 @@ export function useMinesweeperGame({
     toggleMode,
     onHint,
     currentState,
+    isWin,
+    isLoss: state.gameOver && !isWin,
   };
 }
