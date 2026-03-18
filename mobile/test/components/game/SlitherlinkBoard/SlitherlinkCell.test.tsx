@@ -88,4 +88,24 @@ describe('SlitherlinkCell', () => {
     fireEvent.press(screen.getByTestId('slitherlink-cell-edge-bottom'));
     expect(onPressBottom).toHaveBeenCalledTimes(1);
   });
+
+  it('calls onWaveComplete when completion wave animation completes for last cell', () => {
+    jest.useFakeTimers();
+    const onWaveComplete = jest.fn();
+
+    render(
+      <SlitherlinkCell
+        {...defaultProps}
+        isCompletionWaveActive
+        waveDelayNumber={0}
+        isLastInWave
+        onWaveComplete={onWaveComplete}
+      />,
+    );
+
+    jest.runAllTimers();
+
+    expect(onWaveComplete).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
+  });
 });
