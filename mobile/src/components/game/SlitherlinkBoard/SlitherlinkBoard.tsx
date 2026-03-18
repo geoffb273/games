@@ -1,7 +1,9 @@
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
+import { GameCompleteText } from '@/components/game/GameCompleteText';
 import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
@@ -18,6 +20,7 @@ type SlitherlinkBoardProps = {
   cellSize: number;
   onSolve: (input: SlitherlinkOnSolveInput) => Promise<void>;
   variant?: 'play' | 'instructions';
+  onAnimationComplete?: () => void;
 };
 
 export function SlitherlinkBoard({
@@ -25,9 +28,26 @@ export function SlitherlinkBoard({
   cellSize,
   onSolve,
   variant = 'play',
+  onAnimationComplete,
 }: SlitherlinkBoardProps) {
-  const { horizontal, vertical, onHorizontalEdgePress, onVerticalEdgePress, onHint, currentState } =
-    useSlitherlinkGame({ puzzle, onSolve });
+  const {
+    horizontal,
+    vertical,
+    onHorizontalEdgePress,
+    onVerticalEdgePress,
+    onHint,
+    currentState,
+    isComplete,
+  } = useSlitherlinkGame({ puzzle, onSolve });
+
+  const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
+  const hasEndGameAnimationTriggered = useRef(false);
+
+  useEffect(() => {
+    if (!isComplete || variant !== 'play' || hasEndGameAnimationTriggered.current) return;
+    setIsCompletionWaveActive(true);
+    hasEndGameAnimationTriggered.current = true;
+  }, [isComplete, variant]);
 
   useInitialOpenInstructionsEffect({ type: PuzzleType.Slitherlink });
 
@@ -46,6 +66,7 @@ export function SlitherlinkBoard({
               const bottomState = horizontal[r + 1]?.[c] ?? 'empty';
               const leftState = vertical[r]?.[c] ?? 'empty';
               const rightState = vertical[r]?.[c + 1] ?? 'empty';
+              const isLastInWave = r === puzzle.height - 1 && c === puzzle.width - 1;
 
               return (
                 <SlitherlinkCell
@@ -62,6 +83,11 @@ export function SlitherlinkBoard({
                   onPressRight={() => onVerticalEdgePress(r, c + 1)}
                   showBottomEdge={r === puzzle.height - 1}
                   showRightEdge={c === puzzle.width - 1}
+                  isDisabled={isCompletionWaveActive}
+                  isCompletionWaveActive={isCompletionWaveActive}
+                  waveDelayNumber={r + c}
+                  isLastInWave={isLastInWave}
+                  onWaveComplete={onAnimationComplete}
                 />
               );
             })}
@@ -77,12 +103,14 @@ export function SlitherlinkBoard({
           slitherlinkCurrentState={currentState}
         />
       )}
+      {variant === 'play' && isComplete && <GameCompleteText />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    justifyContent: 'center',
     alignItems: 'center',
     gap: Spacing.four,
     paddingTop: Spacing.four,

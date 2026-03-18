@@ -18,9 +18,13 @@ import {
 
 type GameViewSlitherlinkBoardProps = {
   puzzle: SlitherlinkPuzzle;
+  onAnimationComplete: () => void;
 };
 
-export function GameViewSlitherlinkBoard({ puzzle }: GameViewSlitherlinkBoardProps) {
+export function GameViewSlitherlinkBoard({
+  puzzle,
+  onAnimationComplete,
+}: GameViewSlitherlinkBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzle.id });
@@ -54,5 +58,12 @@ export function GameViewSlitherlinkBoard({ puzzle }: GameViewSlitherlinkBoardPro
     },
   );
 
-  return <SlitherlinkBoard puzzle={puzzle} cellSize={cellSize} onSolve={onSolve} />;
+  return (
+    <SlitherlinkBoard
+      puzzle={puzzle}
+      cellSize={cellSize}
+      onSolve={onSolve}
+      onAnimationComplete={onAnimationComplete}
+    />
+  );
 }
