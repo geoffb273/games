@@ -1,7 +1,9 @@
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
+import { GameCompleteText } from '@/components/game/GameCompleteText';
 import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
@@ -19,6 +21,7 @@ type MinesweeperBoardProps = {
   cellSize: number;
   onSolve: (input: MinesweeperOnSolveInput) => Promise<void>;
   variant?: 'play' | 'instructions';
+  onAnimationComplete?: () => void;
 };
 
 export function MinesweeperBoard({
@@ -26,12 +29,15 @@ export function MinesweeperBoard({
   cellSize,
   onSolve,
   variant = 'play',
+  onAnimationComplete,
 }: MinesweeperBoardProps) {
   const theme = useTheme();
   const {
     revealedMap,
     cells,
     remaining,
+    isWin,
+    isLoss,
     mode,
     onCellTap,
     onCellLongPress,
@@ -44,6 +50,16 @@ export function MinesweeperBoard({
     type: PuzzleType.Minesweeper,
     enabled: variant === 'play',
   });
+
+  const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
+  const hasTriggeredCompletionWaveRef = useRef(false);
+
+  useEffect(() => {
+    if (variant !== 'play' || !isWin || hasTriggeredCompletionWaveRef.current) return;
+
+    hasTriggeredCompletionWaveRef.current = true;
+    setIsCompletionWaveActive(true);
+  }, [isWin, variant]);
 
   return (
     <View style={styles.container}>
@@ -91,6 +107,10 @@ export function MinesweeperBoard({
                   value={revealedValue ?? null}
                   onTap={onCellTap}
                   onLongPress={onCellLongPress}
+                  isCompletionWaveActive={isCompletionWaveActive}
+                  isLastInWave={row === puzzle.height - 1 && col === puzzle.width - 1}
+                  onWaveComplete={onAnimationComplete}
+                  isDisabled={isCompletionWaveActive || isWin || isLoss}
                 />
               );
             })}
@@ -105,6 +125,7 @@ export function MinesweeperBoard({
           minesweeperCurrentState={currentState}
         />
       )}
+      {variant === 'play' && isWin && <GameCompleteText />}
     </View>
   );
 }

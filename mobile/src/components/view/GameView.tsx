@@ -119,7 +119,9 @@ function PuzzleBoard({
     case 'HASHI':
       return <GameViewHashiBoard puzzle={puzzle} onAnimationComplete={onBoardAnimationComplete} />;
     case 'MINESWEEPER':
-      return <GameViewMinesweeperBoard puzzle={puzzle} />;
+      return (
+        <GameViewMinesweeperBoard puzzle={puzzle} onAnimationComplete={onBoardAnimationComplete} />
+      );
     case 'SLITHERLINK':
       return (
         <GameViewSlitherlinkBoard puzzle={puzzle} onAnimationComplete={onBoardAnimationComplete} />
@@ -175,7 +177,10 @@ function usePuzzleBoardTransition({
   const readyToExit =
     puzzle != null &&
     puzzle.attempt != null &&
-    ((puzzle.type !== 'HANJI' && puzzle.type !== 'HASHI' && puzzle.type !== 'SLITHERLINK') ||
+    ((puzzle.type !== 'HANJI' &&
+      puzzle.type !== 'HASHI' &&
+      puzzle.type !== 'MINESWEEPER' &&
+      puzzle.type !== 'SLITHERLINK') ||
       animationCompleteFired);
 
   useEffect(() => {

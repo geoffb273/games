@@ -54,7 +54,8 @@ describe('useMinesweeperGame', () => {
     expect(result.current.cells).toHaveLength(2);
     expect(result.current.cells[0]).toHaveLength(2);
     expect(result.current.remaining).toBe(puzzle.mineCount);
-    expect(result.current.gameOver).toBe(false);
+    expect(result.current.isWin).toBe(false);
+    expect(result.current.isLoss).toBe(false);
   });
 
   it('toggles a flag on tap in flag mode and updates remaining', async () => {
@@ -69,7 +70,8 @@ describe('useMinesweeperGame', () => {
 
     expect(result.current.cells[0][0]).toBe('flagged');
     expect(result.current.remaining).toBe(puzzle.mineCount - 1);
-    expect(result.current.gameOver).toBe(false);
+    expect(result.current.isWin).toBe(false);
+    expect(result.current.isLoss).toBe(false);
     expect(onSolve).not.toHaveBeenCalled();
   });
 
@@ -93,7 +95,8 @@ describe('useMinesweeperGame', () => {
     });
 
     expect(result.current.revealedMap.has('0,0')).toBe(true);
-    expect(result.current.gameOver).toBe(false);
+    expect(result.current.isWin).toBe(false);
+    expect(result.current.isLoss).toBe(false);
     expect(onSolve).not.toHaveBeenCalled();
   });
 
@@ -116,7 +119,8 @@ describe('useMinesweeperGame', () => {
       result.current.onCellTap(0, 1);
     });
 
-    expect(result.current.gameOver).toBe(true);
+    expect(result.current.isWin).toBe(false);
+    expect(result.current.isLoss).toBe(true);
     expect(onSolve).toHaveBeenCalled();
   });
 

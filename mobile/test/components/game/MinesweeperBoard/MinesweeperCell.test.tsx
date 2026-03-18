@@ -86,4 +86,27 @@ describe('MinesweeperCell', () => {
       expect(onLongPress).toHaveBeenCalledWith(1, 4);
     });
   });
+
+  it('calls onWaveComplete when completion wave animation completes for last cell', () => {
+    jest.useFakeTimers();
+    const onWaveComplete = jest.fn();
+
+    render(
+      <MinesweeperCell
+        {...defaultProps}
+        row={0}
+        col={0}
+        isRevealed
+        value={0}
+        isCompletionWaveActive
+        isLastInWave
+        onWaveComplete={onWaveComplete}
+      />,
+    );
+
+    jest.runAllTimers();
+
+    expect(onWaveComplete).toHaveBeenCalledTimes(1);
+    jest.useRealTimers();
+  });
 });
