@@ -16,13 +16,5 @@ config:
     secure: AAABAPm7WzB9biuzdzCnrdZmRB+Hbhdqfv7axRj95TmCt61LVv4jvj7wdJ0SLggprp2PkRTjW7VzXugyKsQpyQ==
   game-brain:graphqlHiveAccessToken:
     secure: 'AAABAKIQsmJ75RSeiKSoBaohSBnjjEuch9lJSAWzAyZVvmbU6PLmCBwsZG+D3BbDcN4KswFtT+3NPu1duSUrJw4eyyy73JvZdf/R2nOnfKPl0L8JAg5kfEvxCG8Ym0aLAJ9Z6KA+yyb/ga4SDP6uJkxUXzS4IG8vdHIcoRJtoyWSrQC9Ff4mV/HGz/6C/wVIFkMHZa7KMcL+IowqAqKE1R9Oh5LcCCWtyww8+Gw='
-  game-brain:redisUsername:
-    secure: AAABADUyp9cOzW6naYjTagsJni/amWWGJJrI211Jsz+4jctDa20e
-  game-brain:redisPassword:
-    secure: AAABAFMoEDeG+b3jO6I46qWxU2TUeMEwAplFo1YpzKhcvGjo18I+ldPlOeicXhNm5E90mbSwqCheXnR4YItrrQ==
-  game-brain:redisHost:
-    secure: AAABAN4Z8V0sax+T17jWASMpZMPwTjCeBTfu0pi8ybOzNibCyUVKoj5r6Ngm+gByYOQCvGDzn6rl1I8uEZUSWWBuozs5PAzmQdmBi8Lhk4Pxyn8l
-  game-brain:redisPort:
-    secure: AAABABcZ9/mOTTSPN9CBK5QHs3pqd0lU2oiug/MXG3WUzuFdcw==
 environment:
   - game-brain
