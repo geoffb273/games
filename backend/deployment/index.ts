@@ -11,6 +11,10 @@ const directUrl = config.requireSecret('directUrl');
 const jwtSecret = config.requireSecret('jwtSecret');
 const adminSecret = config.requireSecret('adminSecret');
 const graphqlHiveAccessToken = config.requireSecret('graphqlHiveAccessToken');
+const redisUsername = config.requireSecret('redisUsername');
+const redisPassword = config.requireSecret('redisPassword');
+const redisHost = config.requireSecret('redisHost');
+const redisPort = config.requireSecret('redisPort');
 /** Optional: EC2 key pair name for SSH (create in EC2 → Key Pairs, then set and redeploy). */
 const keyName = config.get('keyName');
 
@@ -51,6 +55,10 @@ const graphqlHiveAccessTokenParam = createSecretParameter(
   'graphqlHiveAccessToken',
   graphqlHiveAccessToken,
 );
+const redisUsernameParam = createSecretParameter('redisUsername', redisUsername);
+const redisPasswordParam = createSecretParameter('redisPassword', redisPassword);
+const redisHostParam = createSecretParameter('redisHost', redisHost);
+const redisPortParam = createSecretParameter('redisPort', redisPort);
 
 // --- ECS task execution role (ECR pull + SSM read for task secrets) ---
 const taskExecutionRole = new aws.iam.Role('ecsTaskExecutionRole', {
@@ -80,6 +88,10 @@ new aws.iam.RolePolicy('taskExecutionSsm', {
       jwtParam.arn,
       adminSecretParam.arn,
       graphqlHiveAccessTokenParam.arn,
+      redisUsernameParam.arn,
+      redisPasswordParam.arn,
+      redisHostParam.arn,
+      redisPortParam.arn,
     ])
     .apply((arns) =>
       JSON.stringify({
@@ -143,6 +155,10 @@ new aws.iam.RolePolicy('instanceSsmParams', {
       jwtParam.arn,
       adminSecretParam.arn,
       graphqlHiveAccessTokenParam.arn,
+      redisUsernameParam.arn,
+      redisPasswordParam.arn,
+      redisHostParam.arn,
+      redisPortParam.arn,
     ])
     .apply((arns) =>
       JSON.stringify({
@@ -252,24 +268,44 @@ const taskDefinition = new aws.ecs.TaskDefinition('backend', {
       jwtParam.name,
       adminSecretParam.name,
       graphqlHiveAccessTokenParam.name,
+      redisUsernameParam.name,
+      redisPasswordParam.name,
+      redisHostParam.name,
+      redisPortParam.name,
     ])
-    .apply(([img, dbName, directName, jwtName, adminSecretName, hiveTokenName]) =>
-      JSON.stringify([
-        {
-          name: 'backend',
-          image: img,
-          essential: true,
-          portMappings: [{ containerPort: 8080, hostPort: 8080, protocol: 'tcp' }],
-          environment: [{ name: 'PORT', value: '8080' }],
-          secrets: [
-            { name: 'DATABASE_URL', valueFrom: dbName },
-            { name: 'DIRECT_URL', valueFrom: directName },
-            { name: 'JWT_SECRET', valueFrom: jwtName },
-            { name: 'ADMIN_SECRET', valueFrom: adminSecretName },
-            { name: 'GRAPHQL_HIVE_ACCESS_TOKEN', valueFrom: hiveTokenName },
-          ],
-        },
-      ]),
+    .apply(
+      ([
+        img,
+        dbName,
+        directName,
+        jwtName,
+        adminSecretName,
+        hiveTokenName,
+        redisUsernameName,
+        redisPasswordName,
+        redisHostName,
+        redisPortName,
+      ]) =>
+        JSON.stringify([
+          {
+            name: 'backend',
+            image: img,
+            essential: true,
+            portMappings: [{ containerPort: 8080, hostPort: 8080, protocol: 'tcp' }],
+            environment: [{ name: 'PORT', value: '8080' }],
+            secrets: [
+              { name: 'DATABASE_URL', valueFrom: dbName },
+              { name: 'DIRECT_URL', valueFrom: directName },
+              { name: 'JWT_SECRET', valueFrom: jwtName },
+              { name: 'ADMIN_SECRET', valueFrom: adminSecretName },
+              { name: 'GRAPHQL_HIVE_ACCESS_TOKEN', valueFrom: hiveTokenName },
+              { name: 'REDIS_USERNAME', valueFrom: redisUsernameName },
+              { name: 'REDIS_PASSWORD', valueFrom: redisPasswordName },
+              { name: 'REDIS_HOST', valueFrom: redisHostName },
+              { name: 'REDIS_PORT', valueFrom: redisPortName },
+            ],
+          },
+        ]),
     ),
 });
 

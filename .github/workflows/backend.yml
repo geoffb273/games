@@ -40,6 +40,10 @@ jobs:
       JWT_SECRET: test
       ADMIN_SECRET: test
       GRAPHQL_HIVE_ACCESS_TOKEN: test
+      REDIS_USERNAME: test
+      REDIS_PASSWORD: test
+      REDIS_HOST: test
+      REDIS_PORT: 6379
     steps:
       - uses: actions/checkout@v4
 
@@ -63,6 +67,10 @@ jobs:
           JWT_SECRET: ${{ env.JWT_SECRET }}
           ADMIN_SECRET: ${{ env.ADMIN_SECRET }}
           GRAPHQL_HIVE_ACCESS_TOKEN: ${{ env.GRAPHQL_HIVE_ACCESS_TOKEN }}
+          REDIS_USERNAME: ${{ env.REDIS_USERNAME }}
+          REDIS_PASSWORD: ${{ env.REDIS_PASSWORD }}
+          REDIS_HOST: ${{ env.REDIS_HOST }}
+          REDIS_PORT: ${{ env.REDIS_PORT }}
 
       - name: Lint
         run: pnpm lint
@@ -93,6 +101,10 @@ jobs:
       JWT_SECRET: test
       ADMIN_SECRET: test
       GRAPHQL_HIVE_ACCESS_TOKEN: test
+      REDIS_USERNAME: test
+      REDIS_PASSWORD: test
+      REDIS_HOST: test
+      REDIS_PORT: 6379
     steps:
       - uses: actions/checkout@v4
 
@@ -116,6 +128,10 @@ jobs:
           JWT_SECRET: ${{ env.JWT_SECRET }}
           ADMIN_SECRET: ${{ env.ADMIN_SECRET }}
           GRAPHQL_HIVE_ACCESS_TOKEN: ${{ env.GRAPHQL_HIVE_ACCESS_TOKEN }}
+          REDIS_USERNAME: ${{ env.REDIS_USERNAME }}
+          REDIS_PASSWORD: ${{ env.REDIS_PASSWORD }}
+          REDIS_HOST: ${{ env.REDIS_HOST }}
+          REDIS_PORT: ${{ env.REDIS_PORT }}
 
       - name: Test
         run: pnpm test
@@ -143,6 +159,10 @@ jobs:
       JWT_SECRET: test
       ADMIN_SECRET: test
       GRAPHQL_HIVE_ACCESS_TOKEN: test
+      REDIS_USERNAME: test
+      REDIS_PASSWORD: test
+      REDIS_HOST: test
+      REDIS_PORT: 6379
     steps:
       - uses: actions/checkout@v4
 
@@ -166,6 +186,10 @@ jobs:
           JWT_SECRET: ${{ env.JWT_SECRET }}
           ADMIN_SECRET: ${{ env.ADMIN_SECRET }}
           GRAPHQL_HIVE_ACCESS_TOKEN: ${{ env.GRAPHQL_HIVE_ACCESS_TOKEN }}
+          REDIS_USERNAME: ${{ env.REDIS_USERNAME }}
+          REDIS_PASSWORD: ${{ env.REDIS_PASSWORD }}
+          REDIS_HOST: ${{ env.REDIS_HOST }}
+          REDIS_PORT: ${{ env.REDIS_PORT }}
 
       - name: Check schema is in sync
         run: pnpm check:schema
