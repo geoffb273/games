@@ -1,4 +1,5 @@
 import React, { Component, type ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { ErrorView } from '@/components/common/ErrorView';
 
@@ -32,9 +33,21 @@ export class GlobalErrorBoundary extends Component<
     const { error } = this.state;
 
     if (error != null) {
-      return <ErrorView title="Something went wrong" onRetry={this.reset} />;
+      return (
+        <View style={styles.container}>
+          <ErrorView title="Something went wrong" onRetry={this.reset} />
+        </View>
+      );
     }
 
     return this.props.children;
   }
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
