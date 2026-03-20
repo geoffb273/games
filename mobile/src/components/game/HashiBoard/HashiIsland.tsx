@@ -88,6 +88,8 @@ export const HashiIsland = memo(function HashiIsland({
   }, [borderColorProgress, isOverMax, isAtMax]);
 
   useEffect(() => {
+    if (isCompletionWaveActive) return;
+
     if (!isOverMax) {
       shakeProgress.value = 0;
       scaleProgress.value = 1;
@@ -103,7 +105,7 @@ export const HashiIsland = memo(function HashiIsland({
     );
 
     scaleProgress.value = withTiming(1.1);
-  }, [isOverMax, scaleProgress, shakeProgress]);
+  }, [isCompletionWaveActive, isOverMax, scaleProgress, shakeProgress]);
 
   const animatedIslandStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
