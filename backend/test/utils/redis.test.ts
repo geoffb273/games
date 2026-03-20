@@ -1,119 +1,118 @@
-import { type RedisClientType } from 'redis';
-import { describe, expect, it, vi } from 'vitest';
+import { randomUUID } from 'node:crypto';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
+import { redis } from '@/client/redis';
 import { getJson, REDIS_PREFIX, setJson } from '@/utils/redis';
 
-function createMockRedisClient(): RedisClientType {
-  return {
-    get: vi.fn(),
-    set: vi.fn(),
-  } as unknown as RedisClientType;
-}
-
 describe('redis utils', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('getJson', () => {
     it('returns null when key is missing', async () => {
-      const client = createMockRedisClient();
-      (client.get as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      const key = `missing-${randomUUID()}`;
       const schema = z.object({ value: z.string() });
+      const getSpy = vi.spyOn(redis, 'get');
 
       const result = await getJson({
-        client,
-        key: 'missing',
+        client: redis,
+        key,
         schema,
       });
 
       expect(result).toBeNull();
-      expect(client.get).toHaveBeenCalledWith(REDIS_PREFIX + 'missing');
+      expect(getSpy).toHaveBeenCalledWith(REDIS_PREFIX + key);
     });
 
     it('parses and validates JSON value', async () => {
-      const client = createMockRedisClient();
-      (client.get as ReturnType<typeof vi.fn>).mockResolvedValue(JSON.stringify({ value: 'ok' }));
+      const key = `present-${randomUUID()}`;
       const schema = z.object({ value: z.string() });
+      await redis.set(REDIS_PREFIX + key, JSON.stringify({ value: 'ok' }));
 
-      const result = await getJson({
-        client,
-        key: 'present',
-        schema,
-      });
+      const getSpy = vi.spyOn(redis, 'get');
 
-      expect(result).toEqual({ value: 'ok' });
+      try {
+        const result = await getJson({
+          client: redis,
+          key,
+          schema,
+        });
+
+        expect(result).toEqual({ value: 'ok' });
+        expect(getSpy).toHaveBeenCalledWith(REDIS_PREFIX + key);
+      } finally {
+        await redis.del(REDIS_PREFIX + key);
+      }
     });
 
-    it('throws when redis value is not valid JSON', async () => {
-      const client = createMockRedisClient();
-      (client.get as ReturnType<typeof vi.fn>).mockResolvedValue('{bad json}');
-      const schema = z.object({ value: z.string() });
+    it('returns null when redis value is not valid JSON', async () => {
+      const key = `bad-json-${randomUUID()}`;
+      await redis.set(REDIS_PREFIX + key, '{bad json}');
 
-      expect(
-        await getJson({
-          client,
-          key: 'bad-json',
-          schema,
-        }),
-      ).toBeNull();
+      const getSpy = vi.spyOn(redis, 'get');
+
+      try {
+        const result = await getJson({
+          client: redis,
+          key,
+          schema: z.object({ value: z.string() }),
+        });
+
+        expect(result).toBeNull();
+        expect(getSpy).toHaveBeenCalledWith(REDIS_PREFIX + key);
+      } finally {
+        await redis.del(REDIS_PREFIX + key);
+      }
     });
 
     it('returns null when JSON does not match schema', async () => {
-      const client = createMockRedisClient();
-      (client.get as ReturnType<typeof vi.fn>).mockResolvedValue(JSON.stringify({ value: 123 }));
-      const schema = z.object({ value: z.string() });
+      const key = `bad-schema-${randomUUID()}`;
+      await redis.set(REDIS_PREFIX + key, JSON.stringify({ value: 123 }));
 
-      expect(
-        await getJson({
-          client,
-          key: 'bad-schema',
-          schema,
-        }),
-      ).toBeNull();
+      const getSpy = vi.spyOn(redis, 'get');
+
+      try {
+        const result = await getJson({
+          client: redis,
+          key,
+          schema: z.object({ value: z.string() }),
+        });
+
+        expect(result).toBeNull();
+        expect(getSpy).toHaveBeenCalledWith(REDIS_PREFIX + key);
+      } finally {
+        await redis.del(REDIS_PREFIX + key);
+      }
     });
   });
 
   describe('setJson', () => {
-    it('validates and serializes value before write', async () => {
-      const client = createMockRedisClient();
-      (client.set as ReturnType<typeof vi.fn>).mockResolvedValue('OK');
+    it('validates, serializes, and writes with EX expiration', async () => {
+      const key = `write-${randomUUID()}`;
       const schema = z.object({ value: z.string() });
+      const expirationMs = 60000;
+      const setSpy = vi.spyOn(redis, 'set');
 
-      await setJson({
-        client,
-        key: 'write',
-        schema,
-        value: { value: 'ok' },
-        expirationMs: 60000,
-      });
+      try {
+        await setJson({
+          client: redis,
+          key,
+          schema,
+          value: { value: 'ok' },
+          expirationMs,
+        });
 
-      expect(client.set).toHaveBeenCalledWith(
-        REDIS_PREFIX + 'write',
-        JSON.stringify({ value: 'ok' }),
-        {
-          expiration: { type: 'EX', value: 60000 },
-        },
-      );
-    });
+        expect(setSpy).toHaveBeenCalledWith(REDIS_PREFIX + key, JSON.stringify({ value: 'ok' }), {
+          expiration: { type: 'EX', value: expirationMs },
+        });
 
-    it('passes redis set options through', async () => {
-      const client = createMockRedisClient();
-      (client.set as ReturnType<typeof vi.fn>).mockResolvedValue('OK');
-      const schema = z.object({ value: z.string() });
-
-      await setJson({
-        client,
-        key: 'write-with-options',
-        schema,
-        value: { value: 'ok' },
-        expirationMs: 60000,
-      });
-
-      expect(client.set).toHaveBeenCalledWith(
-        REDIS_PREFIX + 'write-with-options',
-        JSON.stringify({ value: 'ok' }),
-        {
-          expiration: { type: 'EX', value: 60000 },
-        },
-      );
+        const raw = await redis.get(REDIS_PREFIX + key);
+        expect(raw).toBe(JSON.stringify({ value: 'ok' }));
+      } finally {
+        await redis.del(REDIS_PREFIX + key);
+      }
     });
   });
 });
