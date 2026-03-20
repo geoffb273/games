@@ -3,14 +3,26 @@ import path from 'node:path';
 
 const LOCAL_DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/games';
 
+/** Matches `redis` in `docker-compose.yml` (no ACL; empty auth). */
+const LOCAL_REDIS_HOST = 'localhost';
+const LOCAL_REDIS_PORT = '6379';
+const LOCAL_REDIS_USERNAME = '';
+const LOCAL_REDIS_PASSWORD = '';
+
 export default async function globalSetup() {
-  if (!process.env.DATABASE_URL) {
-    process.env.DATABASE_URL = LOCAL_DATABASE_URL;
-    process.env.DIRECT_URL = LOCAL_DATABASE_URL;
-    process.env.JWT_SECRET = 'test';
-    process.env.GRAPHQL_HIVE_ACCESS_TOKEN = 'test';
-    process.env.ADMIN_SECRET = 'test';
-  }
+  process.env.DATABASE_URL = LOCAL_DATABASE_URL;
+  process.env.DIRECT_URL = LOCAL_DATABASE_URL;
+  process.env.JWT_SECRET = 'test';
+  process.env.GRAPHQL_HIVE_ACCESS_TOKEN = 'test';
+  process.env.ADMIN_SECRET = 'test';
+
+  process.env.REDIS_HOST = LOCAL_REDIS_HOST;
+  process.env.REDIS_PORT = LOCAL_REDIS_PORT;
+  process.env.REDIS_USERNAME = LOCAL_REDIS_USERNAME;
+  process.env.REDIS_PASSWORD = LOCAL_REDIS_PASSWORD;
+
+  const { redis } = await import('@/client/redis');
+  await redis.flushDb();
 
   const backendRoot = path.resolve(__dirname, '..');
 
