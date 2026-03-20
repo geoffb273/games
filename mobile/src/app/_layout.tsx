@@ -2,10 +2,11 @@ import React from 'react';
 
 import { Stack } from 'expo-router';
 
+import { GlobalErrorBoundary } from '@/components/common/GlobalErrorBoundary';
 import { useTheme } from '@/hooks/useTheme';
 import { MainProvider } from '@/provider/MainProvider';
 
-export default function RootLayout() {
+function RootLayoutInner() {
   const theme = useTheme();
 
   return (
@@ -32,5 +33,13 @@ export default function RootLayout() {
         />
       </Stack>
     </MainProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <GlobalErrorBoundary>
+      <RootLayoutInner />
+    </GlobalErrorBoundary>
   );
 }
