@@ -32,6 +32,7 @@ export const PuzzleRef = builder.interfaceRef<Puzzle>('Puzzle').implement({
     id: t.exposeID('id', { nullable: false }),
     name: t.exposeString('name', { nullable: false }),
     description: t.exposeString('description', { nullable: true }),
+    dailyChallengeId: t.exposeID('dailyChallengeId', { nullable: false }),
     attempt: t.field({
       type: PuzzleAttemptRef,
       nullable: true,

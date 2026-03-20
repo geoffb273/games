@@ -35,6 +35,7 @@ type FlowPair {
 
 type FlowPuzzle implements Puzzle {
   attempt: PuzzleAttempt
+  dailyChallengeId: ID!
   description: String
   height: Int!
   id: ID!
@@ -53,6 +54,7 @@ type HanjiHint {
 type HanjiPuzzle implements Puzzle {
   attempt: PuzzleAttempt
   colClues: [[Int!]!]!
+  dailyChallengeId: ID!
   description: String
   height: Int!
   id: ID!
@@ -92,6 +94,7 @@ type HashiIsland {
 
 type HashiPuzzle implements Puzzle {
   attempt: PuzzleAttempt
+  dailyChallengeId: ID!
   description: String
   height: Int!
   id: ID!
@@ -122,6 +125,7 @@ type MinesweeperHint {
 
 type MinesweeperPuzzle implements Puzzle {
   attempt: PuzzleAttempt
+  dailyChallengeId: ID!
   description: String
   height: Int!
   id: ID!
@@ -268,6 +272,7 @@ type PageInfo {
 
 interface Puzzle {
   attempt: PuzzleAttempt
+  dailyChallengeId: ID!
   description: String
   id: ID!
   name: String!
@@ -379,6 +384,7 @@ type SlitherlinkHint {
 type SlitherlinkPuzzle implements Puzzle {
   attempt: PuzzleAttempt
   clues: [[Int]!]!
+  dailyChallengeId: ID!
   description: String
   height: Int!
   id: ID!
