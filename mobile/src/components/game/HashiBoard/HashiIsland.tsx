@@ -87,23 +87,23 @@ export const HashiIsland = memo(function HashiIsland({
     });
   }, [borderColorProgress, isOverMax, isAtMax]);
 
-  // useEffect(() => {
-  //   if (!isOverMax) {
-  //     shakeProgress.value = 0;
-  //     scaleProgress.value = 1;
-  //     return;
-  //   }
+  useEffect(() => {
+    if (!isOverMax) {
+      shakeProgress.value = 0;
+      scaleProgress.value = 1;
+      return;
+    }
 
-  //   shakeProgress.value = withSequence(
-  //     withTiming(-2, { duration: 40 }),
-  //     withTiming(2, { duration: 40 }),
-  //     withTiming(-1.5, { duration: 40 }),
-  //     withTiming(1.5, { duration: 40 }),
-  //     withTiming(0, { duration: 40 }),
-  //   );
+    shakeProgress.value = withSequence(
+      withTiming(-2, { duration: 40 }),
+      withTiming(2, { duration: 40 }),
+      withTiming(-1.5, { duration: 40 }),
+      withTiming(1.5, { duration: 40 }),
+      withTiming(0, { duration: 40 }),
+    );
 
-  //   scaleProgress.value = withTiming(1.1);
-  // }, [isOverMax, scaleProgress, shakeProgress]);
+    scaleProgress.value = withTiming(1.1);
+  }, [isOverMax, scaleProgress, shakeProgress]);
 
   const animatedIslandStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(

@@ -1,4 +1,7 @@
-import { render, screen, userEvent } from '@testing-library/react-native';
+import { State } from 'react-native-gesture-handler';
+import { fireGestureHandler, getByGestureTestId } from 'react-native-gesture-handler/jest-utils';
+
+import { render, screen, waitFor } from '@testing-library/react-native';
 
 import { HashiBridge } from '@/components/game/HashiBoard/HashiBridge';
 
@@ -15,6 +18,7 @@ const defaultProps = {
   y1: 0,
   x2: 100,
   y2: 0,
+  cellSize: 44,
   onPress: jest.fn(),
 };
 
@@ -39,19 +43,45 @@ describe('HashiBridge', () => {
   });
 
   it('calls onPress when pressed', async () => {
-    const user = userEvent.setup();
     const onPress = jest.fn();
     render(<HashiBridge {...defaultProps} count={1} onPress={onPress} />);
-    await user.press(screen.getByTestId('hashi-bridge'));
-    expect(onPress).toHaveBeenCalledTimes(1);
+    fireGestureHandler(getByGestureTestId('hashi-bridge-tap'), [
+      { state: State.BEGAN },
+      { state: State.ACTIVE },
+      { state: State.END },
+    ]);
+    await waitFor(() => {
+      expect(onPress).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('does not call onPress when disabled', async () => {
-    const user = userEvent.setup();
     const onPress = jest.fn();
     render(<HashiBridge {...defaultProps} count={1} disabled onPress={onPress} />);
-    await user.press(screen.getByTestId('hashi-bridge'));
-    expect(onPress).not.toHaveBeenCalled();
+    fireGestureHandler(getByGestureTestId('hashi-bridge-tap'), [
+      { state: State.BEGAN },
+      { state: State.ACTIVE },
+      { state: State.END },
+    ]);
+    await waitFor(() => {
+      expect(onPress).not.toHaveBeenCalled();
+    });
+  });
+
+  it('calls onPress when swiped along the bridge', async () => {
+    const onPress = jest.fn();
+    render(<HashiBridge {...defaultProps} count={1} onPress={onPress} />);
+
+    // For this test setup x1=0,y1=0,x2=100,y2=0 so the bridge axis is horizontal.
+    fireGestureHandler(getByGestureTestId('hashi-bridge-swipe'), [
+      { state: State.BEGAN, translationX: 0, translationY: 0 },
+      { state: State.ACTIVE, translationX: 20, translationY: 0 },
+      { state: State.END, translationX: 20, translationY: 0 },
+    ]);
+
+    await waitFor(() => {
+      expect(onPress).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('sets pointerEvents to none when disabled', () => {
