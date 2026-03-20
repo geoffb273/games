@@ -3,9 +3,15 @@ import {
   getPuzzle as getPuzzleDao,
   getPuzzlesByDailyChallenge as getPuzzlesByDailyChallengeDao,
 } from '../dao/puzzleDao';
-import { getUserPuzzleAttemptsByPuzzleIds as getUserPuzzleAttemptsByPuzzleIdsDao } from '../dao/userPuzzleAttemptDao';
+import {
+  getPuzzleAttemptSpeedPercentages as getPuzzleAttemptSpeedPercentagesByAttemptDao,
+  getUserPuzzleAttemptsByPuzzleIds as getUserPuzzleAttemptsByPuzzleIdsDao,
+} from '../dao/userPuzzleAttemptDao';
 import { type Puzzle } from '../resource/puzzle';
-import { type UserPuzzleAttempt } from '../resource/userPuzzleAttempt';
+import {
+  type PuzzleAttemptSpeedPercentageKey,
+  type UserPuzzleAttempt,
+} from '../resource/userPuzzleAttempt';
 import { type SolvePuzzleInput } from '../resource/userPuzzleAttempt';
 import { type PuzzleHint, type RequestPuzzleHintInput } from '../resource/userPuzzleAttempt';
 import { createPuzzlesForDailyChallenge as createPuzzlesForDailyChallengeCommand } from './createPuzzlesForDailyChallenge';
@@ -57,6 +63,19 @@ export async function getUserPuzzleAttemptsByPuzzleIds({
   puzzleIds: readonly string[];
 }): Promise<Map<string, UserPuzzleAttempt>> {
   return getUserPuzzleAttemptsByPuzzleIdsDao({ userId, puzzleIds });
+}
+
+/**
+ * Gets the speed percentages for a given set of puzzle attempt keys
+ *
+ * @returns a map of puzzle attempt keys to speed percentages
+ */
+export async function getPuzzleAttemptSpeedPercentages({
+  keys,
+}: {
+  keys: readonly PuzzleAttemptSpeedPercentageKey[];
+}): Promise<Map<string, number>> {
+  return getPuzzleAttemptSpeedPercentagesByAttemptDao({ keys });
 }
 
 /**

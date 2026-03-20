@@ -95,3 +95,9 @@ export type PuzzleHint =
       edgeType: 'HORIZONTAL' | 'VERTICAL';
       filled: boolean;
     };
+
+export type PuzzleAttemptSpeedPercentageKey = {
+  puzzleId: string;
+  userId: string;
+  durationMs: number;
+};

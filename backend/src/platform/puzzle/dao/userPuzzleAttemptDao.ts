@@ -1,9 +1,14 @@
 import { prisma } from '@/client/prisma';
-import { type Prisma } from '@/generated/prisma';
+import { Prisma } from '@/generated/prisma';
 import { AlreadyExistsError, NotFoundError } from '@/schema/errors';
 import { isAlreadyExistsError, isForeignKeyViolationError } from '@/utils/errorUtils';
+import { serializePuzzleAttemptSpeedPercentageKey } from '@/utils/puzzle/attemptUtil';
 
-import { type UserPuzzleAttempt, type UserPuzzleHint } from '../resource/userPuzzleAttempt';
+import {
+  type PuzzleAttemptSpeedPercentageKey,
+  type UserPuzzleAttempt,
+  type UserPuzzleHint,
+} from '../resource/userPuzzleAttempt';
 
 const USER_PUZZLE_ATTEMPT_SELECT = {
   id: true,
@@ -44,6 +49,73 @@ export async function getUserPuzzleAttemptsByPuzzleIds({
   });
 
   return new Map(attempts.map((a) => [a.puzzleId, a]));
+}
+
+type PuzzleAttemptSpeedPercentageRow = {
+  puzzleId: string;
+  userId: string;
+  durationMs: number;
+  percentage: number;
+};
+
+/**
+ * Batch-computes speed percentage for attempts.
+ *
+ * The percentage of other users' completed attempts for the same puzzle that are slower than the attempt.
+ *
+ * Counts ties as slower peers to inflate the percentage
+ */
+export async function getPuzzleAttemptSpeedPercentages({
+  keys,
+}: {
+  keys: readonly PuzzleAttemptSpeedPercentageKey[];
+}): Promise<Map<string, number>> {
+  if (keys.length === 0) return new Map();
+
+  const rows = await prisma.$queryRaw<PuzzleAttemptSpeedPercentageRow[]>(Prisma.sql`
+    WITH keys AS (
+      SELECT
+        t."puzzleId"::uuid AS "puzzleId",
+        t."userId"::uuid AS "userId",
+        t."durationMs"::integer AS "durationMs"
+      FROM unnest(
+        ${keys.map((key) => key.puzzleId)}::text[],
+        ${keys.map((key) => key.userId)}::text[],
+        ${keys.map((key) => key.durationMs)}::integer[]
+      ) AS t("puzzleId", "userId", "durationMs")
+    )
+    SELECT
+      k."puzzleId"::text AS "puzzleId",
+      k."userId"::text AS "userId",
+      k."durationMs" AS "durationMs",
+      CASE
+        WHEN peer_stats."totalPeers" = 0 THEN 100.0
+        ELSE (peer_stats."slowerPeers"::double precision / peer_stats."totalPeers"::double precision) * 100.0
+      END AS "percentage"
+    FROM keys k
+    LEFT JOIN LATERAL (
+      SELECT
+        COUNT(*) AS "totalPeers",
+        COUNT(*) FILTER (
+          WHERE a."durationMs" IS NULL
+            OR a."durationMs" >= k."durationMs"
+        ) AS "slowerPeers"
+      FROM "UserPuzzleAttempt" a
+      WHERE a."puzzleId" = k."puzzleId"
+        AND a."userId" != k."userId"
+    ) AS peer_stats ON true
+  `);
+
+  return new Map(
+    rows.map((row) => [
+      serializePuzzleAttemptSpeedPercentageKey({
+        puzzleId: row.puzzleId,
+        userId: row.userId,
+        durationMs: row.durationMs,
+      }),
+      row.percentage,
+    ]),
+  );
 }
 
 /**
