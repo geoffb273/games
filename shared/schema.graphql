@@ -283,6 +283,11 @@ type PuzzleAttempt {
   durationMs: Int
   hintsUsed: Int!
   id: ID!
+
+  """
+  The percentage of users who completed the puzzle slower than the attempt.
+  """
+  percentage: Float!
   startedAt: DateTime!
 }
 

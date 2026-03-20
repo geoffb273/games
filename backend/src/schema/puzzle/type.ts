@@ -20,6 +20,19 @@ export const PuzzleAttemptRef = builder.objectRef<UserPuzzleAttempt>('PuzzleAtte
     completedAt: t.expose('completedAt', { type: 'DateTime', nullable: true }),
     durationMs: t.exposeInt('durationMs', { nullable: true }),
     hintsUsed: t.exposeInt('hintsUsed', { nullable: false }),
+    percentage: t.float({
+      description: 'The percentage of users who completed the puzzle slower than the attempt.',
+      nullable: false,
+      resolve: (attempt, _args, { dataloaders: { puzzleAttemptSpeedPercentage } }) => {
+        if (attempt.durationMs == null) return 0;
+
+        return puzzleAttemptSpeedPercentage.load({
+          puzzleId: attempt.puzzleId,
+          userId: attempt.userId,
+          durationMs: attempt.durationMs,
+        });
+      },
+    }),
   }),
 });
 
