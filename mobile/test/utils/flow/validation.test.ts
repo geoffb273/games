@@ -119,6 +119,19 @@ describe('isFlowComplete', () => {
       expect(isFlowComplete(3, 3, pairs, grid)).toBe(false);
     });
 
+    it('returns false when pairs connected but grid is not full', () => {
+      const grid = [
+        [1, 1, 2],
+        [1, 0, 2],
+        [1, 2, 2],
+      ];
+      const pairs: FlowPair[] = [
+        pair(1, { row: 0, col: 1 }, { row: 2, col: 0 }),
+        pair(2, { row: 0, col: 2 }, { row: 2, col: 1 }),
+      ];
+      expect(isFlowComplete(3, 3, pairs, grid)).toBe(false);
+    });
+
     it('returns true for 1x1 grid with one pair (start equals end)', () => {
       const grid = [[1]];
       const pairs: FlowPair[] = [pair(1, { row: 0, col: 0 }, { row: 0, col: 0 })];
@@ -145,7 +158,7 @@ describe('isFlowComplete', () => {
         [1, 1],
       ];
       const pairs: FlowPair[] = [];
-      expect(isFlowComplete(2, 2, pairs, grid)).toBe(true);
+      expect(isFlowComplete(2, 2, pairs, grid)).toBe(false);
     });
   });
 });

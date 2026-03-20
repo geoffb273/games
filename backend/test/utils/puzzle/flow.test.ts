@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  type FlowPair,
   generateFlowPuzzleData,
   isValidFlowSolution,
-  type FlowPair,
 } from '../../../src/utils/puzzle/flow';
 
 describe('generateFlowPuzzleData', () => {
