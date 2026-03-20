@@ -211,7 +211,7 @@ function HorizontalEdgeStrip({
       style={styles.edgeStripHorizontal}
       onPress={onPress}
       disabled={isDisabled}
-      hitSlop={{ top: DOT_SIZE, bottom: DOT_SIZE }}
+      hitSlop={{ top: DOT_SIZE * 2, bottom: DOT_SIZE * 2 }}
       testID={testID}
     >
       <Animated.View style={[styles.line, backgroundColor]} />
@@ -251,7 +251,7 @@ function VerticalEdgeStrip({
       style={styles.edgeStripVertical}
       onPress={onPress}
       disabled={isDisabled}
-      hitSlop={{ left: DOT_SIZE / 2, right: DOT_SIZE / 2 }}
+      hitSlop={{ left: DOT_SIZE * 2, right: DOT_SIZE * 2 }}
       testID={testID}
     >
       <Animated.View style={[styles.line, backgroundColor]} />
