@@ -41,4 +41,10 @@ export default async function globalSetup() {
       stdio: 'inherit',
     });
   }
+
+  return async () => {
+    if (redis.isOpen) {
+      await redis.quit();
+    }
+  };
 }

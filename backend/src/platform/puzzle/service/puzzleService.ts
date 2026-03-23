@@ -1,4 +1,10 @@
 import {
+  getCachedPuzzleAttemptSpeedPercentages,
+  setCachedPuzzleAttemptSpeedPercentages,
+} from '@/cache/puzzle/puzzleAttemptSpeedPercentage';
+import { serializePuzzleAttemptSpeedPercentageKey } from '@/utils/puzzle/attemptUtil';
+
+import {
   getDailyChallengeToPuzzlesMap as getDailyChallengeToPuzzlesMapDao,
   getPuzzle as getPuzzleDao,
   getPuzzlesByDailyChallenge as getPuzzlesByDailyChallengeDao,
@@ -75,7 +81,37 @@ export async function getPuzzleAttemptSpeedPercentages({
 }: {
   keys: readonly PuzzleAttemptSpeedPercentageKey[];
 }): Promise<Map<string, number>> {
-  return getPuzzleAttemptSpeedPercentagesByAttemptDao({ keys });
+  if (keys.length === 0) return new Map();
+
+  const cachedPercentages = await getCachedPuzzleAttemptSpeedPercentages();
+  const serializedKeys = keys.map((key) => ({
+    key,
+    serialized: serializePuzzleAttemptSpeedPercentageKey(key),
+  }));
+  const keysToFetch = serializedKeys
+    .filter(({ serialized }) => !cachedPercentages.has(serialized))
+    .map(({ key }) => key);
+  const fetchedPercentages = await getPuzzleAttemptSpeedPercentagesByAttemptDao({
+    keys: keysToFetch,
+  });
+
+  if (fetchedPercentages.size > 0) {
+    await setCachedPuzzleAttemptSpeedPercentages({
+      percentages: new Map(
+        Array.from(fetchedPercentages.entries()).map(([key, percentage]) => [key, { percentage }]),
+      ),
+    });
+  }
+
+  return serializedKeys.reduce<Map<string, number>>((acc, { serialized }) => {
+    const cachedPercentage = cachedPercentages.get(serialized)?.percentage;
+    const fetchedPercentage = fetchedPercentages.get(serialized);
+    const percentage = cachedPercentage ?? fetchedPercentage;
+    if (percentage != null) {
+      acc.set(serialized, percentage);
+    }
+    return acc;
+  }, new Map());
 }
 
 /**

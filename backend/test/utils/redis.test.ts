@@ -105,7 +105,7 @@ describe('redis utils', () => {
         });
 
         expect(setSpy).toHaveBeenCalledWith(REDIS_PREFIX + key, JSON.stringify({ value: 'ok' }), {
-          expiration: { type: 'EX', value: expirationMs },
+          expiration: { type: 'PX', value: expirationMs },
         });
 
         const raw = await redis.get(REDIS_PREFIX + key);

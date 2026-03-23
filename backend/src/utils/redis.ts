@@ -45,6 +45,6 @@ export async function setJson<TSchema extends ZodType>({
   const serializedValue = JSON.stringify(parsedValue);
 
   await client.set(REDIS_PREFIX + key, serializedValue, {
-    expiration: { type: 'EX', value: expirationMs },
+    expiration: { type: 'PX', value: expirationMs },
   });
 }
