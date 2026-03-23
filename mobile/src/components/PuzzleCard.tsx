@@ -23,33 +23,64 @@ const PUZZLE_TYPE_DESCRIPTIONS: Record<Puzzle['type'], string> = {
   SLITHERLINK: 'Draw a single loop that satisfies all the clues.',
 };
 
-export function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
+type PuzzleCardProps = {
+  puzzle: Puzzle;
+  variant?: 'normal' | 'small';
+};
+
+export function PuzzleCard({ puzzle, variant = 'normal' }: PuzzleCardProps) {
   const theme = useTheme();
   const isCompleted = puzzle.attempt != null;
   const isSolved = isCompleted && puzzle.attempt?.completedAt != null;
   const palette = usePuzzlePalette(puzzle.type);
   const router = useRouter();
 
+  const isNormalVariant = variant === 'normal';
+  const isSmallVariant = variant === 'small';
+
   // Pre-load the puzzle to avoid flickering
   usePuzzleQuery({ id: puzzle.id });
 
-  const description = puzzle.description ?? PUZZLE_TYPE_DESCRIPTIONS[puzzle.type];
+  const description = isSmallVariant
+    ? null
+    : (puzzle.description ?? PUZZLE_TYPE_DESCRIPTIONS[puzzle.type]);
 
   return (
     <Pressable
-      onPress={() => router.push({ pathname: '/game/[id]', params: { id: puzzle.id } })}
+      onPress={() => {
+        if (isNormalVariant) {
+          router.push({ pathname: '/game/[id]', params: { id: puzzle.id } });
+        } else {
+          router.replace({ pathname: '/game/[id]', params: { id: puzzle.id } });
+        }
+      }}
       style={({ pressed }) => [
         styles.puzzleCard,
+        isNormalVariant && styles.normalVariant,
+        isSmallVariant && styles.smallVariant,
         {
           backgroundColor: pressed ? getColorWithOpacity(palette.chip, 0.5) : palette.card,
           borderColor: theme.borderSubtle,
         },
       ]}
     >
-      <View style={styles.puzzleCardContent}>
-        <PuzzleIcon type={puzzle.type} size="sm" />
-        <View style={styles.puzzleInfo}>
-          <Text type="h3" numberOfLines={1}>
+      <View
+        style={[
+          styles.puzzleCardContent,
+          isNormalVariant && styles.normalVariantCardContent,
+          isSmallVariant && styles.smallVariantCardContent,
+        ]}
+      >
+        <PuzzleIcon type={puzzle.type} size={isSmallVariant ? 'sm' : 'md'} />
+        <View
+          style={[
+            styles.puzzleInfo,
+            isNormalVariant && styles.normalVariantContent,
+            isSmallVariant && styles.smallVariantContent,
+          ]}
+        >
+          <Text type={isSmallVariant ? 'lead' : 'h3'} numberOfLines={1}>
+            {isSmallVariant ? 'Play ' : ''}
             {puzzle.name}
           </Text>
 
@@ -59,7 +90,9 @@ export function PuzzleCard({ puzzle }: { puzzle: Puzzle }) {
             </Text>
           )}
         </View>
-        <PuzzleStatusIcon status={isSolved ? 'solved' : isCompleted ? 'lost' : 'incomplete'} />
+        {isNormalVariant && (
+          <PuzzleStatusIcon status={isSolved ? 'solved' : isCompleted ? 'lost' : 'incomplete'} />
+        )}
       </View>
     </Pressable>
   );
@@ -127,22 +160,31 @@ export function PuzzleListEmptyState({
 
 const styles = StyleSheet.create({
   puzzleCard: {
-    flex: 1,
     borderRadius: Radii.md,
     padding: Spacing.three,
     borderWidth: 1,
     marginHorizontal: Spacing.one,
     marginVertical: Spacing.one,
   },
+  smallVariant: {},
+  normalVariant: {
+    flex: 1,
+  },
   puzzleCardContent: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  smallVariantCardContent: {
+    gap: Spacing.two,
+  },
+  normalVariantCardContent: {
     gap: Spacing.three,
   },
   puzzleInfo: {
-    flex: 1,
     gap: Spacing.one,
   },
+  smallVariantContent: {},
+  normalVariantContent: { flex: 1 },
   completedBadge: {
     alignItems: 'center',
     justifyContent: 'center',

@@ -21,24 +21,25 @@ const PUZZLE_TYPE_ICONS: Record<Puzzle['type'], keyof typeof MaterialCommunityIc
   SLITHERLINK: 'vector-polyline',
 };
 
-type Size = 'sm' | 'md' | 'lg';
+type Size = 'sm' | 'md' | 'lg' | 'xl';
 
-const SIZE: Record<Size, { iconSize: number; chipSize: number }> = {
-  sm: { iconSize: 28, chipSize: 44 },
-  md: { iconSize: 56, chipSize: 72 },
-  lg: { iconSize: 72, chipSize: 96 },
+const SIZE: Record<Size, { iconSize: number; chipSize: number; borderRadius: number }> = {
+  sm: { iconSize: 20, chipSize: 32, borderRadius: Radii.xs },
+  md: { iconSize: 28, chipSize: 44, borderRadius: Radii.sm },
+  lg: { iconSize: 56, chipSize: 72, borderRadius: Radii.sm },
+  xl: { iconSize: 72, chipSize: 96, borderRadius: Radii.sm },
 };
 
 export function PuzzleIcon({ type, size = 'md', style }: PuzzleIconProps) {
   const theme = useTheme();
   const palette = usePuzzlePalette(type);
-  const { iconSize, chipSize } = SIZE[size];
+  const { iconSize, chipSize, borderRadius } = SIZE[size];
 
   return (
     <View
       style={[
         styles.chip,
-        { backgroundColor: palette.chip, width: chipSize, height: chipSize },
+        { backgroundColor: palette.chip, width: chipSize, height: chipSize, borderRadius },
         style,
       ]}
     >
@@ -53,9 +54,6 @@ export function PuzzleIcon({ type, size = 'md', style }: PuzzleIconProps) {
 
 const styles = StyleSheet.create({
   chip: {
-    width: 44,
-    height: 44,
-    borderRadius: Radii.sm,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',

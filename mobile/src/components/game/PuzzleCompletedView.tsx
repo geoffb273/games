@@ -3,6 +3,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
+import { PuzzleCard } from '@/components/PuzzleCard';
 import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 import { formatDuration } from '@/utils/timeUtils';
@@ -19,9 +20,15 @@ type PuzzleCompletedViewProps = {
   puzzleType: Puzzle['type'];
   solved: boolean;
   durationMs?: number | null;
+  nextPuzzle: Puzzle | null;
 };
 
-export function PuzzleCompletedView({ puzzleType, solved, durationMs }: PuzzleCompletedViewProps) {
+export function PuzzleCompletedView({
+  puzzleType,
+  solved,
+  durationMs,
+  nextPuzzle,
+}: PuzzleCompletedViewProps) {
   const theme = useTheme();
   const typeLabel = PUZZLE_TYPE_LABELS[puzzleType];
 
@@ -61,6 +68,11 @@ export function PuzzleCompletedView({ puzzleType, solved, durationMs }: PuzzleCo
       <Text type="caption" color={solved ? 'success' : 'warning'} textAlign="center">
         {solved ? 'Marked as solved' : 'Marked as attempted'}
       </Text>
+      {nextPuzzle != null && (
+        <Animated.View style={styles.playNextButtonContainer}>
+          <PuzzleCard puzzle={nextPuzzle} variant="small" />
+        </Animated.View>
+      )}
     </Animated.View>
   );
 }
@@ -83,5 +95,10 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 1,
     marginVertical: Spacing.one,
+  },
+  playNextButtonContainer: {
+    position: 'absolute',
+    bottom: -Spacing.two,
+    transform: [{ translateY: '100%' }],
   },
 });

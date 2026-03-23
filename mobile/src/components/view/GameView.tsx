@@ -6,6 +6,7 @@ import { useNavigation } from 'expo-router';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
+import { usePuzzlesQuery } from '@/api/puzzle/puzzlesQuery';
 import { ErrorView } from '@/components/common/ErrorView';
 import { GameViewFlowBoard } from '@/components/game/GameViewFlowBoard';
 import { GameViewHanjiBoard } from '@/components/game/GameViewHanjiBoard';
@@ -34,6 +35,17 @@ export function GameView({ id }: { id: string }) {
   } = usePuzzleBoardTransition({ puzzle, puzzleId: id });
 
   const isPuzzleMissing = !isLoading && puzzle == null;
+  const challengeId = puzzle?.dailyChallengeId;
+  const { puzzles: challengePuzzles } = usePuzzlesQuery({
+    dailyChallengeId: challengeId,
+    enabled: challengeId != null,
+  });
+  const nextPuzzle = useMemo(() => {
+    if (challengePuzzles == null) return null;
+    return (
+      challengePuzzles.find((candidate) => candidate.id !== id && candidate.attempt == null) ?? null
+    );
+  }, [challengePuzzles, id]);
 
   if (isNotFound && !isLoading) {
     return (
@@ -55,11 +67,14 @@ export function GameView({ id }: { id: string }) {
   if (shouldShowCompleted && puzzle?.attempt != null) {
     return (
       <VerticallyCenteredLayout>
-        <PuzzleCompletedView
-          puzzleType={puzzle.type}
-          solved={puzzle.attempt.completedAt != null}
-          durationMs={puzzle.attempt.durationMs}
-        />
+        <View style={styles.completedContainer}>
+          <PuzzleCompletedView
+            puzzleType={puzzle.type}
+            solved={puzzle.attempt.completedAt != null}
+            durationMs={puzzle.attempt.durationMs}
+            nextPuzzle={nextPuzzle}
+          />
+        </View>
       </VerticallyCenteredLayout>
     );
   }
@@ -248,5 +263,10 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     flex: 1,
+  },
+
+  completedContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
