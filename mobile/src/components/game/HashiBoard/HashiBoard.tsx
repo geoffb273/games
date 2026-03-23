@@ -45,6 +45,7 @@ export function HashiBoard({
     onHint,
     currentState,
     isComplete,
+    onIslandPress,
   } = useHashiGame({ puzzle, onSolve });
   const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
   const hasEndGameAnimationTriggered = useRef(false);
@@ -120,6 +121,7 @@ export function HashiBoard({
             isCompletionWaveActive={isCompletionWaveActive}
             isLastInWave={i === lastIslandIndex}
             onWaveComplete={onAnimationComplete}
+            onPress={() => onIslandPress({ row: island.row, col: island.col })}
           />
         ))}
       </View>

@@ -1,5 +1,5 @@
 import { memo, useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 import Animated, {
   interpolateColor,
   runOnJS,
@@ -29,6 +29,7 @@ export type HashiIslandProps = {
   onWaveComplete?: () => void;
   /** Whether the completion wave is active. */
   isCompletionWaveActive: boolean;
+  onPress: () => void;
 };
 
 export const HashiIsland = memo(function HashiIsland({
@@ -40,6 +41,7 @@ export const HashiIsland = memo(function HashiIsland({
   isLastInWave,
   onWaveComplete,
   isCompletionWaveActive,
+  onPress,
 }: HashiIslandProps) {
   const theme = useTheme();
   const radius = cellSize * ISLAND_RADIUS_RATIO;
@@ -136,9 +138,11 @@ export const HashiIsland = memo(function HashiIsland({
         animatedIslandStyle,
       ]}
     >
-      <Text type="emphasized_body" color={isAtMax ? 'background' : 'text'}>
-        {requiredBridges}
-      </Text>
+      <Pressable onPress={onPress}>
+        <Text type="emphasized_body" color={isAtMax ? 'background' : 'text'}>
+          {requiredBridges}
+        </Text>
+      </Pressable>
     </Animated.View>
   );
 });
