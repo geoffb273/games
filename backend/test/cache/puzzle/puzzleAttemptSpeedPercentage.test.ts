@@ -22,10 +22,6 @@ const { cacheStore, getJsonMock, setJsonMock } = vi.hoisted(() => {
   };
 });
 
-vi.mock('@/client/redis', () => ({
-  redis: {},
-}));
-
 vi.mock('@/utils/redis', () => ({
   REDIS_PREFIX: 'game-brain:v1:',
   getJson: getJsonMock,

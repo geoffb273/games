@@ -2,8 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { redis } from '@/client/redis';
+import { getRedis } from '@/client/redis';
 import { getJson, REDIS_PREFIX, setJson } from '@/utils/redis';
+
+const redis = await getRedis();
 
 describe('redis utils', () => {
   afterEach(() => {

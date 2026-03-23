@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { redis } from '@/client/redis';
+import { getRedis } from '@/client/redis';
 import { getJson, setJson } from '@/utils/redis';
 
 export const PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY = 'puzzle-attempt-speed-percentage';
@@ -22,7 +22,7 @@ export async function getCachedPuzzleAttemptSpeedPercentages(): Promise<
 > {
   const now = Date.now();
   const cachedValues = await getJson({
-    client: redis,
+    client: await getRedis(),
     key: PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY,
     schema: PUZZLE_ATTEMPT_SPEED_PERCENTAGE_SCHEMA,
   });
@@ -62,7 +62,7 @@ export async function setCachedPuzzleAttemptSpeedPercentages({
   );
 
   await setJson({
-    client: redis,
+    client: await getRedis(),
     key: PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY,
     schema: PUZZLE_ATTEMPT_SPEED_PERCENTAGE_SCHEMA,
     value: entries,
