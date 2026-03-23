@@ -42,6 +42,7 @@ describe('useHashiGame', () => {
   function createPuzzle(): HashiPuzzle {
     return {
       id: 'test-puzzle',
+      dailyChallengeId: 'test-daily-challenge',
       width: 2,
       height: 1,
       islands,

@@ -16,6 +16,7 @@ import { Shadows, Spacing } from '@/constants/token';
 
 const INSTRUCTIONS_HANJI_PUZZLE: HanjiPuzzle = {
   id: 'hanji-instructions-demo',
+  dailyChallengeId: 'hanji-instructions-demo',
   name: 'Example Hanji board',
   description: null,
   attempt: null,

@@ -15,6 +15,7 @@ import { Shadows, Spacing } from '@/constants/token';
 
 const INSTRUCTIONS_HASHI_PUZZLE: HashiPuzzle = {
   id: 'hashi-instructions-demo',
+  dailyChallengeId: 'hashi-instructions-demo',
   name: 'Example Hashi board',
   description: null,
   attempt: null,
