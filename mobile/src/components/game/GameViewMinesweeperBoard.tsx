@@ -50,13 +50,20 @@ export function GameViewMinesweeperBoard({
         ...(completedAt != null && durationMs != null && { completedAt, durationMs }),
       });
 
-      await solvePuzzle({
+      const attempt = await solvePuzzle({
         puzzleId: puzzle.id,
         puzzleType: PuzzleType.Minesweeper,
         startedAt,
         ...(completedAt != null && durationMs != null && { completedAt, durationMs }),
         minesweeperSolution,
-      }).then(refetch);
+      });
+      updateOptimisticallyPuzzleAttempt({
+        startedAt: attempt.startedAt,
+        completedAt: attempt.completedAt,
+        durationMs: attempt.durationMs,
+        percentage: attempt.percentage,
+      });
+      await refetch();
     },
   );
 

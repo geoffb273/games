@@ -48,14 +48,21 @@ export function GameViewFlowBoard({ puzzle, onAnimationComplete }: GameViewFlowB
         durationMs,
       });
 
-      await solvePuzzle({
+      const attempt = await solvePuzzle({
         puzzleId: puzzle.id,
         puzzleType: PuzzleType.Flow,
         startedAt,
         completedAt,
         durationMs,
         flowSolution,
-      }).then(refetch);
+      });
+      updateOptimisticallyPuzzleAttempt({
+        startedAt: attempt.startedAt,
+        completedAt: attempt.completedAt,
+        durationMs: attempt.durationMs,
+        percentage: attempt.percentage,
+      });
+      await refetch();
     },
   );
 

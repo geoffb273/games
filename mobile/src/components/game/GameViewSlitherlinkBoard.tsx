@@ -47,14 +47,21 @@ export function GameViewSlitherlinkBoard({
     }: SlitherlinkOnSolveInput) => {
       updateOptimisticallyPuzzleAttempt({ startedAt, completedAt, durationMs });
 
-      await solvePuzzle({
+      const attempt = await solvePuzzle({
         puzzleId: puzzle.id,
         puzzleType: PuzzleType.Slitherlink,
         startedAt,
         completedAt,
         durationMs,
         slitherlinkSolution,
-      }).then(refetch);
+      });
+      updateOptimisticallyPuzzleAttempt({
+        startedAt: attempt.startedAt,
+        completedAt: attempt.completedAt,
+        durationMs: attempt.durationMs,
+        percentage: attempt.percentage,
+      });
+      await refetch();
     },
   );
 

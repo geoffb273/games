@@ -82,6 +82,7 @@ gql`
       startedAt
       completedAt
       durationMs
+      percentage
     }
     ... on HanjiPuzzle {
       ...HanjiPuzzleFragment
@@ -114,6 +115,8 @@ export type PuzzleAttempt = {
   startedAt: Date;
   completedAt?: Date | null;
   durationMs?: number | null;
+  /** Share of other players’ times that were slower or tied (server-computed). */
+  percentage?: number | null;
 };
 
 export type PuzzleBase = {
@@ -208,6 +211,7 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
           startedAt: puzzleAttempt.startedAt,
           completedAt: puzzleAttempt.completedAt ?? null,
           durationMs: puzzleAttempt.durationMs ?? null,
+          percentage: puzzleAttempt.percentage,
         }
       : null;
 
@@ -351,6 +355,7 @@ export function mapToPuzzleFragment(puzzle: Puzzle): PuzzleQueryData {
           startedAt: puzzle.attempt.startedAt,
           completedAt: puzzle.attempt.completedAt ?? null,
           durationMs: puzzle.attempt.durationMs ?? null,
+          percentage: puzzle.attempt.percentage ?? 0,
         }
       : null;
 

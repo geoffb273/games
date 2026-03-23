@@ -72,6 +72,7 @@ export function GameView({ id }: { id: string }) {
             puzzleType={puzzle.type}
             solved={puzzle.attempt.completedAt != null}
             durationMs={puzzle.attempt.durationMs}
+            speedPercent={puzzle.attempt.percentage}
             nextPuzzle={nextPuzzle}
           />
         </View>
