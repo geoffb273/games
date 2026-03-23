@@ -66,8 +66,11 @@ type PuzzleAttemptSpeedPercentageRow = {
  * Counts ties as slower peers to inflate the percentage
  */
 export async function getPuzzleAttemptSpeedPercentages({
+  userId,
   keys,
 }: {
+  /** The user to compute speed percentages for */
+  userId: string;
   keys: readonly PuzzleAttemptSpeedPercentageKey[];
 }): Promise<Map<string, number>> {
   if (keys.length === 0) return new Map();
@@ -80,7 +83,7 @@ export async function getPuzzleAttemptSpeedPercentages({
         t."durationMs"::integer AS "durationMs"
       FROM unnest(
         ${keys.map((key) => key.puzzleId)}::text[],
-        ${keys.map((key) => key.userId)}::text[],
+        ${keys.map((_) => userId)}::text[],
         ${keys.map((key) => key.durationMs)}::integer[]
       ) AS t("puzzleId", "userId", "durationMs")
     )
@@ -110,7 +113,6 @@ export async function getPuzzleAttemptSpeedPercentages({
     rows.map((row) => [
       serializePuzzleAttemptSpeedPercentageKey({
         puzzleId: row.puzzleId,
-        userId: row.userId,
         durationMs: row.durationMs,
       }),
       row.percentage,

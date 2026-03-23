@@ -1,8 +1,10 @@
+import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 
 import { prisma } from '@/client/prisma';
 import { getPuzzleAttemptSpeedPercentages } from '@/platform/puzzle/dao/userPuzzleAttemptDao';
 import { createTestDailyChallenge, createTestUser, createUniqueDateTime } from '@/test/testUtils';
+import { serializePuzzleAttemptSpeedPercentageKey } from '@/utils/puzzle/attemptUtil';
 
 async function createTestPuzzleForAttemptStats() {
   const dailyChallenge = await createTestDailyChallenge({
@@ -29,6 +31,7 @@ async function createTestPuzzleForAttemptStats() {
 describe('userPuzzleAttemptDao:getPuzzleAttemptSpeedPercentages', () => {
   it('returns faster-than percentage for mixed peer durations', async () => {
     const { puzzleId } = await createTestPuzzleForAttemptStats();
+    const key = { puzzleId, durationMs: 11000 };
     const user = await createTestUser();
     const slower = await createTestUser();
     const faster = await createTestUser();
@@ -60,15 +63,17 @@ describe('userPuzzleAttemptDao:getPuzzleAttemptSpeedPercentages', () => {
     });
 
     const result = await getPuzzleAttemptSpeedPercentages({
-      keys: [{ puzzleId, userId: user.id, durationMs: 11000 }],
+      userId: user.id,
+      keys: [key],
     });
 
-    expect(result.get(`${puzzleId}:${user.id}:11000`)).toBe(50);
+    expect(result.get(serializePuzzleAttemptSpeedPercentageKey(key))).toBe(50);
   });
 
   it('returns 100% when there are no peers', async () => {
     const { puzzleId } = await createTestPuzzleForAttemptStats();
     const user = await createTestUser();
+    const key = { puzzleId, durationMs: 10000 };
 
     await prisma.userPuzzleAttempt.createMany({
       data: [
@@ -83,10 +88,11 @@ describe('userPuzzleAttemptDao:getPuzzleAttemptSpeedPercentages', () => {
     });
 
     const result = await getPuzzleAttemptSpeedPercentages({
-      keys: [{ puzzleId, userId: user.id, durationMs: 10000 }],
+      userId: user.id,
+      keys: [key],
     });
 
-    expect(result.get(`${puzzleId}:${user.id}:10000`)).toBe(100);
+    expect(result.get(serializePuzzleAttemptSpeedPercentageKey(key))).toBe(100);
   });
 
   it('does counts ties as slower peers', async () => {
@@ -94,6 +100,7 @@ describe('userPuzzleAttemptDao:getPuzzleAttemptSpeedPercentages', () => {
     const user = await createTestUser();
     const tiedUser = await createTestUser();
     const slower = await createTestUser();
+    const key = { puzzleId, durationMs: 10000 };
 
     await prisma.userPuzzleAttempt.createMany({
       data: [
@@ -122,16 +129,18 @@ describe('userPuzzleAttemptDao:getPuzzleAttemptSpeedPercentages', () => {
     });
 
     const result = await getPuzzleAttemptSpeedPercentages({
-      keys: [{ puzzleId, userId: user.id, durationMs: 10000 }],
+      userId: user.id,
+      keys: [key],
     });
 
-    expect(result.get(`${puzzleId}:${user.id}:10000`)).toBe(100);
+    expect(result.get(serializePuzzleAttemptSpeedPercentageKey(key))).toBe(100);
   });
 
   it('returns 100% when there are no completed peers', async () => {
     const { puzzleId } = await createTestPuzzleForAttemptStats();
     const user = await createTestUser();
     const incompletePeer = await createTestUser();
+    const key = { puzzleId, durationMs: 10000 };
 
     await prisma.userPuzzleAttempt.createMany({
       data: [
@@ -153,16 +162,19 @@ describe('userPuzzleAttemptDao:getPuzzleAttemptSpeedPercentages', () => {
     });
 
     const result = await getPuzzleAttemptSpeedPercentages({
-      keys: [{ puzzleId, userId: user.id, durationMs: 10000 }],
+      userId: user.id,
+      keys: [key],
     });
 
-    expect(result.get(`${puzzleId}:${user.id}:10000`)).toBe(100);
+    expect(result.get(serializePuzzleAttemptSpeedPercentageKey(key))).toBe(100);
   });
 
   it('returns 0 when no peers are slower than the user', async () => {
     const { puzzleId } = await createTestPuzzleForAttemptStats();
     const user = await createTestUser();
     const completedPeer = await createTestUser();
+
+    const key = { puzzleId, durationMs: 14000 };
 
     await prisma.userPuzzleAttempt.createMany({
       data: [
@@ -184,14 +196,15 @@ describe('userPuzzleAttemptDao:getPuzzleAttemptSpeedPercentages', () => {
     });
 
     const result = await getPuzzleAttemptSpeedPercentages({
-      keys: [{ puzzleId, userId: user.id, durationMs: 14000 }],
+      userId: user.id,
+      keys: [key],
     });
 
-    expect(result.get(`${puzzleId}:${user.id}:14000`)).toBe(0);
+    expect(result.get(serializePuzzleAttemptSpeedPercentageKey(key))).toBe(0);
   });
 
   it('returns empty map for empty input keys', async () => {
-    const result = await getPuzzleAttemptSpeedPercentages({ keys: [] });
+    const result = await getPuzzleAttemptSpeedPercentages({ userId: randomUUID(), keys: [] });
     expect(result.size).toBe(0);
   });
 });

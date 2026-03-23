@@ -17,13 +17,15 @@ export const PUZZLE_ATTEMPT_SPEED_PERCENTAGE_SCHEMA = z.record(
   }),
 );
 
-export async function getCachedPuzzleAttemptSpeedPercentages(): Promise<
-  Map<string, { percentage: number; expirationTimestampMs: number }>
-> {
+export async function getCachedPuzzleAttemptSpeedPercentages({
+  userId,
+}: {
+  userId: string;
+}): Promise<Map<string, { percentage: number; expirationTimestampMs: number }>> {
   const now = Date.now();
   const cachedValues = await getJson({
     client: await getRedis(),
-    key: PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY,
+    key: `${PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY}:${userId}`,
     schema: PUZZLE_ATTEMPT_SPEED_PERCENTAGE_SCHEMA,
   });
 
@@ -40,8 +42,10 @@ export async function getCachedPuzzleAttemptSpeedPercentages(): Promise<
 }
 
 export async function setCachedPuzzleAttemptSpeedPercentages({
+  userId,
   percentages,
 }: {
+  userId: string;
   percentages: Map<string, { percentage: number; expirationTimestampMs?: number }>;
 }) {
   const now = Date.now();
@@ -63,7 +67,7 @@ export async function setCachedPuzzleAttemptSpeedPercentages({
 
   await setJson({
     client: await getRedis(),
-    key: PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY,
+    key: `${PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY}:${userId}`,
     schema: PUZZLE_ATTEMPT_SPEED_PERCENTAGE_SCHEMA,
     value: entries,
     expirationMs: PUZZLE_ATTEMPT_SPEED_PERCENTAGE_EXPIRATION_MS,

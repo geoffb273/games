@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -17,9 +18,9 @@ describe('getPuzzleAttemptSpeedPercentages', () => {
   });
 
   it('returns only requested keys when cache contains additional keys', async () => {
+    const userId = randomUUID();
     const requestedKey = {
-      puzzleId: 'puzzle-1',
-      userId: 'user-1',
+      puzzleId: randomUUID(),
       durationMs: 1000,
     };
     const requestedSerialized = serializePuzzleAttemptSpeedPercentageKey(requestedKey);
@@ -34,7 +35,7 @@ describe('getPuzzleAttemptSpeedPercentages', () => {
           },
         ],
         [
-          'other-puzzle:other-user:999',
+          'other-puzzle:999',
           {
             percentage: 99,
             expirationTimestampMs: Date.now() + 60_000,
@@ -44,15 +45,15 @@ describe('getPuzzleAttemptSpeedPercentages', () => {
     );
     vi.mocked(getPuzzleAttemptSpeedPercentagesByAttemptDao).mockResolvedValue(new Map());
 
-    const result = await getPuzzleAttemptSpeedPercentages({ keys: [requestedKey] });
+    const result = await getPuzzleAttemptSpeedPercentages({ userId, keys: [requestedKey] });
 
     expect(result).toEqual(new Map([[requestedSerialized, 20]]));
   });
 
   it('does not write cache when all requested keys are cache hits', async () => {
+    const userId = randomUUID();
     const requestedKey = {
-      puzzleId: 'puzzle-2',
-      userId: 'user-2',
+      puzzleId: randomUUID(),
       durationMs: 2000,
     };
     const requestedSerialized = serializePuzzleAttemptSpeedPercentageKey(requestedKey);
@@ -70,22 +71,24 @@ describe('getPuzzleAttemptSpeedPercentages', () => {
     );
     vi.mocked(getPuzzleAttemptSpeedPercentagesByAttemptDao).mockResolvedValue(new Map());
 
-    const result = await getPuzzleAttemptSpeedPercentages({ keys: [requestedKey] });
+    const result = await getPuzzleAttemptSpeedPercentages({ userId, keys: [requestedKey] });
 
-    expect(getPuzzleAttemptSpeedPercentagesByAttemptDao).toHaveBeenCalledWith({ keys: [] });
+    expect(getPuzzleAttemptSpeedPercentagesByAttemptDao).toHaveBeenCalledWith({
+      userId,
+      keys: [],
+    });
     expect(setCachedPuzzleAttemptSpeedPercentages).not.toHaveBeenCalled();
     expect(result).toEqual(new Map([[requestedSerialized, 88]]));
   });
 
   it('fetches misses, writes only misses to cache, and returns full requested set', async () => {
+    const userId = randomUUID();
     const hitKey = {
-      puzzleId: 'puzzle-3',
-      userId: 'user-3',
+      puzzleId: randomUUID(),
       durationMs: 3000,
     };
     const missKey = {
-      puzzleId: 'puzzle-4',
-      userId: 'user-4',
+      puzzleId: randomUUID(),
       durationMs: 4000,
     };
     const hitSerialized = serializePuzzleAttemptSpeedPercentageKey(hitKey);
@@ -106,10 +109,14 @@ describe('getPuzzleAttemptSpeedPercentages', () => {
       new Map([[missSerialized, 70]]),
     );
 
-    const result = await getPuzzleAttemptSpeedPercentages({ keys: [hitKey, missKey] });
+    const result = await getPuzzleAttemptSpeedPercentages({ userId, keys: [hitKey, missKey] });
 
-    expect(getPuzzleAttemptSpeedPercentagesByAttemptDao).toHaveBeenCalledWith({ keys: [missKey] });
+    expect(getPuzzleAttemptSpeedPercentagesByAttemptDao).toHaveBeenCalledWith({
+      userId,
+      keys: [missKey],
+    });
     expect(setCachedPuzzleAttemptSpeedPercentages).toHaveBeenCalledWith({
+      userId,
       percentages: new Map([[missSerialized, { percentage: 70 }]]),
     });
     expect(result).toEqual(

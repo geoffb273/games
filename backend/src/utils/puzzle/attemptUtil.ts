@@ -2,8 +2,7 @@ import { type PuzzleAttemptSpeedPercentageKey } from '@/platform/puzzle/resource
 
 export function serializePuzzleAttemptSpeedPercentageKey({
   puzzleId,
-  userId,
   durationMs,
 }: PuzzleAttemptSpeedPercentageKey): string {
-  return `${puzzleId}:${userId}:${durationMs}`;
+  return `${puzzleId}:${durationMs}`;
 }

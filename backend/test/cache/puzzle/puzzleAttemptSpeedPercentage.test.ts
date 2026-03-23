@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -37,26 +38,28 @@ describe('puzzleAttemptSpeedPercentage cache', () => {
 
   describe('getCachedPuzzleAttemptSpeedPercentages', () => {
     it('returns an empty Map when there is no cached payload', async () => {
-      const result = await getCachedPuzzleAttemptSpeedPercentages();
+      const userId = randomUUID();
+      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId });
 
       expect(result).toEqual(new Map());
       expect(getJsonMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          key: PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY,
+          key: `${PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY}:${userId}`,
           schema: PUZZLE_ATTEMPT_SPEED_PERCENTAGE_SCHEMA,
         }),
       );
     });
 
     it('drops entries whose expirationTimestampMs is not after now', async () => {
+      const userId = randomUUID();
       const t = Date.now();
-      cacheStore.set(PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY, {
+      cacheStore.set(`${PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY}:${userId}`, {
         expired: { percentage: 1, expirationTimestampMs: t },
         stale: { percentage: 2, expirationTimestampMs: t - 1 },
         ok: { percentage: 99, expirationTimestampMs: t + 60_000 },
       });
 
-      const result = await getCachedPuzzleAttemptSpeedPercentages();
+      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId });
 
       expect(result.size).toBe(1);
       expect(result.get('ok')).toEqual({
@@ -67,12 +70,13 @@ describe('puzzleAttemptSpeedPercentage cache', () => {
 
     it('returns all entries when every expirationTimestampMs is in the future', async () => {
       const t = Date.now();
-      cacheStore.set(PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY, {
+      const userId = randomUUID();
+      cacheStore.set(`${PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY}:${userId}`, {
         a: { percentage: 10, expirationTimestampMs: t + 1000 },
         b: { percentage: 20, expirationTimestampMs: t + 2000 },
       });
 
-      const result = await getCachedPuzzleAttemptSpeedPercentages();
+      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId });
 
       expect(result.size).toBe(2);
       expect(result.get('a')).toEqual({
@@ -89,12 +93,13 @@ describe('puzzleAttemptSpeedPercentage cache', () => {
   describe('setCachedPuzzleAttemptSpeedPercentages', () => {
     it('writes entries and getCached returns them before they expire', async () => {
       const t = Date.now();
-
+      const userId = randomUUID();
       await setCachedPuzzleAttemptSpeedPercentages({
+        userId,
         percentages: new Map([['puzzle-1', { percentage: 42, expirationTimestampMs: t + 60_000 }]]),
       });
 
-      const result = await getCachedPuzzleAttemptSpeedPercentages();
+      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId });
 
       expect(result.size).toBe(1);
       expect(result.get('puzzle-1')).toEqual({
@@ -105,12 +110,13 @@ describe('puzzleAttemptSpeedPercentage cache', () => {
 
     it('defaults expirationTimestampMs to one hour after now when omitted', async () => {
       const before = Date.now();
-
+      const userId = randomUUID();
       await setCachedPuzzleAttemptSpeedPercentages({
+        userId,
         percentages: new Map([['puzzle-1', { percentage: 33 }]]),
       });
 
-      const result = await getCachedPuzzleAttemptSpeedPercentages();
+      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId });
       const entry = result.get('puzzle-1');
 
       expect(entry).toBeDefined();
@@ -121,29 +127,31 @@ describe('puzzleAttemptSpeedPercentage cache', () => {
 
     it('does not store entries whose expirationTimestampMs is not after now', async () => {
       const t = Date.now();
-
+      const userId = randomUUID();
       await setCachedPuzzleAttemptSpeedPercentages({
+        userId,
         percentages: new Map([
           ['gone', { percentage: 1, expirationTimestampMs: t }],
           ['alsoGone', { percentage: 2, expirationTimestampMs: t - 1 }],
         ]),
       });
 
-      const result = await getCachedPuzzleAttemptSpeedPercentages();
+      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId });
 
       expect(result.size).toBe(0);
     });
 
     it('passes key, value, schema, and TTL to setJson', async () => {
       const t = Date.now();
-
+      const userId = randomUUID();
       await setCachedPuzzleAttemptSpeedPercentages({
+        userId,
         percentages: new Map([['x', { percentage: 1, expirationTimestampMs: t + 1000 }]]),
       });
 
       expect(setJsonMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          key: PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY,
+          key: `${PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY}:${userId}`,
           expirationMs: PUZZLE_ATTEMPT_SPEED_PERCENTAGE_EXPIRATION_MS,
           value: {
             x: {
