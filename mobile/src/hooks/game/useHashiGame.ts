@@ -55,6 +55,7 @@ export type HashiGame = {
     from: { row: number; col: number };
     to: { row: number; col: number };
   }[];
+  onIslandPress: ({ row, col }: { row: number; col: number }) => void;
 };
 
 export type HashiOnSolve = (params: {
@@ -106,6 +107,8 @@ export function useHashiGame({
   puzzle: HashiPuzzle;
   onSolve: HashiOnSolve;
 }): HashiGame {
+  const lastIslandTapRef = useRef<{ row: number; col: number } | null>(null);
+
   const stableOnSolve = useStableCallback(onSolve);
   const connections = useMemo(() => findConnections(islands), [islands]);
   const bridgeCountsSchema = useMemo(
@@ -217,6 +220,27 @@ export function useHashiGame({
     },
   );
 
+  const onIslandPress = useStableCallback(({ row, col }: { row: number; col: number }) => {
+    if (lastIslandTapRef.current != null) {
+      const { row: fromRow, col: fromCol } = lastIslandTapRef.current;
+
+      const connectionIndex = connections.findIndex((conn) => {
+        const a = islands[conn.a];
+        const b = islands[conn.b];
+        return (
+          (a.row === fromRow && a.col === fromCol && b.row === row && b.col === col) ||
+          (a.row === row && a.col === col && b.row === fromRow && b.col === fromCol)
+        );
+      });
+
+      if (connectionIndex >= 0 && isValidBridge(connectionIndex)) {
+        onConnectionTap(connectionIndex);
+      }
+    }
+
+    lastIslandTapRef.current = { row, col };
+  });
+
   const currentState = useMemo(
     () => buildHashiCurrentState(connections, bridgeCounts, islands),
     [connections, bridgeCounts, islands],
@@ -230,5 +254,6 @@ export function useHashiGame({
     onConnectionTap,
     onHint,
     currentState,
+    onIslandPress,
   };
 }
