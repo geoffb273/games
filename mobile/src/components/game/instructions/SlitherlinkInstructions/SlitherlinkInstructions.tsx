@@ -13,25 +13,20 @@ export function SlitherlinkInstructions() {
     <>
       <InstructionSection title="Goal">
         <Text type="body" color="textSecondary">
-          Draw a single continuous loop around the grid by placing lines along the edges of cells.
-          The loop cannot cross itself or branch, and it must eventually return to where it started.
+          Draw one closed loop on the grid.
         </Text>
       </InstructionSection>
 
       <InstructionSection title="Rules">
         <InstructionBulletList
           items={[
-            'Numbers inside cells tell you exactly how many of that cell’s four edges must be part of the loop.',
-            'Blank cells have no restriction—they can have any number of loop edges from 0 to 4.',
-            'The loop must be a single, unbroken cycle: no forks, dead ends, or separate smaller loops.',
-            'Lines run only along the grid edges between dots; they never cut through cells or cross each other.',
+            'A number tells how many of the 4 edges are part of the loop.',
+            'Blank cells have no count rule.',
+            'The final path is one loop: no forks, dead ends, or extra loops.',
+            'Lines go only on grid edges.',
           ]}
         />
-
         <View style={styles.previewContainer}>
-          <Text type="caption" color="textSecondary">
-            Here&apos;s a tiny example board so you can see how the clues and loop edges work:
-          </Text>
           <View style={styles.previewBoard}>
             <InstructionsSlitherlinkBoard />
           </View>
@@ -42,29 +37,26 @@ export function SlitherlinkInstructions() {
         <InstructionBulletList
           items={[
             <>
-              <Text type="emphasized_body">Tap</Text> an edge between two dots to toggle a loop line
-              on or off.
+              <Text type="emphasized_body">Tap</Text> an edge to toggle a line.
             </>,
-            'Use marked edges to rule out paths and focus on where the loop must pass.',
+            'Use line and empty marks to narrow options.',
           ]}
         />
       </InstructionSection>
 
       <InstructionSection title="Hints">
         <Text type="body" color="textSecondary">
-          Tap the <Text type="emphasized_body">Hint</Text> button below the board to get help. A
-          hint will suggest adding or removing a line in a place that follows the rules and moves
-          you closer to a complete loop.
+          Tap <Text type="emphasized_body">Hint</Text> for a suggested line change.
         </Text>
       </InstructionSection>
 
       <InstructionSection title="Tips">
         <InstructionBulletList
           items={[
-            'Start with cells that have 0 or 3–4 as clues; their edges are often forced.',
-            'A cell with 0 means none of its edges can be part of the loop—mark them all empty.',
-            'A cell with 3 or 4 must have most or all of its edges filled; use that to constrain neighbors.',
-            'Remember that the final loop has no branches: avoid creating T-junctions or dead-end lines.',
+            'Start with 0, 3, and 4 clues.',
+            'A 0 cell has no loop edges.',
+            'A 3 or 4 cell forces many edges.',
+            'Avoid T-junctions and dead ends.',
           ]}
         />
       </InstructionSection>
@@ -74,7 +66,6 @@ export function SlitherlinkInstructions() {
 
 const styles = StyleSheet.create({
   previewContainer: {
-    marginTop: Spacing.two,
     alignItems: 'center',
     gap: Spacing.one,
   },

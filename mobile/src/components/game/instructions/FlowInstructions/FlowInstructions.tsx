@@ -42,9 +42,9 @@ export function FlowInstructions() {
       <InstructionSection title="Controls">
         <InstructionBulletList
           items={[
-            'Tap and drag from a colored dot to draw a path to its matching dot.',
-            'Drag back over an existing path of the same color to change its route.',
-            'If a path blocks another color, redraw or erase it to free up space.',
+            'Tap and drag from a colored dot to draw a path toward its matching dot.',
+            'You can only start drawing from a colored dot; ending on or next to the matching dot will complete the connection.',
+            'Drag back over your existing path of the same color to reroute it, or tap either colored dot to clear that color path.',
           ]}
         />
       </InstructionSection>
