@@ -113,6 +113,7 @@ export function HashiBoard({
         {puzzle.islands.map((island, i) => (
           <HashiIsland
             key={i}
+            isDisabled={isDisabled}
             requiredBridges={island.requiredBridges}
             currentBridges={currentBridgesPerIsland[i] ?? 0}
             x={islandPositions[i].x}

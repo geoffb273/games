@@ -30,6 +30,7 @@ export type HashiIslandProps = {
   /** Whether the completion wave is active. */
   isCompletionWaveActive: boolean;
   onPress: () => void;
+  isDisabled: boolean;
 };
 
 export const HashiIsland = memo(function HashiIsland({
@@ -42,6 +43,7 @@ export const HashiIsland = memo(function HashiIsland({
   onWaveComplete,
   isCompletionWaveActive,
   onPress,
+  isDisabled,
 }: HashiIslandProps) {
   const theme = useTheme();
   const radius = cellSize * ISLAND_RADIUS_RATIO;
@@ -138,7 +140,7 @@ export const HashiIsland = memo(function HashiIsland({
         animatedIslandStyle,
       ]}
     >
-      <Pressable onPress={onPress}>
+      <Pressable onPress={onPress} disabled={isDisabled || isCompletionWaveActive}>
         <Text type="emphasized_body" color={isAtMax ? 'background' : 'text'}>
           {requiredBridges}
         </Text>

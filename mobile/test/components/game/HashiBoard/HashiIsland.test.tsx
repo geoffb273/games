@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, userEvent } from '@testing-library/react-native';
 
 import { HashiIsland } from '@/components/game/HashiBoard/HashiIsland';
 
@@ -20,6 +20,8 @@ const defaultProps = {
   cellSize: 40,
   isLastInWave: false,
   isCompletionWaveActive: false,
+  onPress: jest.fn(),
+  isDisabled: false,
 };
 
 describe('HashiIsland', () => {
@@ -76,5 +78,58 @@ describe('HashiIsland', () => {
 
     expect(onWaveComplete).toHaveBeenCalledTimes(1);
     jest.useRealTimers();
+  });
+
+  it('calls onPress when island is pressed and enabled', async () => {
+    const user = userEvent.setup();
+    const onPress = jest.fn();
+    render(
+      <HashiIsland
+        {...defaultProps}
+        requiredBridges={2}
+        currentBridges={0}
+        onPress={onPress}
+        isDisabled={false}
+      />,
+    );
+
+    await user.press(screen.getByText('2'));
+
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call onPress when explicitly disabled', async () => {
+    const user = userEvent.setup();
+    const onPress = jest.fn();
+    render(
+      <HashiIsland
+        {...defaultProps}
+        requiredBridges={2}
+        currentBridges={0}
+        onPress={onPress}
+        isDisabled
+      />,
+    );
+
+    await user.press(screen.getByText('2'));
+    expect(onPress).not.toHaveBeenCalled();
+  });
+
+  it('does not call onPress during completion wave even if enabled', async () => {
+    const user = userEvent.setup();
+    const onPress = jest.fn();
+    render(
+      <HashiIsland
+        {...defaultProps}
+        requiredBridges={2}
+        currentBridges={0}
+        onPress={onPress}
+        isDisabled={false}
+        isCompletionWaveActive
+      />,
+    );
+
+    await user.press(screen.getByText('2'));
+    expect(onPress).not.toHaveBeenCalled();
   });
 });
