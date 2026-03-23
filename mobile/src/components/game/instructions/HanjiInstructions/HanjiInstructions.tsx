@@ -46,8 +46,8 @@ export function HanjiInstructions() {
               empty.
             </>,
             <>
-              <Text type="emphasized_body">Long-press</Text> a cell to mark it as empty (✕) or to
-              clear the mark. Use marks for cells you know must stay empty.
+              <Text type="emphasized_body">Long-press</Text> an empty or marked cell to toggle a ✕
+              mark. Use marks for cells you know must stay empty.
             </>,
             'Empty cells are unshaded; filled cells are dark; marked cells show a ✕.',
           ]}
