@@ -30,6 +30,7 @@ describe('useFlowGame', () => {
   function createPuzzle(): FlowPuzzle {
     return {
       id: 'test-puzzle',
+      dailyChallengeId: 'test-daily-challenge',
       width: 2,
       height: 2,
       pairs: [

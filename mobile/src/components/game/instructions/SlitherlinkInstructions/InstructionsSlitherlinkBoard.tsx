@@ -15,6 +15,7 @@ import { Shadows, Spacing } from '@/constants/token';
 
 const INSTRUCTIONS_SLITHERLINK_PUZZLE: SlitherlinkPuzzle = {
   id: 'slitherlink-instructions-demo',
+  dailyChallengeId: 'slitherlink-instructions-demo',
   name: 'Example Slitherlink board',
   description: null,
   attempt: null,

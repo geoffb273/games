@@ -11,21 +11,21 @@ export function LandingPageView() {
   return (
     <View style={styles.container}>
       <View style={[styles.topLeftIcon, { paddingTop: top }]}>
-        <PuzzleIcon type={PuzzleType.Flow} size="md" style={styles.topLeftRotate} />
+        <PuzzleIcon type={PuzzleType.Flow} size="lg" style={styles.topLeftRotate} />
       </View>
       <View style={[styles.topRightIcon, { paddingTop: top }]}>
-        <PuzzleIcon type={PuzzleType.Hanji} size="md" style={styles.topRightRotate} />
+        <PuzzleIcon type={PuzzleType.Hanji} size="lg" style={styles.topRightRotate} />
       </View>
 
       <View style={[styles.bottomLeftIcon, { paddingBottom: bottom }]}>
-        <PuzzleIcon type={PuzzleType.Minesweeper} size="md" style={styles.bottomLeftRotate} />
+        <PuzzleIcon type={PuzzleType.Minesweeper} size="lg" style={styles.bottomLeftRotate} />
       </View>
       <View style={[styles.bottomRightIcon, { paddingBottom: bottom }]}>
-        <PuzzleIcon type={PuzzleType.Slitherlink} size="md" style={styles.bottomRightRotate} />
+        <PuzzleIcon type={PuzzleType.Slitherlink} size="lg" style={styles.bottomRightRotate} />
       </View>
 
       <View style={styles.centerContent}>
-        <PuzzleIcon type={PuzzleType.Hashi} size="lg" />
+        <PuzzleIcon type={PuzzleType.Hashi} size="xl" />
         <AppLogo />
       </View>
     </View>

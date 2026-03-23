@@ -43,7 +43,9 @@ jest.mock('@/api/puzzle/puzzleQuery', () => ({
 }));
 
 jest.mock('@/components/common/PuzzleIcon', () => ({
-  PuzzleIcon: ({ type }: { type: PuzzleType }) => <MockText>{type}</MockText>,
+  PuzzleIcon: ({ type, size }: { type: PuzzleType; size: 'sm' | 'md' }) => (
+    <MockText>{`${type}-${size}`}</MockText>
+  ),
 }));
 
 jest.mock('@/components/common/ErrorView', () => ({
@@ -142,6 +144,53 @@ describe('PuzzleCard', () => {
     render(<PuzzleCard puzzle={puzzle} />);
 
     expect(screen.getByText('close')).toBeOnTheScreen();
+  });
+
+  describe('small variant', () => {
+    it('renders the Play-prefixed title and hides descriptions', () => {
+      const puzzle = createPuzzle({
+        name: 'Custom Puzzle',
+        description: 'Custom description',
+      });
+
+      render(<PuzzleCard puzzle={puzzle} variant="small" />);
+
+      expect(screen.getByText('Play Custom Puzzle')).toBeOnTheScreen();
+      expect(screen.queryByText('Custom description')).toBeNull();
+    });
+
+    it('navigates with replace instead of push on press', async () => {
+      const user = userEvent.setup();
+      const puzzle = createPuzzle({ id: 'puzzle-small-route' });
+      const mockPush = jest.fn();
+      const mockReplace = jest.fn();
+
+      jest.mocked(useRouter).mockReturnValue({
+        push: mockPush,
+        replace: mockReplace,
+      } as unknown as Router);
+
+      render(<PuzzleCard puzzle={puzzle} variant="small" />);
+
+      await user.press(screen.getByText('Play Sample Puzzle'));
+
+      expect(mockReplace).toHaveBeenCalledWith({
+        pathname: '/game/[id]',
+        params: { id: 'puzzle-small-route' },
+      });
+      expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    it('uses the small icon and does not render a status icon', () => {
+      const puzzle = createPuzzle({
+        attempt: { startedAt: new Date(), completedAt: new Date(), durationMs: 1000 },
+      });
+
+      render(<PuzzleCard puzzle={puzzle} variant="small" />);
+
+      expect(screen.getByText(`${PuzzleType.Flow}-sm`)).toBeOnTheScreen();
+      expect(screen.queryByText('check')).toBeNull();
+    });
   });
 });
 

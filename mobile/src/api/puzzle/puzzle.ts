@@ -75,6 +75,7 @@ gql`
   fragment PuzzleFragment on Puzzle {
     __typename
     id
+    dailyChallengeId
     name
     description
     attempt {
@@ -117,6 +118,7 @@ export type PuzzleAttempt = {
 
 export type PuzzleBase = {
   id: string;
+  dailyChallengeId: string;
   name: string;
   description: string | null;
   attempt: PuzzleAttempt | null;
@@ -198,7 +200,7 @@ export type Puzzle = HanjiPuzzle | HashiPuzzle | MinesweeperPuzzle | Slitherlink
  */
 export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>): Puzzle {
   const puzzle = getFragmentData(PuzzleFragmentFragmentDoc, data);
-  const { id, name, description, attempt: puzzleAttempt, __typename } = puzzle;
+  const { id, dailyChallengeId, name, description, attempt: puzzleAttempt, __typename } = puzzle;
 
   const attempt: PuzzleAttempt | null =
     puzzleAttempt != null
@@ -211,6 +213,7 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
 
   const shared: PuzzleBase = {
     id,
+    dailyChallengeId,
     name,
     description: description ?? null,
     attempt,
@@ -353,6 +356,7 @@ export function mapToPuzzleFragment(puzzle: Puzzle): PuzzleQueryData {
 
   const base: PuzzleBaseFragmentData = {
     id: puzzle.id,
+    dailyChallengeId: puzzle.dailyChallengeId,
     name: puzzle.name,
     description: puzzle.description,
     attempt,
