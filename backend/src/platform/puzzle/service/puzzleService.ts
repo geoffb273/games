@@ -77,13 +77,15 @@ export async function getUserPuzzleAttemptsByPuzzleIds({
  * @returns a map of puzzle attempt keys to speed percentages
  */
 export async function getPuzzleAttemptSpeedPercentages({
+  userId,
   keys,
 }: {
+  userId: string;
   keys: readonly PuzzleAttemptSpeedPercentageKey[];
 }): Promise<Map<string, number>> {
   if (keys.length === 0) return new Map();
 
-  const cachedPercentages = await getCachedPuzzleAttemptSpeedPercentages();
+  const cachedPercentages = await getCachedPuzzleAttemptSpeedPercentages({ userId });
   const serializedKeys = keys.map((key) => ({
     key,
     serialized: serializePuzzleAttemptSpeedPercentageKey(key),
@@ -92,11 +94,13 @@ export async function getPuzzleAttemptSpeedPercentages({
     .filter(({ serialized }) => !cachedPercentages.has(serialized))
     .map(({ key }) => key);
   const fetchedPercentages = await getPuzzleAttemptSpeedPercentagesByAttemptDao({
+    userId,
     keys: keysToFetch,
   });
 
   if (fetchedPercentages.size > 0) {
     await setCachedPuzzleAttemptSpeedPercentages({
+      userId,
       percentages: new Map(
         Array.from(fetchedPercentages.entries()).map(([key, percentage]) => [key, { percentage }]),
       ),

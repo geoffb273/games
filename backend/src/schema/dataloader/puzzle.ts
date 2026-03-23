@@ -30,7 +30,10 @@ export function PuzzleDataLoader({ user }: Authorization) {
     string
   >(
     async (keys) => {
-      const map = await getPuzzleAttemptSpeedPercentages({ keys });
+      const userId = (await user)?.id ?? null;
+      if (userId == null) return keys.map(() => 0);
+
+      const map = await getPuzzleAttemptSpeedPercentages({ userId, keys });
       return keys.map((key) => map.get(serializePuzzleAttemptSpeedPercentageKey(key)) ?? 0);
     },
     {

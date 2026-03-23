@@ -98,6 +98,5 @@ export type PuzzleHint =
 
 export type PuzzleAttemptSpeedPercentageKey = {
   puzzleId: string;
-  userId: string;
   durationMs: number;
 };
