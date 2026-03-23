@@ -1,6 +1,8 @@
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 
+import { getRedis } from '@/client/redis';
+
 const LOCAL_DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/games';
 
 /** Matches `redis` in `docker-compose.yml` (no ACL; empty auth). */
@@ -21,7 +23,7 @@ export default async function globalSetup() {
   process.env.REDIS_USERNAME = LOCAL_REDIS_USERNAME;
   process.env.REDIS_PASSWORD = LOCAL_REDIS_PASSWORD;
 
-  const { redis } = await import('@/client/redis');
+  const redis = await getRedis();
   await redis.flushDb();
 
   const backendRoot = path.resolve(__dirname, '..');
@@ -41,4 +43,10 @@ export default async function globalSetup() {
       stdio: 'inherit',
     });
   }
+
+  return async () => {
+    if (redis.isOpen) {
+      await redis.quit();
+    }
+  };
 }

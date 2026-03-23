@@ -2,8 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { redis } from '@/client/redis';
+import { getRedis } from '@/client/redis';
 import { getJson, REDIS_PREFIX, setJson } from '@/utils/redis';
+
+const redis = await getRedis();
 
 describe('redis utils', () => {
   afterEach(() => {
@@ -105,7 +107,7 @@ describe('redis utils', () => {
         });
 
         expect(setSpy).toHaveBeenCalledWith(REDIS_PREFIX + key, JSON.stringify({ value: 'ok' }), {
-          expiration: { type: 'EX', value: expirationMs },
+          expiration: { type: 'PX', value: expirationMs },
         });
 
         const raw = await redis.get(REDIS_PREFIX + key);

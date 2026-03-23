@@ -40,9 +40,9 @@ jobs:
       JWT_SECRET: test
       ADMIN_SECRET: test
       GRAPHQL_HIVE_ACCESS_TOKEN: test
-      REDIS_USERNAME: test
-      REDIS_PASSWORD: test
-      REDIS_HOST: test
+      REDIS_USERNAME: ''
+      REDIS_PASSWORD: ''
+      REDIS_HOST: localhost
       REDIS_PORT: 6379
     steps:
       - uses: actions/checkout@v4
@@ -110,9 +110,9 @@ jobs:
       JWT_SECRET: test
       ADMIN_SECRET: test
       GRAPHQL_HIVE_ACCESS_TOKEN: test
-      REDIS_USERNAME: test
-      REDIS_PASSWORD: test
-      REDIS_HOST: test
+      REDIS_USERNAME: ''
+      REDIS_PASSWORD: ''
+      REDIS_HOST: localhost
       REDIS_PORT: 6379
     steps:
       - uses: actions/checkout@v4
@@ -168,9 +168,9 @@ jobs:
       JWT_SECRET: test
       ADMIN_SECRET: test
       GRAPHQL_HIVE_ACCESS_TOKEN: test
-      REDIS_USERNAME: test
-      REDIS_PASSWORD: test
-      REDIS_HOST: test
+      REDIS_USERNAME: ''
+      REDIS_PASSWORD: ''
+      REDIS_HOST: localhost
       REDIS_PORT: 6379
     steps:
       - uses: actions/checkout@v4
