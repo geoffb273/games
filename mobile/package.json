@@ -22,8 +22,12 @@
   },
   "jest": {
     "preset": "jest-expo",
-    "setupFiles": ["./node_modules/react-native-gesture-handler/jestSetup.js"],
-    "setupFilesAfterEnv": ["./jest-setup.js"],
+    "setupFiles": [
+      "./node_modules/react-native-gesture-handler/jestSetup.js"
+    ],
+    "setupFilesAfterEnv": [
+      "./jest-setup.js"
+    ],
     "transformIgnorePatterns": [
       "node_modules/(?!(?:.pnpm/)?((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg))"
     ]
@@ -35,6 +39,7 @@
     "@react-navigation/elements": "^2.8.1",
     "@react-navigation/native": "^7.1.28",
     "expo": "~55.0.4",
+    "expo-build-properties": "~55.0.10",
     "expo-constants": "~55.0.7",
     "expo-crypto": "~55.0.8",
     "expo-dev-client": "~55.0.10",
@@ -57,6 +62,7 @@
     "react-dom": "19.2.0",
     "react-native": "0.83.2",
     "react-native-gesture-handler": "~2.30.0",
+    "react-native-google-mobile-ads": "^16.3.1",
     "react-native-mmkv": "^3.3.3",
     "react-native-nitro-modules": "^0.35.0",
     "react-native-reanimated": "4.2.1",
