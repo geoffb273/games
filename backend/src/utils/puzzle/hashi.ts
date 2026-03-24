@@ -461,6 +461,18 @@ function tryFixAmbiguity(
   return null;
 }
 
+/**
+ * Island clue parity: requiredBridges is odd iff the island has an odd number of
+ * incident edges with exactly one bridge (edges with two bridges contribute 0 mod 2).
+ * Lower double-bridge probability → more single bridges → odd clue numbers become more common.
+ */
+function sampleDoubleBridgeProb(random: () => number, oddClueBias: number): number {
+  const t = Math.min(1, Math.max(0, oddClueBias));
+  const base = 0.3 - 0.15 * t;
+  const span = 0.4 - 0.05 * t;
+  return base + random() * span;
+}
+
 // --- Main export ---
 
 type GenerateHashiPuzzleDataOptions = {
@@ -470,6 +482,11 @@ type GenerateHashiPuzzleDataOptions = {
   seed?: string | number;
   /** Target number of islands. Defaults to ~15% of grid cells (min 4). */
   islandCount?: number;
+  /**
+   * 0 = default distribution. 1 = stronger preference for odd clue numbers (3, 5, 7)
+   * over even (4, 6) by sampling lower double-bridge probability per attempt.
+   */
+  oddClueBias?: number;
 };
 
 const ATTEMPTS_PER_TIER = 3000;
@@ -481,6 +498,7 @@ const MAX_ISLAND_REDUCTIONS = 6;
  * For each attempt: places islands, generates a random spanning-tree-based bridge
  * assignment, and checks unique solvability. The double-bridge probability and
  * extra-bridge probability are randomized per attempt to maximise diversity.
+ * Use {@link oddClueBias} to favour odd clue numbers.
  * Progressively reduces the island count if the target density is too hard.
  */
 export function generateHashiPuzzleData({
@@ -488,6 +506,7 @@ export function generateHashiPuzzleData({
   height,
   seed,
   islandCount,
+  oddClueBias = 0,
 }: GenerateHashiPuzzleDataOptions): HashiPuzzleData {
   const targetIslands = islandCount ?? Math.max(4, Math.floor(width * height * 0.15));
 
@@ -500,7 +519,7 @@ export function generateHashiPuzzleData({
       const numericSeed = stringToSeed(effectiveSeed);
       const random = createSeededRandom(numericSeed);
 
-      const doubleBridgeProb = 0.3 + random() * 0.4;
+      const doubleBridgeProb = sampleDoubleBridgeProb(random, oddClueBias);
       const extraBridgeProb = random() < 0.7 ? 0 : random() * 0.2;
 
       const positions = placeIslands(width, height, currentCount, random);
