@@ -1,7 +1,6 @@
 import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import mobileAds, {
   AdsConsent,
-  AdsConsentDebugGeography,
   type AdsConsentInfo,
   AdsConsentStatus,
 } from 'react-native-google-mobile-ads';
@@ -24,9 +23,7 @@ function ensureMobileAdsInitialized(): Promise<void> {
 
 async function requestConsent(): Promise<AdsConsentInfo> {
   await ensureMobileAdsInitialized();
-  return AdsConsent.requestInfoUpdate({
-    debugGeography: AdsConsentDebugGeography.REGULATED_US_STATE,
-  });
+  return AdsConsent.requestInfoUpdate();
 }
 
 export function AdConsentProvider({ children }: AdConsentProviderProps) {
