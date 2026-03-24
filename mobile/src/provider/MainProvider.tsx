@@ -8,6 +8,7 @@ import { ApolloProvider } from '@apollo/client/react';
 import client from '@/client/apollo';
 import { ThemeColor } from '@/constants/theme';
 
+import { AdConsentProvider } from './AdConsentProvider';
 import { AuthFetchProvider } from './AuthFetchProvider';
 import { InitialLoadGuard } from './InitialLoadGuard';
 
@@ -33,7 +34,9 @@ export function MainProvider({ children }: { children: ReactNode }) {
       >
         <ApolloProvider client={client}>
           <AuthFetchProvider>
-            <InitialLoadGuard>{children}</InitialLoadGuard>
+            <AdConsentProvider>
+              <InitialLoadGuard>{children}</InitialLoadGuard>
+            </AdConsentProvider>
           </AuthFetchProvider>
         </ApolloProvider>
       </ThemeProvider>

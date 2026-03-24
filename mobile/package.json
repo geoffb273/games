@@ -23,7 +23,8 @@
   "jest": {
     "preset": "jest-expo",
     "setupFiles": [
-      "./node_modules/react-native-gesture-handler/jestSetup.js"
+      "./node_modules/react-native-gesture-handler/jestSetup.js",
+      "./node_modules/react-native-google-mobile-ads/jest.setup.ts"
     ],
     "setupFilesAfterEnv": [
       "./jest-setup.js"
