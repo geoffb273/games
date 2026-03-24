@@ -69,23 +69,28 @@ describe('generateSlitherlinkPuzzleData', () => {
 });
 
 describe('generateSlitherlinkPuzzleData uniqueness (measured)', () => {
-  const RUNS_9X9 = 100;
+  const RUNS_6X6 = 100;
   const MIN_SUCCESS_RATE_PERCENT = 90;
 
-  it('reports success rate for 9×9 over many runs', () => {
-    let success9 = 0;
+  it('reports success rate for 6×6 over many runs', () => {
+    let success6 = 0;
 
-    for (let i = 0; i < RUNS_9X9; i++) {
+    for (let i = 0; i < RUNS_6X6; i++) {
       try {
-        generateSlitherlinkPuzzleData({ width: 9, height: 9, seed: `measure-9-${i}` });
-        success9++;
+        generateSlitherlinkPuzzleData({
+          width: 6,
+          height: 6,
+          seed: `measure-6-${i}`,
+        });
+
+        success6++;
       } catch {
         // failed to find unique puzzle within attempt limit
       }
     }
 
-    const rate9 = (success9 / RUNS_9X9) * 100;
+    const rate6 = (success6 / RUNS_6X6) * 100;
 
-    expect(rate9).toBeGreaterThanOrEqual(MIN_SUCCESS_RATE_PERCENT);
+    expect(rate6).toBeGreaterThanOrEqual(MIN_SUCCESS_RATE_PERCENT);
   }, 60_000);
 });

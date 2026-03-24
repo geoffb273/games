@@ -211,4 +211,26 @@ describe('generateHashiPuzzleData', () => {
     const solverResult = solveHashi(puzzleData.islands);
     expect(solverResult.solvable).toBe(true);
   });
+
+  it(
+    'successfully generates many puzzles with deterministic seeds (stress)',
+    { timeout: 10_000 },
+    () => {
+      for (let i = 0; i < 100; i++) {
+        const puzzleData = generateHashiPuzzleData({
+          width: 10,
+          height: 10,
+          seed: `deterministic-stress-${i}`,
+          oddClueBias: 1,
+          islandCount: 24,
+        });
+
+        expect(puzzleData.islands.length).toBeGreaterThanOrEqual(2);
+        expect(puzzleData.solution.length).toBeGreaterThanOrEqual(1);
+
+        const solverResult = solveHashi(puzzleData.islands);
+        expect(solverResult.solvable).toBe(true);
+      }
+    },
+  );
 });

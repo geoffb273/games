@@ -31,13 +31,14 @@ export async function createPuzzlesForDailyChallenge({
     width: 10,
     height: 10,
     seed,
-    islandCount: 20,
+    islandCount: 24,
+    oddClueBias: 1,
   });
 
   const minesweeper = generateMinesweeperPuzzleData({
     width: 12,
     height: 12,
-    mineCount: 36,
+    mineCount: 32,
     seed,
   });
 

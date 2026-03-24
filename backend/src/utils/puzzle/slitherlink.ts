@@ -1,6 +1,6 @@
 import type { SlitherlinkPuzzleData } from '@/platform/puzzle/resource/puzzle';
 
-import { createSeededRandom, stringToSeed } from '../randomUtils';
+import { createSeededRandom, shuffleArrayInPlace, stringToSeed } from '../randomUtils';
 
 type Dot = {
   row: number;
@@ -488,10 +488,11 @@ const TARGET_CLUE_DENSITY_MAX = 0.3;
 const MAX_CLUE_REMOVAL_ATTEMPTS_MULTIPLIER = 4;
 
 /**
- * Thins a full clue grid into a sparser, more informative one while preserving uniqueness.
+ * Thins a full clue grid into a sparser one while preserving uniqueness.
  *
- * Starts from a fully-clued, uniquely-solvable puzzle, removes mostly low-information clues
- * towards a target density, then adds clues back if needed until the puzzle is uniquely solvable again.
+ * Starts from a fully-clued, uniquely-solvable puzzle, removes clues in random order
+ * towards a target density, then adds clues back (most recently removed first) if needed
+ * until the puzzle is uniquely solvable again.
  */
 function sparsifyClues(
   width: number,
@@ -510,40 +511,23 @@ function sparsifyClues(
 
   const clues: (number | null)[][] = fullClues.map((row) => row.slice());
 
-  type Cell = { r: number; c: number; priority: number };
+  type Cell = { r: number; c: number };
   const cells: Cell[] = [];
-
-  function cluePriority(value: number | null): number {
-    if (value === null) return 10;
-    if (value === 0) return 0;
-    if (value === 4) return 1;
-    if (value === 2) return 2;
-    return 3;
-  }
 
   for (let r = 0; r < height; r++) {
     for (let c = 0; c < width; c++) {
-      const value = clues[r][c];
-      cells.push({ r, c, priority: cluePriority(value) });
+      cells.push({ r, c });
     }
   }
 
-  for (let i = cells.length - 1; i > 0; i--) {
-    const j = Math.floor(random() * (i + 1));
-    const tmp = cells[i];
-    cells[i] = cells[j];
-    cells[j] = tmp;
-  }
-
-  cells.sort((a, b) => a.priority - b.priority);
+  shuffleArrayInPlace(cells, random);
 
   let nonNullCount = totalCells;
   const maxAttempts = totalCells * MAX_CLUE_REMOVAL_ATTEMPTS_MULTIPLIER;
   let attempts = 0;
   const removed: Cell[] = [];
 
-  // First pass: aggressively remove low-priority clues without
-  // re-checking uniqueness on every single change.
+  // First pass: remove clues in shuffled order without re-checking uniqueness each step.
   for (const cell of cells) {
     if (nonNullCount <= targetNonNull) break;
     if (attempts >= maxAttempts) break;
@@ -551,12 +535,10 @@ function sparsifyClues(
     const { r, c } = cell;
     if (clues[r][c] === null) continue;
 
-    const original = clues[r][c];
-    // Remove in priority order (0, 4, 2, 3, 1) so we keep the most informative clues when sparse.
     clues[r][c] = null;
     attempts++;
 
-    removed.push({ r, c, priority: cluePriority(original) });
+    removed.push({ r, c });
     nonNullCount--;
   }
 
@@ -566,17 +548,17 @@ function sparsifyClues(
     return clues;
   }
 
-  // Binary-search repair: find minimal number of clues to add back (by priority) for uniqueness.
-  removed.sort((a, b) => b.priority - a.priority);
+  // Binary-search repair: add back clues in reverse removal order (most recently removed first).
+  const repairOrder = removed.slice().reverse();
   const baseClues = clues.map((row) => row.slice());
 
   let low = 0;
-  let high = removed.length;
+  let high = repairOrder.length;
   while (low < high) {
     const mid = (low + high) >> 1;
     const workClues = baseClues.map((row) => row.slice());
     for (let i = 0; i < mid; i++) {
-      const { r, c } = removed[i];
+      const { r, c } = repairOrder[i];
       workClues[r][c] = fullClues[r][c];
     }
     const sols = findSlitherlinkSolutions(width, height, workClues, 2);
@@ -588,7 +570,7 @@ function sparsifyClues(
   }
 
   for (let i = 0; i < low; i++) {
-    const { r, c } = removed[i];
+    const { r, c } = repairOrder[i];
     clues[r][c] = fullClues[r][c];
   }
 
