@@ -12,9 +12,9 @@ import {
 import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
 import { Spacing } from '@/constants/token';
+import { useTriggerAd } from '@/hooks/ads/useTriggerAd';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { useTheme } from '@/hooks/useTheme';
-import { useTriggerAd } from '@/hooks/useTriggerAd';
 
 type HintButtonProps<T extends PuzzleType> = Extract<RequestPuzzleHintInput, { puzzleType: T }> & {
   onHint: (hint: Extract<PuzzleHint, { puzzleType: T }>) => void;
@@ -23,7 +23,7 @@ type HintButtonProps<T extends PuzzleType> = Extract<RequestPuzzleHintInput, { p
 export function HintButton<T extends PuzzleType>({ onHint, ...input }: HintButtonProps<T>) {
   const theme = useTheme();
   const { requestPuzzleHint, isLoading, isError } = useRequestPuzzleHint();
-  const { isLoaded, isEarnedReward, onPressShowAd } = useTriggerAd();
+  const { isDisabled, isEarnedReward, onPressShowAd } = useTriggerAd();
 
   const onHintPress = useStableCallback(async () => {
     const hint = await requestPuzzleHint(input);
@@ -41,12 +41,11 @@ export function HintButton<T extends PuzzleType>({ onHint, ...input }: HintButto
       <Button
         variant="secondary"
         onPress={onPressShowAd}
-        disabled={isLoading || isError || !isLoaded}
+        disabled={isLoading || isError || isDisabled}
         leadingIcon={<FontAwesome name="lightbulb-o" size={28} color={theme.accentInk} />}
       >
         Hint
       </Button>
-
       <Text type="caption">Watch an ad to get a hint</Text>
     </View>
   );
