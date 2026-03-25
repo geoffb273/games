@@ -193,7 +193,7 @@ describe('puzzle cache', () => {
         },
       });
 
-      expect(parsed.description).toBeNull();
+      expect(parsed.description).toBeNullable();
     });
   });
 

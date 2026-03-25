@@ -22,10 +22,7 @@ const puzzleBaseSchema = z.object({
   updatedAt: z.coerce.date(),
   dailyChallengeId: z.string(),
   name: z.string(),
-  description: z.preprocess(
-    (val) => (val === undefined ? null : val),
-    z.union([z.string(), z.null()]),
-  ),
+  description: z.string().nullish(),
 });
 
 /** Schema for a single puzzle document in Redis (matches JSON round-trip from {@link Puzzle}). */
@@ -52,8 +49,10 @@ export const cachedPuzzleSchema = z.discriminatedUnion('type', [
   }),
 ]);
 
+/** Schema for a non-empty list of cached puzzles (one daily challenge set in Redis). */
 export const cachedPuzzlesSchema = z.array(cachedPuzzleSchema).min(1);
 
+/** Loads one puzzle from Redis by id; returns null if absent or fails validation. */
 export async function getCachedPuzzle({ id }: { id: string }): Promise<Puzzle | null> {
   return getJson({
     client: await getRedis(),
@@ -62,6 +61,7 @@ export async function getCachedPuzzle({ id }: { id: string }): Promise<Puzzle | 
   });
 }
 
+/** Loads all puzzles for a daily challenge from Redis; returns null if absent or fails validation. */
 export async function getCachedPuzzles({
   dailyChallengeId,
 }: {
@@ -74,6 +74,7 @@ export async function getCachedPuzzles({
   });
 }
 
+/** Persists one puzzle in Redis with {@link PUZZLE_CACHE_EXPIRATION_MS} TTL. */
 export async function setCachedPuzzle({ puzzle }: { puzzle: Puzzle }): Promise<void> {
   await setJson({
     client: await getRedis(),
@@ -84,6 +85,7 @@ export async function setCachedPuzzle({ puzzle }: { puzzle: Puzzle }): Promise<v
   });
 }
 
+/** Persists a daily challenge’s puzzle list in Redis with {@link PUZZLES_CACHE_EXPIRATION_MS} TTL. */
 export async function setCachedPuzzles({
   dailyChallengeId,
   puzzles,
