@@ -5,6 +5,10 @@ alwaysApply: true
 
 # Planning and Writing in This Codebase
 
+## Plan mode
+
+- Use **Plan mode** when a task’s complexity requires **three or more** distinct steps or requires meaningful thoughts about architecture.
+
 ## Project layout
 
 - **backend**: Node/Express, Apollo Server, Pothos GraphQL, Prisma. TypeScript, ESM.
