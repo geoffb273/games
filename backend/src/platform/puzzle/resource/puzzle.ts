@@ -16,7 +16,7 @@ type BasePuzzle = {
   dailyChallengeId: string;
   type: PuzzleType;
   name: string;
-  description: string | null | undefined;
+  description?: string | null | undefined;
 };
 
 export type FlowPuzzle = BasePuzzle & {
