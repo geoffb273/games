@@ -89,6 +89,40 @@ model UserPuzzleHint {
   puzzleId String @db.Uuid
   puzzle   Puzzle @relation(fields: [puzzleId], references: [id])
 
+  adRewardVerificationId String?                          @db.Uuid
+  adRewardVerification   AdvertisementRewardVerification? @relation(fields: [adRewardVerificationId], references: [id])
+
   @@index([userId, puzzleId])
   @@index([puzzleId])
+  @@index([adRewardVerificationId])
+}
+
+model AdvertisementRewardType {
+  type      String   @id @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  verifications AdvertisementRewardVerification[]
+}
+
+model AdvertisementRewardVerification {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  uniqueKey String @unique
+
+  admobTransactionId String   @unique
+  userId             String   @db.Uuid
+  // Required for type PUZZLE_HINT
+  puzzleId           String?  @db.Uuid
+  expiresAt          DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  type                    String
+  advertisementRewardType AdvertisementRewardType @relation(fields: [type], references: [type])
+
+  userPuzzleHints UserPuzzleHint[]
+
+  @@index([type])
+  @@index([userId, type, expiresAt])
 }
