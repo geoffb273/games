@@ -1,3 +1,4 @@
+import { setCachedPuzzles } from '@/cache/puzzle/puzzle';
 import { generateFlowPuzzleData } from '@/utils/puzzle/flow';
 import { generateHanjiPuzzleData } from '@/utils/puzzle/hanji';
 import { generateHashiPuzzleData } from '@/utils/puzzle/hashi';
@@ -48,8 +49,11 @@ export async function createPuzzlesForDailyChallenge({
     seed,
   });
 
-  return createPuzzles({
+  const puzzles = await createPuzzles({
     dailyChallengeId,
     data: { flow, hanji, hashi, minesweeper, slitherlink },
   });
+
+  void setCachedPuzzles({ dailyChallengeId, puzzles });
+  return puzzles;
 }

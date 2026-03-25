@@ -2,15 +2,61 @@ import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  getCachedPuzzle,
+  getCachedPuzzles,
+  setCachedPuzzle,
+  setCachedPuzzles,
+} from '@/cache/puzzle/puzzle';
+import {
   getCachedPuzzleAttemptSpeedPercentages,
   setCachedPuzzleAttemptSpeedPercentages,
 } from '@/cache/puzzle/puzzleAttemptSpeedPercentage';
+import {
+  getPuzzle as getPuzzleDao,
+  getPuzzlesByDailyChallenge as getPuzzlesByDailyChallengeDao,
+} from '@/platform/puzzle/dao/puzzleDao';
 import { getPuzzleAttemptSpeedPercentages as getPuzzleAttemptSpeedPercentagesByAttemptDao } from '@/platform/puzzle/dao/userPuzzleAttemptDao';
-import { getPuzzleAttemptSpeedPercentages } from '@/platform/puzzle/service/puzzleService';
+import type { Puzzle } from '@/platform/puzzle/resource/puzzle';
+import {
+  getPuzzle,
+  getPuzzleAttemptSpeedPercentages,
+  getPuzzlesByDailyChallenge,
+} from '@/platform/puzzle/service/puzzleService';
 import { serializePuzzleAttemptSpeedPercentageKey } from '@/utils/puzzle/attemptUtil';
 
+vi.mock('@/cache/puzzle/puzzle');
 vi.mock('@/cache/puzzle/puzzleAttemptSpeedPercentage');
+vi.mock('@/platform/puzzle/dao/puzzleDao');
 vi.mock('@/platform/puzzle/dao/userPuzzleAttemptDao');
+
+function minimalFlowPuzzle({
+  id,
+  dailyChallengeId,
+}: {
+  id: string;
+  dailyChallengeId: string;
+}): Puzzle {
+  const created = new Date('2024-06-01T12:00:00.000Z');
+  const updated = new Date('2024-06-02T15:30:00.000Z');
+  return {
+    id,
+    createdAt: created,
+    updatedAt: updated,
+    dailyChallengeId,
+    name: 'Service test flow',
+    description: null,
+    type: 'FLOW',
+    data: {
+      width: 2,
+      height: 2,
+      pairs: [],
+      solution: [
+        [0, 0],
+        [0, 0],
+      ],
+    },
+  };
+}
 
 describe('getPuzzleAttemptSpeedPercentages', () => {
   beforeEach(() => {
@@ -125,5 +171,71 @@ describe('getPuzzleAttemptSpeedPercentages', () => {
         [missSerialized, 70],
       ]),
     );
+  });
+});
+
+describe('getPuzzle', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns a cache hit without calling the DAO', async () => {
+    const id = randomUUID();
+    const dailyChallengeId = randomUUID();
+    const puzzle = minimalFlowPuzzle({ id, dailyChallengeId });
+    vi.mocked(getCachedPuzzle).mockResolvedValue(puzzle);
+
+    const result = await getPuzzle({ id });
+
+    expect(result).toEqual(puzzle);
+    expect(getPuzzleDao).not.toHaveBeenCalled();
+    expect(setCachedPuzzle).not.toHaveBeenCalled();
+  });
+
+  it('loads from the DAO on a cache miss and populates the cache', async () => {
+    const id = randomUUID();
+    const dailyChallengeId = randomUUID();
+    const puzzle = minimalFlowPuzzle({ id, dailyChallengeId });
+    vi.mocked(getCachedPuzzle).mockResolvedValue(null);
+    vi.mocked(getPuzzleDao).mockResolvedValue(puzzle);
+
+    const result = await getPuzzle({ id });
+
+    expect(getPuzzleDao).toHaveBeenCalledWith({ id });
+    expect(setCachedPuzzle).toHaveBeenCalledWith({ puzzle });
+    expect(result).toEqual(puzzle);
+  });
+});
+
+describe('getPuzzlesByDailyChallenge', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns a non-empty cache hit without calling the DAO', async () => {
+    const dailyChallengeId = randomUUID();
+    const id = randomUUID();
+    const puzzles: Puzzle[] = [minimalFlowPuzzle({ id, dailyChallengeId })];
+    vi.mocked(getCachedPuzzles).mockResolvedValue(puzzles);
+
+    const result = await getPuzzlesByDailyChallenge({ dailyChallengeId });
+
+    expect(result).toEqual(puzzles);
+    expect(getPuzzlesByDailyChallengeDao).not.toHaveBeenCalled();
+    expect(setCachedPuzzles).not.toHaveBeenCalled();
+  });
+
+  it('loads from the DAO when the cache is empty and caches the result', async () => {
+    const dailyChallengeId = randomUUID();
+    const id = randomUUID();
+    const puzzles: Puzzle[] = [minimalFlowPuzzle({ id, dailyChallengeId })];
+    vi.mocked(getCachedPuzzles).mockResolvedValue(null);
+    vi.mocked(getPuzzlesByDailyChallengeDao).mockResolvedValue(puzzles);
+
+    const result = await getPuzzlesByDailyChallenge({ dailyChallengeId });
+
+    expect(getPuzzlesByDailyChallengeDao).toHaveBeenCalledWith({ dailyChallengeId });
+    expect(setCachedPuzzles).toHaveBeenCalledWith({ dailyChallengeId, puzzles });
+    expect(result).toEqual(puzzles);
   });
 });

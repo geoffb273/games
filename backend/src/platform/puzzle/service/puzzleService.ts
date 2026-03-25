@@ -1,4 +1,10 @@
 import {
+  getCachedPuzzle,
+  getCachedPuzzles,
+  setCachedPuzzle,
+  setCachedPuzzles,
+} from '@/cache/puzzle/puzzle';
+import {
   getCachedPuzzleAttemptSpeedPercentages,
   setCachedPuzzleAttemptSpeedPercentages,
 } from '@/cache/puzzle/puzzleAttemptSpeedPercentage';
@@ -30,7 +36,15 @@ import { solvePuzzle as solvePuzzleCommand } from './solvePuzzle';
  * @throws {UnknownError} if the puzzle type is unknown
  */
 export async function getPuzzle({ id }: { id: string }): Promise<Puzzle> {
-  return getPuzzleDao({ id });
+  const cachedPuzzle = await getCachedPuzzle({ id });
+
+  if (cachedPuzzle != null) {
+    return cachedPuzzle;
+  }
+
+  const puzzle = await getPuzzleDao({ id });
+  void setCachedPuzzle({ puzzle });
+  return puzzle;
 }
 
 /**
@@ -44,7 +58,15 @@ export async function getPuzzlesByDailyChallenge({
 }: {
   dailyChallengeId: string;
 }): Promise<Puzzle[]> {
-  return getPuzzlesByDailyChallengeDao({ dailyChallengeId });
+  const cachedPuzzles = await getCachedPuzzles({ dailyChallengeId });
+
+  if (cachedPuzzles != null && cachedPuzzles.length > 0) {
+    return cachedPuzzles;
+  }
+
+  const puzzles = await getPuzzlesByDailyChallengeDao({ dailyChallengeId });
+  void setCachedPuzzles({ dailyChallengeId, puzzles });
+  return puzzles;
 }
 
 /**
