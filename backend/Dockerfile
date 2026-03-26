@@ -22,10 +22,10 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=8080
-ENV NODE_OPTIONS="--require newrelic"
 
 COPY package.json pnpm-lock.yaml tsconfig.runtime.json newrelic.cjs ./
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts && pnpm add tsx
+ENV NODE_OPTIONS="--require newrelic"
 
 COPY --from=deps /app/src ./src
 COPY --from=deps /app/prisma ./prisma/
