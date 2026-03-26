@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 export const AdvertisementRewardType = {
   PUZZLE_HINT: 'PUZZLE_HINT',
 } as const;
@@ -13,36 +11,23 @@ export type AdvertisementRewardVerification = {
   userId: string;
   puzzleId: string | null;
   expiresAt: Date;
-  type: string;
+  type: AdvertisementRewardTypeValue;
   createdAt: Date;
   updatedAt: Date;
 };
 
-export const createAdvertisementRewardVerificationInputSchema = z
-  .object({
-    uniqueKey: z.string().min(1),
-    admobTransactionId: z.string().min(1),
-    userId: z.string().uuid(),
-    type: z.string().min(1),
-    expiresAt: z.date(),
-    puzzleId: z.string().uuid().optional().nullable(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.type === AdvertisementRewardType.PUZZLE_HINT) {
-      if (data.puzzleId == null) {
-        ctx.addIssue({
-          code: 'custom',
-          message: 'puzzleId is required when type is PUZZLE_HINT',
-        });
-      }
-    } else if (data.puzzleId != null) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'puzzleId must not be set for this reward type',
-      });
-    }
-  });
+export type CreateAdvertisementRewardVerificationInput = {
+  uniqueKey: string;
+  admobTransactionId: string;
+  userId: string;
+  expiresAt: Date;
+  type: AdvertisementRewardTypeValue;
+  puzzleId?: string | null;
+};
 
-export type CreateAdvertisementRewardVerificationInput = z.infer<
-  typeof createAdvertisementRewardVerificationInputSchema
->;
+export type GetAdvertisementRewardVerificationInput = {
+  userId: string;
+  uniqueKey: string;
+  type: AdvertisementRewardTypeValue;
+  puzzleId: string | null;
+};

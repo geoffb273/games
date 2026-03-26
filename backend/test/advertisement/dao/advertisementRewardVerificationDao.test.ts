@@ -9,11 +9,7 @@ import { AdvertisementRewardType } from '@/advertisement/resource/advertisementR
 import { prisma } from '@/client/prisma';
 import type { HanjiPuzzleData } from '@/platform/puzzle/resource/puzzle';
 import { AlreadyExistsError, NotFoundError } from '@/schema/errors';
-import {
-  createTestDailyChallenge,
-  createTestUser,
-  createUniqueDateTime,
-} from '@/test/testUtils';
+import { createTestDailyChallenge, createTestUser, createUniqueDateTime } from '@/test/testUtils';
 
 const MINIMAL_HANJI_DATA: HanjiPuzzleData = {
   width: 1,
@@ -212,6 +208,7 @@ describe('advertisementRewardVerificationDao', () => {
         getAdvertisementRewardVerification({
           uniqueKey,
           userId: user.id,
+          // @ts-expect-error - other type is not allowed
           type: 'OTHER_TYPE',
           puzzleId: puzzle.id,
         }),

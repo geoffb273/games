@@ -26,22 +26,60 @@ describe('advertisementRewardService', () => {
           userId: randomUUID(),
           uniqueKey: randomUUID(),
           type: AdvertisementRewardType.PUZZLE_HINT,
+          puzzleId: null,
         }),
       ).rejects.toBeInstanceOf(ValidationError);
 
       expect(getAdvertisementRewardVerificationDao).not.toHaveBeenCalled();
     });
+
+    it('returns the verification when it is valid', async () => {
+      const userId = randomUUID();
+      const uniqueKey = randomUUID();
+      const type = AdvertisementRewardType.PUZZLE_HINT;
+      const puzzleId = randomUUID();
+
+      vi.mocked(getAdvertisementRewardVerificationDao).mockImplementation(async () => {
+        return {
+          id: randomUUID(),
+          uniqueKey,
+          admobTransactionId: randomUUID(),
+          userId,
+          puzzleId,
+          expiresAt: new Date(),
+          type,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+      });
+
+      const verification = await getAdvertisementRewardVerification({
+        userId,
+        uniqueKey,
+        type,
+        puzzleId,
+      });
+
+      expect(verification).toMatchObject(
+        expect.objectContaining({
+          userId,
+          uniqueKey,
+          type,
+          puzzleId,
+        }),
+      );
+    });
   });
 
   describe('createAdvertisementRewardVerification', () => {
-    it('throws ValidationError when Zod validation fails', async () => {
+    it('throws ValidationError when type is PUZZLE_HINT and puzzleId is missing', async () => {
       await expect(
         createAdvertisementRewardVerification({
-          uniqueKey: '',
+          uniqueKey: randomUUID(),
           admobTransactionId: randomUUID(),
           userId: randomUUID(),
           type: AdvertisementRewardType.PUZZLE_HINT,
-          puzzleId: randomUUID(),
+          puzzleId: null,
           expiresAt: new Date(),
         }),
       ).rejects.toBeInstanceOf(ValidationError);
@@ -49,7 +87,7 @@ describe('advertisementRewardService', () => {
       expect(createAdvertisementRewardVerificationDao).not.toHaveBeenCalled();
     });
 
-    it('calls DAO with parsed data when input is valid', async () => {
+    it('calls DAO with data when input is valid', async () => {
       const userId = randomUUID();
       const puzzleId = randomUUID();
       const uniqueKey = randomUUID();
