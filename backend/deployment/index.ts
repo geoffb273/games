@@ -15,6 +15,8 @@ const redisUsername = config.requireSecret('redisUsername');
 const redisPassword = config.requireSecret('redisPassword');
 const redisHost = config.requireSecret('redisHost');
 const redisPort = config.requireSecret('redisPort');
+const newRelicLicenseKey = config.requireSecret('newRelicLicenseKey');
+const newRelicAppName = config.requireSecret('newRelicAppName');
 /** Optional: EC2 key pair name for SSH (create in EC2 → Key Pairs, then set and redeploy). */
 const keyName = config.get('keyName');
 
@@ -59,6 +61,8 @@ const redisUsernameParam = createSecretParameter('redisUsername', redisUsername)
 const redisPasswordParam = createSecretParameter('redisPassword', redisPassword);
 const redisHostParam = createSecretParameter('redisHost', redisHost);
 const redisPortParam = createSecretParameter('redisPort', redisPort);
+const newRelicLicenseKeyParam = createSecretParameter('newRelicLicenseKey', newRelicLicenseKey);
+const newRelicAppNameParam = createSecretParameter('newRelicAppName', newRelicAppName);
 
 // --- ECS task execution role (ECR pull + SSM read for task secrets) ---
 const taskExecutionRole = new aws.iam.Role('ecsTaskExecutionRole', {
@@ -92,6 +96,8 @@ new aws.iam.RolePolicy('taskExecutionSsm', {
       redisPasswordParam.arn,
       redisHostParam.arn,
       redisPortParam.arn,
+      newRelicLicenseKeyParam.arn,
+      newRelicAppNameParam.arn,
     ])
     .apply((arns) =>
       JSON.stringify({
@@ -159,6 +165,8 @@ new aws.iam.RolePolicy('instanceSsmParams', {
       redisPasswordParam.arn,
       redisHostParam.arn,
       redisPortParam.arn,
+      newRelicLicenseKeyParam.arn,
+      newRelicAppNameParam.arn,
     ])
     .apply((arns) =>
       JSON.stringify({
@@ -272,6 +280,8 @@ const taskDefinition = new aws.ecs.TaskDefinition('backend', {
       redisPasswordParam.name,
       redisHostParam.name,
       redisPortParam.name,
+      newRelicLicenseKeyParam.name,
+      newRelicAppNameParam.name,
     ])
     .apply(
       ([
@@ -285,6 +295,8 @@ const taskDefinition = new aws.ecs.TaskDefinition('backend', {
         redisPasswordName,
         redisHostName,
         redisPortName,
+        newRelicLicenseKeyName,
+        newRelicAppNameName,
       ]) =>
         JSON.stringify([
           {
@@ -303,6 +315,8 @@ const taskDefinition = new aws.ecs.TaskDefinition('backend', {
               { name: 'REDIS_PASSWORD', valueFrom: redisPasswordName },
               { name: 'REDIS_HOST', valueFrom: redisHostName },
               { name: 'REDIS_PORT', valueFrom: redisPortName },
+              { name: 'NEW_RELIC_LICENSE_KEY', valueFrom: newRelicLicenseKeyName },
+              { name: 'NEW_RELIC_APP_NAME', valueFrom: newRelicAppNameName },
             ],
           },
         ]),

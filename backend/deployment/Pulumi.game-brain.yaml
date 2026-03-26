@@ -24,5 +24,9 @@ config:
     secure: AAABAN4Z8V0sax+T17jWASMpZMPwTjCeBTfu0pi8ybOzNibCyUVKoj5r6Ngm+gByYOQCvGDzn6rl1I8uEZUSWWBuozs5PAzmQdmBi8Lhk4Pxyn8l
   game-brain:redisPort:
     secure: AAABABcZ9/mOTTSPN9CBK5QHs3pqd0lU2oiug/MXG3WUzuFdcw==
+  game-brain:newRelicLicenseKey:
+    secure: AAABAD6kC9gUG6uwBgcoqak4PVJzXtnx7iRSf8q8APwg9FIGEmSiHchrIQglLOyA4S2uaqc7B/P84XT4sJvW1DC1TZ5HBM7X
+  game-brain:newRelicAppName:
+    secure: AAABAJSXLwNT9wcypzD2PscQNazzu9rAU7omNZyf19wf4glaYneJnuR3
 environment:
   - game-brain

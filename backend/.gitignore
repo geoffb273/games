@@ -1,3 +1,4 @@
 .env
 src/generated/
 dist/
+newrelic_agent.log
