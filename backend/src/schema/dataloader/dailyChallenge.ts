@@ -7,7 +7,9 @@ import {
 
 import { type Context } from '../context/context';
 
-export function DailyChallengeDataLoader({ authorization: { user } }: Context) {
+export function DailyChallengeDataLoader({
+  authorization: { user },
+}: Omit<Context, 'dataloaders'>) {
   const dailyChallengePuzzleCount = new DataLoader<string, number>(async (dailyChallengeIds) => {
     const map = await getPuzzleCountsByDailyChallengeIds({ dailyChallengeIds });
     return dailyChallengeIds.map((id) => map.get(id) ?? 0);

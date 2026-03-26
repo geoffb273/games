@@ -2,7 +2,7 @@ import { type Context } from '../context/context';
 import { DailyChallengeDataLoader } from './dailyChallenge';
 import { PuzzleDataLoader } from './puzzle';
 
-export function createDataloaders(context: Context) {
+export function createDataloaders(context: Omit<Context, 'dataloaders'>) {
   return {
     ...PuzzleDataLoader(context),
     ...DailyChallengeDataLoader(context),

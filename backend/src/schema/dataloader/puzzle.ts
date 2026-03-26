@@ -12,7 +12,10 @@ import { serializePuzzleAttemptSpeedPercentageKey } from '@/utils/puzzle/attempt
 
 import { type Context } from '../context/context';
 
-export function PuzzleDataLoader({ authorization: { user }, logger }: Context) {
+export function PuzzleDataLoader({
+  authorization: { user },
+  logger,
+}: Omit<Context, 'dataloaders'>) {
   const userPuzzleAttempt = new DataLoader<string, UserPuzzleAttempt | null>(async (puzzleIds) => {
     const resolvedUser = await user;
 
