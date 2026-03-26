@@ -41,6 +41,13 @@ export class AlreadyExistsError extends GraphQLError {
   }
 }
 
+export class AdMobSsvVerificationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AdMobSsvVerificationError';
+  }
+}
+
 builder.interfaceType(GraphQLError, {
   name: 'Error',
   fields: (t) => ({

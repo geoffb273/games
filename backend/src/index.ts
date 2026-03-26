@@ -8,6 +8,9 @@ import { schema } from '@/schema';
 
 import { GRAPHQL_HIVE_ACCESS_TOKEN } from './constants';
 import { buildContext, type Context } from './schema/context/context';
+import { AdMobSsvVerificationError } from './schema/errors';
+import { verifyAdMobSsvQueryString } from './utils/adMob/verify';
+
 const PORT = Number(process.env.PORT) || 8080;
 
 const app = express();
@@ -33,6 +36,29 @@ app.get('/hello', (_req, res) => {
   res.json({ message: 'Hello' });
 });
 
+app.get('/ad-mob-verification', async (req, res) => {
+  const q = req.originalUrl.indexOf('?');
+
+  const rawQuery = q === -1 ? '' : req.originalUrl.slice(q + 1);
+
+  if (!rawQuery) {
+    res.status(400).json({ error: 'Missing query string' });
+    return;
+  }
+
+  try {
+    await verifyAdMobSsvQueryString(rawQuery);
+    res.status(200).json({ ok: true });
+  } catch (err) {
+    if (err instanceof AdMobSsvVerificationError) {
+      res.status(403).json({ error: 'Verification failed' });
+      return;
+    }
+
+    res.status(500).json({ error: 'Internal error' });
+  }
+});
+
 app.use(
   '/graphql',
   expressMiddleware(server, {
@@ -42,5 +68,7 @@ app.use(
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console -- server startup
-  console.log(`Server ready at http://localhost:${PORT} (GraphQL: /graphql, Hello: /hello)`);
+  console.log(
+    `Server ready at http://localhost:${PORT} (GraphQL: /graphql, Hello: /hello, AdMob SSV: /ad-mob-verification)`,
+  );
 });
