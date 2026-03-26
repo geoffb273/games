@@ -1,10 +1,14 @@
+import { type Logger } from 'pino';
 import type { RedisClientType } from 'redis';
 import type { input, output, ZodType } from 'zod';
+
+import { safeParse } from './zodUtils';
 
 type GetJsonArgs<TSchema extends ZodType> = {
   client: RedisClientType;
   key: string;
   schema: TSchema;
+  logger: Logger;
 };
 
 type SetJsonArgs<TSchema extends ZodType> = {
@@ -21,6 +25,7 @@ export async function getJson<TSchema extends ZodType>({
   client,
   key,
   schema,
+  logger,
 }: GetJsonArgs<TSchema>): Promise<output<TSchema> | null> {
   const rawValue = await client.get(REDIS_PREFIX + key);
   if (rawValue === null) {
@@ -28,7 +33,7 @@ export async function getJson<TSchema extends ZodType>({
   }
   try {
     const parsedValue: unknown = JSON.parse(rawValue);
-    return schema.parse(parsedValue);
+    return safeParse({ schema, value: parsedValue, logger });
   } catch {
     return null;
   }

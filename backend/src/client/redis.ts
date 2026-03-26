@@ -1,6 +1,7 @@
 import { createClient, type RedisClientType } from 'redis';
 
 import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, REDIS_USERNAME } from '@/constants';
+import { logger } from '@/logger';
 
 let redis: RedisClientType | null = null;
 
@@ -14,8 +15,8 @@ async function getRedis(): Promise<RedisClientType> {
         port: REDIS_PORT,
       },
     });
-    // eslint-disable-next-line no-console
-    redis.on('error', (err) => console.log('Redis Client Error', err));
+
+    redis.on('error', (err) => logger.error(err, 'Redis client error'));
     await redis.connect();
   }
 

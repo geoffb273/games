@@ -5,7 +5,10 @@ import { z } from 'zod';
 import { getRedis } from '@/client/redis';
 import { getJson, REDIS_PREFIX, setJson } from '@/utils/redis';
 
+import { createMockLogger } from '../testUtils';
+
 const redis = await getRedis();
+const logger = createMockLogger();
 
 describe('redis utils', () => {
   afterEach(() => {
@@ -22,6 +25,7 @@ describe('redis utils', () => {
         client: redis,
         key,
         schema,
+        logger,
       });
 
       expect(result).toBeNull();
@@ -40,6 +44,7 @@ describe('redis utils', () => {
           client: redis,
           key,
           schema,
+          logger,
         });
 
         expect(result).toEqual({ value: 'ok' });
@@ -60,6 +65,7 @@ describe('redis utils', () => {
           client: redis,
           key,
           schema: z.object({ value: z.string() }),
+          logger,
         });
 
         expect(result).toBeNull();
@@ -80,6 +86,7 @@ describe('redis utils', () => {
           client: redis,
           key,
           schema: z.object({ value: z.string() }),
+          logger,
         });
 
         expect(result).toBeNull();

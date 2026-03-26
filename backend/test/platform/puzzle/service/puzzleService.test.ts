@@ -22,7 +22,10 @@ import {
   getPuzzleAttemptSpeedPercentages,
   getPuzzlesByDailyChallenge,
 } from '@/platform/puzzle/service/puzzleService';
+import { createMockLogger } from '@/test/testUtils';
 import { serializePuzzleAttemptSpeedPercentageKey } from '@/utils/puzzle/attemptUtil';
+
+const logger = createMockLogger();
 
 vi.mock('@/cache/puzzle/puzzle');
 vi.mock('@/cache/puzzle/puzzleAttemptSpeedPercentage');
@@ -91,7 +94,7 @@ describe('getPuzzleAttemptSpeedPercentages', () => {
     );
     vi.mocked(getPuzzleAttemptSpeedPercentagesByAttemptDao).mockResolvedValue(new Map());
 
-    const result = await getPuzzleAttemptSpeedPercentages({ userId, keys: [requestedKey] });
+    const result = await getPuzzleAttemptSpeedPercentages({ userId, keys: [requestedKey], logger });
 
     expect(result).toEqual(new Map([[requestedSerialized, 20]]));
   });
@@ -117,7 +120,7 @@ describe('getPuzzleAttemptSpeedPercentages', () => {
     );
     vi.mocked(getPuzzleAttemptSpeedPercentagesByAttemptDao).mockResolvedValue(new Map());
 
-    const result = await getPuzzleAttemptSpeedPercentages({ userId, keys: [requestedKey] });
+    const result = await getPuzzleAttemptSpeedPercentages({ userId, keys: [requestedKey], logger });
 
     expect(getPuzzleAttemptSpeedPercentagesByAttemptDao).toHaveBeenCalledWith({
       userId,
@@ -155,7 +158,11 @@ describe('getPuzzleAttemptSpeedPercentages', () => {
       new Map([[missSerialized, 70]]),
     );
 
-    const result = await getPuzzleAttemptSpeedPercentages({ userId, keys: [hitKey, missKey] });
+    const result = await getPuzzleAttemptSpeedPercentages({
+      userId,
+      keys: [hitKey, missKey],
+      logger,
+    });
 
     expect(getPuzzleAttemptSpeedPercentagesByAttemptDao).toHaveBeenCalledWith({
       userId,
@@ -185,7 +192,7 @@ describe('getPuzzle', () => {
     const puzzle = minimalFlowPuzzle({ id, dailyChallengeId });
     vi.mocked(getCachedPuzzle).mockResolvedValue(puzzle);
 
-    const result = await getPuzzle({ id });
+    const result = await getPuzzle({ id, logger });
 
     expect(result).toEqual(puzzle);
     expect(getPuzzleDao).not.toHaveBeenCalled();
@@ -199,7 +206,7 @@ describe('getPuzzle', () => {
     vi.mocked(getCachedPuzzle).mockResolvedValue(null);
     vi.mocked(getPuzzleDao).mockResolvedValue(puzzle);
 
-    const result = await getPuzzle({ id });
+    const result = await getPuzzle({ id, logger });
 
     expect(getPuzzleDao).toHaveBeenCalledWith({ id });
     expect(setCachedPuzzle).toHaveBeenCalledWith({ puzzle });
@@ -218,7 +225,7 @@ describe('getPuzzlesByDailyChallenge', () => {
     const puzzles: Puzzle[] = [minimalFlowPuzzle({ id, dailyChallengeId })];
     vi.mocked(getCachedPuzzles).mockResolvedValue(puzzles);
 
-    const result = await getPuzzlesByDailyChallenge({ dailyChallengeId });
+    const result = await getPuzzlesByDailyChallenge({ dailyChallengeId, logger });
 
     expect(result).toEqual(puzzles);
     expect(getPuzzlesByDailyChallengeDao).not.toHaveBeenCalled();
@@ -232,7 +239,7 @@ describe('getPuzzlesByDailyChallenge', () => {
     vi.mocked(getCachedPuzzles).mockResolvedValue(null);
     vi.mocked(getPuzzlesByDailyChallengeDao).mockResolvedValue(puzzles);
 
-    const result = await getPuzzlesByDailyChallenge({ dailyChallengeId });
+    const result = await getPuzzlesByDailyChallenge({ dailyChallengeId, logger });
 
     expect(getPuzzlesByDailyChallengeDao).toHaveBeenCalledWith({ dailyChallengeId });
     expect(setCachedPuzzles).toHaveBeenCalledWith({ dailyChallengeId, puzzles });

@@ -1,3 +1,5 @@
+import { type Logger } from 'pino';
+
 import {
   getCachedPuzzle,
   getCachedPuzzles,
@@ -35,8 +37,8 @@ import { solvePuzzle as solvePuzzleCommand } from './solvePuzzle';
  * @throws {NotFoundError} if the puzzle is not found
  * @throws {UnknownError} if the puzzle type is unknown
  */
-export async function getPuzzle({ id }: { id: string }): Promise<Puzzle> {
-  const cachedPuzzle = await getCachedPuzzle({ id });
+export async function getPuzzle({ id, logger }: { id: string; logger: Logger }): Promise<Puzzle> {
+  const cachedPuzzle = await getCachedPuzzle({ id, logger });
 
   if (cachedPuzzle != null) {
     return cachedPuzzle;
@@ -55,10 +57,12 @@ export async function getPuzzle({ id }: { id: string }): Promise<Puzzle> {
  */
 export async function getPuzzlesByDailyChallenge({
   dailyChallengeId,
+  logger,
 }: {
+  logger: Logger;
   dailyChallengeId: string;
 }): Promise<Puzzle[]> {
-  const cachedPuzzles = await getCachedPuzzles({ dailyChallengeId });
+  const cachedPuzzles = await getCachedPuzzles({ dailyChallengeId, logger });
 
   if (cachedPuzzles != null && cachedPuzzles.length > 0) {
     return cachedPuzzles;
@@ -101,13 +105,15 @@ export async function getUserPuzzleAttemptsByPuzzleIds({
 export async function getPuzzleAttemptSpeedPercentages({
   userId,
   keys,
+  logger,
 }: {
   userId: string;
   keys: readonly PuzzleAttemptSpeedPercentageKey[];
+  logger: Logger;
 }): Promise<Map<string, number>> {
   if (keys.length === 0) return new Map();
 
-  const cachedPercentages = await getCachedPuzzleAttemptSpeedPercentages({ userId });
+  const cachedPercentages = await getCachedPuzzleAttemptSpeedPercentages({ userId, logger });
   const serializedKeys = keys.map((key) => ({
     key,
     serialized: serializePuzzleAttemptSpeedPercentageKey(key),

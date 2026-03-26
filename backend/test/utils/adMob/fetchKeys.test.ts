@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getAdMobKeysCache, setAdMobKeysCache } from '@/cache/advertisment/adMobKeys';
+import { createMockLogger } from '@/test/testUtils';
 import { fetchAdMobKeys } from '@/utils/adMob/fetchKeys';
 
 const VERIFIER_KEYS_URL = 'https://www.gstatic.com/admob/reward/verifier-keys.json';
+const logger = createMockLogger();
 
 vi.mock('@/cache/advertisment/adMobKeys');
 
@@ -21,7 +23,7 @@ describe('fetchAdMobKeys', () => {
     const cached = { 42: Buffer.from([1, 2, 3]) };
     vi.mocked(getAdMobKeysCache).mockResolvedValue(cached);
 
-    const result = await fetchAdMobKeys();
+    const result = await fetchAdMobKeys({ logger });
 
     expect(result).toBe(cached);
     expect(vi.mocked(fetch)).not.toHaveBeenCalled();
@@ -43,7 +45,7 @@ describe('fetchAdMobKeys', () => {
       }),
     } as Response);
 
-    const result = await fetchAdMobKeys();
+    const result = await fetchAdMobKeys({ logger });
 
     expect(result[10]).toEqual(a);
     expect(result[20]).toEqual(b);
@@ -63,7 +65,7 @@ describe('fetchAdMobKeys', () => {
       status: 503,
     } as Response);
 
-    await expect(fetchAdMobKeys()).rejects.toMatchObject({
+    await expect(fetchAdMobKeys({ logger })).rejects.toMatchObject({
       name: 'AdMobSsvVerificationError',
       message: 'Failed to fetch AdMob verifier keys: 503',
     });

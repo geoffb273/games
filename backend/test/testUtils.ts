@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { type BaseLogger, type Logger } from 'pino';
+import { vi } from 'vitest';
 
 import { prisma } from '@/client/prisma';
 import { type DailyChallenge } from '@/platform/dailyChallenge/resource/dailyChallenge';
@@ -58,4 +60,22 @@ export async function createTestDailyChallenge({
   return prisma.dailyChallenge.create({
     data: { id, date },
   });
+}
+
+export function createMockLogger(): Logger {
+  const logger: BaseLogger = {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+    trace: vi.fn(),
+    fatal: vi.fn(),
+    level: 'info',
+    msgPrefix: '',
+    silent: vi.fn(),
+  };
+  return {
+    ...logger,
+    child: vi.fn().mockReturnValue(logger),
+  } as unknown as Logger;
 }

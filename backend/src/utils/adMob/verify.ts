@@ -1,4 +1,5 @@
 import { createPublicKey, createVerify } from 'crypto';
+import { type Logger } from 'pino';
 
 import { AdMobSsvVerificationError } from '@/schema/errors';
 
@@ -61,14 +62,20 @@ function decodeSignatureToBuffer(signatureFromQuery: string): Buffer {
  * Verifies an AdMob rewarded-ad SSV callback query string (no leading `?`), using Google's keys and ECDSA P-256 / SHA-256.
  * @param rawQuery - Query or path-style string containing `signature=` and `key_id=`
  */
-export async function verifyAdMobSsvQueryString(rawQuery: string): Promise<void> {
+export async function verifyAdMobSsvQueryString({
+  rawQuery,
+  logger,
+}: {
+  rawQuery: string;
+  logger: Logger;
+}): Promise<void> {
   if (!rawQuery || rawQuery.trim() === '') {
     throw new AdMobSsvVerificationError('Empty query string');
   }
 
   const { contentToVerify, signatureFromQuery, keyId } = parseSignatureAndKeyId(rawQuery);
 
-  const keys = await fetchAdMobKeys();
+  const keys = await fetchAdMobKeys({ logger });
   const publicKeyDer = keys[keyId];
   if (publicKeyDer == null) {
     throw new AdMobSsvVerificationError(`Unknown key_id: ${keyId}`);

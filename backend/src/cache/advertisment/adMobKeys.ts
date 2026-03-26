@@ -1,3 +1,4 @@
+import { type Logger } from 'pino';
 import { z } from 'zod';
 
 import { getRedis } from '@/client/redis';
@@ -15,11 +16,16 @@ type KeyCache = z.infer<typeof KeyCacheSchema>;
  * Gets the AdMob keys cache from Redis.
  * @returns The AdMob keys cache or null if it doesn't exist.
  */
-export async function getAdMobKeysCache(): Promise<Record<number, Buffer> | null> {
+export async function getAdMobKeysCache({
+  logger,
+}: {
+  logger: Logger;
+}): Promise<Record<number, Buffer> | null> {
   const cache = await getJson({
     key: AD_MOB_KEYS_CACHE_KEY,
     schema: KeyCacheSchema,
     client: await getRedis(),
+    logger,
   });
   if (cache == null) {
     return null;

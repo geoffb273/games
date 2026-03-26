@@ -1,3 +1,4 @@
+import { type Logger } from 'pino';
 import { z } from 'zod';
 
 import { getRedis } from '@/client/redis';
@@ -19,14 +20,17 @@ export const PUZZLE_ATTEMPT_SPEED_PERCENTAGE_SCHEMA = z.record(
 
 export async function getCachedPuzzleAttemptSpeedPercentages({
   userId,
+  logger,
 }: {
   userId: string;
+  logger: Logger;
 }): Promise<Map<string, { percentage: number; expirationTimestampMs: number }>> {
   const now = Date.now();
   const cachedValues = await getJson({
     client: await getRedis(),
     key: `${PUZZLE_ATTEMPT_SPEED_PERCENTAGE_KEY}:${userId}`,
     schema: PUZZLE_ATTEMPT_SPEED_PERCENTAGE_SCHEMA,
+    logger,
   });
 
   if (cachedValues == null) return new Map();

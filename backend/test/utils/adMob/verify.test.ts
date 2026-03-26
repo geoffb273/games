@@ -2,10 +2,12 @@ import { createSign, generateKeyPairSync } from 'node:crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AdMobSsvVerificationError } from '@/schema/errors';
+import { createMockLogger } from '@/test/testUtils';
 import { fetchAdMobKeys } from '@/utils/adMob/fetchKeys';
 import { verifyAdMobSsvQueryString } from '@/utils/adMob/verify';
 
 const TEST_KEY_ID = 9_999_001;
+const logger = createMockLogger();
 
 vi.mock('@/utils/adMob/fetchKeys');
 
@@ -40,7 +42,7 @@ describe('verifyAdMobSsvQueryString', () => {
       'ad_network=5450213213286189855&ad_unit=2747237135&reward_amount=1&reward_item=hints&timestamp=1507770365237&transaction_id=18fa792de1bca816048293fc71035638';
     const query = buildSignedQuery(content, privateKey, TEST_KEY_ID);
 
-    await expect(verifyAdMobSsvQueryString(query)).resolves.toBeUndefined();
+    await expect(verifyAdMobSsvQueryString({ rawQuery: query, logger })).resolves.toBeUndefined();
     expect(fetchAdMobKeys).toHaveBeenCalledTimes(1);
   });
 
@@ -64,7 +66,7 @@ describe('verifyAdMobSsvQueryString', () => {
       'ad_network=1&ad_unit=2&reward_amount=1&reward_item=x&timestamp=1&transaction_id=abc';
     const query = buildSignedQuery(content, otherKey, TEST_KEY_ID);
 
-    await expect(verifyAdMobSsvQueryString(query)).rejects.toBeInstanceOf(
+    await expect(verifyAdMobSsvQueryString({ rawQuery: query, logger })).rejects.toBeInstanceOf(
       AdMobSsvVerificationError,
     );
   });
@@ -79,7 +81,7 @@ describe('verifyAdMobSsvQueryString', () => {
     vi.mocked(fetchAdMobKeys).mockResolvedValue({ [TEST_KEY_ID]: publicKey });
 
     await expect(
-      verifyAdMobSsvQueryString('ad_network=1&key_id=1'),
+      verifyAdMobSsvQueryString({ rawQuery: 'ad_network=1&key_id=1', logger }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(
       `[AdMobSsvVerificationError: Missing signature parameter]`,
     );
@@ -95,7 +97,7 @@ describe('verifyAdMobSsvQueryString', () => {
     vi.mocked(fetchAdMobKeys).mockResolvedValue({ [TEST_KEY_ID]: publicKey });
 
     await expect(
-      verifyAdMobSsvQueryString('ad_network=1&signature=abc'),
+      verifyAdMobSsvQueryString({ rawQuery: 'ad_network=1&signature=abc', logger }),
     ).rejects.toThrowErrorMatchingInlineSnapshot(
       `[AdMobSsvVerificationError: Missing key_id parameter]`,
     );
@@ -113,7 +115,9 @@ describe('verifyAdMobSsvQueryString', () => {
     const content = 'ad_network=1&ad_unit=2&timestamp=1&transaction_id=x';
     const query = buildSignedQuery(content, privateKey, 55_555_555);
 
-    await expect(verifyAdMobSsvQueryString(query)).rejects.toThrowErrorMatchingInlineSnapshot(
+    await expect(
+      verifyAdMobSsvQueryString({ rawQuery: query, logger }),
+    ).rejects.toThrowErrorMatchingInlineSnapshot(
       `[AdMobSsvVerificationError: Unknown key_id: 55555555]`,
     );
   });

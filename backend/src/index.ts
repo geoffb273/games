@@ -49,7 +49,7 @@ app.get('/ad-mob-verification', async (req, res) => {
   }
 
   try {
-    await verifyAdMobSsvQueryString(rawQuery);
+    await verifyAdMobSsvQueryString({ rawQuery, logger });
     logger.info('AdMob SSV verification successful');
     res.status(200).json({ ok: true });
   } catch (err) {
@@ -71,8 +71,7 @@ app.use(
 );
 
 app.listen(PORT, () => {
-  // eslint-disable-next-line no-console -- server startup
-  console.log(
+  logger.info(
     `Server ready at http://localhost:${PORT} (GraphQL: /graphql, Hello: /hello, AdMob SSV: /ad-mob-verification)`,
   );
 });
