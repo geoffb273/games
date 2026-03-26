@@ -16,7 +16,7 @@ import type {
   SlitherlinkPuzzleData,
 } from '@/platform/puzzle/resource/puzzle';
 import { NotFoundError } from '@/schema/errors';
-import { createTestDailyChallenge } from '@/test/testUtils';
+import { createTestDailyChallenge, createUniqueDateTime } from '@/test/testUtils';
 
 // Minimal valid data per puzzle type for mapPuzzle / createPuzzles
 const MINIMAL_FLOW_DATA: FlowPuzzleData = {
@@ -125,7 +125,7 @@ describe('puzzleDao', () => {
 
   describe('getPuzzlesByDailyChallenge', () => {
     it('returns empty array when no puzzles exist for daily challenge', async () => {
-      const dc = await createTestDailyChallenge({ date: new Date('2001-01-03') });
+      const dc = await createTestDailyChallenge({ date: createUniqueDateTime() });
 
       const result = await getPuzzlesByDailyChallenge({ dailyChallengeId: dc.id });
 
@@ -133,7 +133,7 @@ describe('puzzleDao', () => {
     });
 
     it('returns all puzzles for the daily challenge', async () => {
-      const dc = await createTestDailyChallenge({ date: new Date('2001-01-02') });
+      const dc = await createTestDailyChallenge({ date: createUniqueDateTime() });
       await createTestPuzzle({
         dailyChallengeId: dc.id,
         type: 'FLOW',
@@ -160,7 +160,7 @@ describe('puzzleDao', () => {
     });
 
     it('omits daily challenge ids with no puzzles', async () => {
-      const dc = await createTestDailyChallenge({ date: new Date('2001-01-04') });
+      const dc = await createTestDailyChallenge({ date: createUniqueDateTime() });
       const result = await getDailyChallengeToPuzzlesMap({
         dailyChallengeIds: [dc.id],
       });
@@ -168,8 +168,8 @@ describe('puzzleDao', () => {
     });
 
     it('returns map of daily challenge id to puzzles', async () => {
-      const dc1 = await createTestDailyChallenge({ date: new Date('2020-01-03') });
-      const dc2 = await createTestDailyChallenge({ date: new Date('2021-01-01') });
+      const dc1 = await createTestDailyChallenge({ date: createUniqueDateTime() });
+      const dc2 = await createTestDailyChallenge({ date: createUniqueDateTime() });
       await createTestPuzzle({
         dailyChallengeId: dc1.id,
         type: 'FLOW',
