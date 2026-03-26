@@ -16,6 +16,10 @@ import {
 import type { Puzzle } from '@/platform/puzzle/resource/puzzle';
 import { getJson, setJson } from '@/utils/redis';
 
+import { createMockLogger } from '../../testUtils';
+
+const logger = createMockLogger();
+
 vi.mock('@/client/redis', () => ({
   getRedis: vi.fn(async () => ({})),
 }));
@@ -59,7 +63,7 @@ describe('puzzle cache', () => {
       const id = randomUUID();
       vi.mocked(getJson).mockResolvedValue(null);
 
-      const result = await getCachedPuzzle({ id });
+      const result = await getCachedPuzzle({ id, logger });
 
       expect(result).toBeNull();
       expect(getJson).toHaveBeenCalledWith(
@@ -76,7 +80,7 @@ describe('puzzle cache', () => {
       const puzzle = minimalFlowPuzzle({ id, dailyChallengeId });
       vi.mocked(getJson).mockResolvedValue(puzzle);
 
-      const result = await getCachedPuzzle({ id });
+      const result = await getCachedPuzzle({ id, logger });
 
       expect(result).toEqual(puzzle);
       expect(getJson).toHaveBeenCalledWith(
@@ -93,7 +97,7 @@ describe('puzzle cache', () => {
       const dailyChallengeId = randomUUID();
       vi.mocked(getJson).mockResolvedValue(null);
 
-      const result = await getCachedPuzzles({ dailyChallengeId });
+      const result = await getCachedPuzzles({ dailyChallengeId, logger });
 
       expect(result).toBeNull();
       expect(getJson).toHaveBeenCalledWith(
@@ -110,7 +114,7 @@ describe('puzzle cache', () => {
       const puzzles: Puzzle[] = [minimalFlowPuzzle({ id, dailyChallengeId })];
       vi.mocked(getJson).mockResolvedValue(puzzles);
 
-      const result = await getCachedPuzzles({ dailyChallengeId });
+      const result = await getCachedPuzzles({ dailyChallengeId, logger });
 
       expect(result).toEqual(puzzles);
       expect(getJson).toHaveBeenCalledWith(

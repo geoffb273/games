@@ -1,3 +1,4 @@
+import { type Logger } from 'pino';
 import { z } from 'zod';
 
 import { getRedis } from '@/client/redis';
@@ -53,24 +54,34 @@ export const cachedPuzzleSchema = z.discriminatedUnion('type', [
 export const cachedPuzzlesSchema = z.array(cachedPuzzleSchema).min(1);
 
 /** Loads one puzzle from Redis by id; returns null if absent or fails validation. */
-export async function getCachedPuzzle({ id }: { id: string }): Promise<Puzzle | null> {
+export async function getCachedPuzzle({
+  id,
+  logger,
+}: {
+  id: string;
+  logger: Logger;
+}): Promise<Puzzle | null> {
   return getJson({
     client: await getRedis(),
     key: `${PUZZLE_CACHE_KEY}:${id}`,
     schema: cachedPuzzleSchema,
+    logger,
   });
 }
 
 /** Loads all puzzles for a daily challenge from Redis; returns null if absent or fails validation. */
 export async function getCachedPuzzles({
   dailyChallengeId,
+  logger,
 }: {
   dailyChallengeId: string;
+  logger: Logger;
 }): Promise<Puzzle[] | null> {
   return getJson({
     client: await getRedis(),
     key: `${PUZZLES_CACHE_KEY}:${dailyChallengeId}`,
     schema: cachedPuzzlesSchema,
+    logger,
   });
 }
 

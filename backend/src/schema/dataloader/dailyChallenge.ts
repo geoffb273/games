@@ -4,9 +4,12 @@ import {
   getCompletedPuzzleCountsByDailyChallengeIds,
   getPuzzleCountsByDailyChallengeIds,
 } from '@/platform/dailyChallenge/service/dailyChallengeService';
-import { type Authorization } from '@/schema/context/authorization';
 
-export function DailyChallengeDataLoader({ user }: Authorization) {
+import { type Context } from '../context/context';
+
+export function DailyChallengeDataLoader({
+  authorization: { user },
+}: Omit<Context, 'dataloaders'>) {
   const dailyChallengePuzzleCount = new DataLoader<string, number>(async (dailyChallengeIds) => {
     const map = await getPuzzleCountsByDailyChallengeIds({ dailyChallengeIds });
     return dailyChallengeIds.map((id) => map.get(id) ?? 0);

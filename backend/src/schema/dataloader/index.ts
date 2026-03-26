@@ -1,12 +1,11 @@
-import { type Authorization } from '@/schema/context/authorization';
-
+import { type Context } from '../context/context';
 import { DailyChallengeDataLoader } from './dailyChallenge';
 import { PuzzleDataLoader } from './puzzle';
 
-export function createDataloaders(authorization: Authorization) {
+export function createDataloaders(context: Omit<Context, 'dataloaders'>) {
   return {
-    ...PuzzleDataLoader(authorization),
-    ...DailyChallengeDataLoader(authorization),
+    ...PuzzleDataLoader(context),
+    ...DailyChallengeDataLoader(context),
   };
 }
 

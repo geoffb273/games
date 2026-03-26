@@ -8,10 +8,14 @@ import {
   getPuzzleAttemptSpeedPercentages,
   getUserPuzzleAttemptsByPuzzleIds,
 } from '@/platform/puzzle/service/puzzleService';
-import { type Authorization } from '@/schema/context/authorization';
 import { serializePuzzleAttemptSpeedPercentageKey } from '@/utils/puzzle/attemptUtil';
 
-export function PuzzleDataLoader({ user }: Authorization) {
+import { type Context } from '../context/context';
+
+export function PuzzleDataLoader({
+  authorization: { user },
+  logger,
+}: Omit<Context, 'dataloaders'>) {
   const userPuzzleAttempt = new DataLoader<string, UserPuzzleAttempt | null>(async (puzzleIds) => {
     const resolvedUser = await user;
 
@@ -33,7 +37,7 @@ export function PuzzleDataLoader({ user }: Authorization) {
       const userId = (await user)?.id ?? null;
       if (userId == null) return keys.map(() => 0);
 
-      const map = await getPuzzleAttemptSpeedPercentages({ userId, keys });
+      const map = await getPuzzleAttemptSpeedPercentages({ userId, keys, logger });
       return keys.map((key) => map.get(serializePuzzleAttemptSpeedPercentageKey(key)) ?? 0);
     },
     {

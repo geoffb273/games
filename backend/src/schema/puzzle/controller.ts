@@ -1,5 +1,3 @@
-import { ZodError } from 'zod';
-
 import { getLatestDailyChallenge } from '@/platform/dailyChallenge/service/dailyChallengeService';
 import {
   flowPuzzleDataSchema,
@@ -14,6 +12,7 @@ import {
   requestPuzzleHint,
   solvePuzzle,
 } from '@/platform/puzzle/service/puzzleService';
+import { safeParse } from '@/utils/zodUtils';
 
 import { builder } from '../builder';
 import {
@@ -42,8 +41,8 @@ builder.queryField('puzzle', (t) =>
     errors: {
       types: [UnknownError, NotFoundError],
     },
-    resolve: async (_, { input: { id } }) => {
-      return getPuzzle({ id });
+    resolve: async (_, { input: { id } }, { logger }) => {
+      return getPuzzle({ id, logger });
     },
   }),
 );
@@ -62,11 +61,12 @@ builder.queryField('puzzles', (t) =>
     errors: {
       types: [UnknownError, NotFoundError],
     },
-    resolve: async (_, { input: { dailyChallengeId } }) => {
+    resolve: async (_, { input: { dailyChallengeId } }, { logger }) => {
       const id = dailyChallengeId ?? (await getLatestDailyChallenge()).id;
 
       return getPuzzlesByDailyChallenge({
         dailyChallengeId: id,
+        logger,
       });
     },
   }),
@@ -145,87 +145,85 @@ builder.mutationField('solvePuzzle', (t) =>
           durationMs,
         },
       },
-      { authorization },
+      { authorization, logger },
     ) => {
       const user = await authorization.expectUser;
 
-      try {
-        switch (puzzleType) {
-          case 'FLOW':
-            return solvePuzzle({
-              puzzleId,
-              userId: user.id,
-              startedAt,
-              completedAt,
-              durationMs,
-              puzzleType: 'FLOW',
-              solution:
-                flowSolution != null
-                  ? flowPuzzleDataSchema.shape.solution.parse(flowSolution)
-                  : null,
-            });
-          case 'HANJI':
-            return solvePuzzle({
-              puzzleId,
-              userId: user.id,
-              startedAt,
-              completedAt,
-              durationMs,
-              puzzleType: 'HANJI',
-              solution:
-                hanjiSolution != null
-                  ? hanjiPuzzleDataSchema.shape.solution.parse(hanjiSolution)
-                  : null,
-            });
-          case 'HASHI':
-            return solvePuzzle({
-              puzzleId,
-              userId: user.id,
-              startedAt,
-              completedAt,
-              durationMs,
-              puzzleType: 'HASHI',
-              solution:
-                hashiSolution != null
-                  ? hashiPuzzleDataSchema.shape.solution.parse(hashiSolution)
-                  : null,
-            });
-          case 'MINESWEEPER':
-            return solvePuzzle({
-              puzzleId,
-              userId: user.id,
-              startedAt,
-              completedAt,
-              durationMs,
-              puzzleType: 'MINESWEEPER',
-              solution:
-                minesweeperSolution != null
-                  ? minesweeperPuzzleDataSchema.shape.solution.parse(minesweeperSolution)
-                  : null,
-            });
-          case 'SLITHERLINK':
-            return solvePuzzle({
-              puzzleId,
-              userId: user.id,
-              startedAt,
-              completedAt,
-              durationMs,
-              puzzleType: 'SLITHERLINK',
-              solution:
-                slitherlinkSolution != null
-                  ? slitherlinkPuzzleDataSchema.shape.solution.parse(slitherlinkSolution)
-                  : null,
-            });
-          default:
-            // This should be unreachable because puzzleType is validated by GraphQL enum
-            // but keeps TypeScript happy.
-            throw new ValidationError('Unknown input puzzle type');
-        }
-      } catch (error) {
-        if (error instanceof ZodError) {
-          throw new ValidationError(error.message);
-        }
-        throw error;
+      switch (puzzleType) {
+        case 'FLOW':
+          return solvePuzzle({
+            puzzleId,
+            userId: user.id,
+            startedAt,
+            completedAt,
+            durationMs,
+            puzzleType: 'FLOW',
+            solution: safeParse({
+              schema: flowPuzzleDataSchema.shape.solution,
+              value: flowSolution,
+              logger,
+            }),
+          });
+        case 'HANJI':
+          return solvePuzzle({
+            puzzleId,
+            userId: user.id,
+            startedAt,
+            completedAt,
+            durationMs,
+            puzzleType: 'HANJI',
+            solution: safeParse({
+              schema: hanjiPuzzleDataSchema.shape.solution,
+              value: hanjiSolution,
+              logger,
+            }),
+          });
+        case 'HASHI':
+          return solvePuzzle({
+            puzzleId,
+            userId: user.id,
+            startedAt,
+            completedAt,
+            durationMs,
+            puzzleType: 'HASHI',
+            solution: safeParse({
+              schema: hashiPuzzleDataSchema.shape.solution,
+              value: hashiSolution,
+              logger,
+            }),
+          });
+        case 'MINESWEEPER':
+          return solvePuzzle({
+            puzzleId,
+            userId: user.id,
+            startedAt,
+            completedAt,
+            durationMs,
+            puzzleType: 'MINESWEEPER',
+            solution: safeParse({
+              schema: minesweeperPuzzleDataSchema.shape.solution,
+              value: minesweeperSolution,
+              logger,
+            }),
+          });
+        case 'SLITHERLINK':
+          return solvePuzzle({
+            puzzleId,
+            userId: user.id,
+            startedAt,
+            completedAt,
+            durationMs,
+            puzzleType: 'SLITHERLINK',
+            solution: safeParse({
+              schema: slitherlinkPuzzleDataSchema.shape.solution,
+              value: slitherlinkSolution,
+              logger,
+            }),
+          });
+        default:
+          // This should be unreachable because puzzleType is validated by GraphQL enum
+          // but keeps TypeScript happy.
+          throw new ValidationError('Unknown input puzzle type');
       }
     },
   }),
@@ -282,7 +280,7 @@ builder.mutationField('requestPuzzleHint', (t) =>
           slitherlinkCurrentState,
         },
       },
-      { authorization },
+      { authorization, logger },
     ) => {
       const user = await authorization.expectUser;
 
@@ -290,53 +288,50 @@ builder.mutationField('requestPuzzleHint', (t) =>
         throw new ValidationError('Hints are not supported for FLOW puzzles');
       }
 
-      try {
-        const base = { userId: user.id, puzzleId, puzzleType };
-        switch (puzzleType) {
-          case 'HANJI':
-            return requestPuzzleHint({
-              ...base,
-              puzzleType: 'HANJI',
-              hanjiCurrentState:
-                hanjiCurrentState != null
-                  ? hanjiPuzzleDataSchema.shape.solution.parse(hanjiCurrentState)
-                  : undefined,
-            });
-          case 'HASHI':
-            return requestPuzzleHint({
-              ...base,
-              puzzleType: 'HASHI',
-              hashiCurrentState:
-                hashiCurrentState != null
-                  ? hashiPuzzleDataSchema.shape.solution.parse(hashiCurrentState)
-                  : undefined,
-            });
-          case 'MINESWEEPER':
-            return requestPuzzleHint({
-              ...base,
-              puzzleType: 'MINESWEEPER',
-              minesweeperCurrentState:
-                minesweeperCurrentState != null
-                  ? minesweeperPuzzleDataSchema.shape.solution.parse(minesweeperCurrentState)
-                  : undefined,
-            });
-          case 'SLITHERLINK':
-            return requestPuzzleHint({
-              ...base,
-              puzzleType: 'SLITHERLINK',
-              slitherlinkCurrentState:
-                slitherlinkCurrentState != null
-                  ? slitherlinkPuzzleDataSchema.shape.solution.parse(slitherlinkCurrentState)
-                  : undefined,
-            });
-          default:
-            throw new ValidationError('Unknown input puzzle type');
-        }
-      } catch (error) {
-        if (error instanceof ZodError) {
-          throw new ValidationError(error.message);
-        }
-        throw error;
+      const base = { userId: user.id, puzzleId, puzzleType };
+      switch (puzzleType) {
+        case 'HANJI':
+          return requestPuzzleHint({
+            ...base,
+            puzzleType: 'HANJI',
+            hanjiCurrentState: safeParse({
+              schema: hanjiPuzzleDataSchema.shape.solution,
+              value: hanjiCurrentState,
+              logger,
+            }),
+          });
+        case 'HASHI':
+          return requestPuzzleHint({
+            ...base,
+            puzzleType: 'HASHI',
+            hashiCurrentState: safeParse({
+              schema: hashiPuzzleDataSchema.shape.solution,
+              value: hashiCurrentState,
+              logger,
+            }),
+          });
+        case 'MINESWEEPER':
+          return requestPuzzleHint({
+            ...base,
+            puzzleType: 'MINESWEEPER',
+            minesweeperCurrentState: safeParse({
+              schema: minesweeperPuzzleDataSchema.shape.solution,
+              value: minesweeperCurrentState,
+              logger,
+            }),
+          });
+        case 'SLITHERLINK':
+          return requestPuzzleHint({
+            ...base,
+            puzzleType: 'SLITHERLINK',
+            slitherlinkCurrentState: safeParse({
+              schema: slitherlinkPuzzleDataSchema.shape.solution,
+              value: slitherlinkCurrentState,
+              logger,
+            }),
+          });
+        default:
+          throw new ValidationError('Unknown input puzzle type');
       }
     },
   }),

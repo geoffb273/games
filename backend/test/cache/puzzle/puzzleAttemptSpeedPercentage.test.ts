@@ -8,6 +8,9 @@ import {
   PUZZLE_ATTEMPT_SPEED_PERCENTAGE_SCHEMA,
   setCachedPuzzleAttemptSpeedPercentages,
 } from '@/cache/puzzle/puzzleAttemptSpeedPercentage';
+import { createMockLogger } from '@/test/testUtils';
+
+const logger = createMockLogger();
 
 const { cacheStore, getJsonMock, setJsonMock } = vi.hoisted(() => {
   const memoryCache = new Map<string, unknown>();
@@ -39,7 +42,7 @@ describe('puzzleAttemptSpeedPercentage cache', () => {
   describe('getCachedPuzzleAttemptSpeedPercentages', () => {
     it('returns an empty Map when there is no cached payload', async () => {
       const userId = randomUUID();
-      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId });
+      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId, logger });
 
       expect(result).toEqual(new Map());
       expect(getJsonMock).toHaveBeenCalledWith(
@@ -59,7 +62,7 @@ describe('puzzleAttemptSpeedPercentage cache', () => {
         ok: { percentage: 99, expirationTimestampMs: t + 60_000 },
       });
 
-      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId });
+      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId, logger });
 
       expect(result.size).toBe(1);
       expect(result.get('ok')).toEqual({
@@ -76,7 +79,7 @@ describe('puzzleAttemptSpeedPercentage cache', () => {
         b: { percentage: 20, expirationTimestampMs: t + 2000 },
       });
 
-      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId });
+      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId, logger });
 
       expect(result.size).toBe(2);
       expect(result.get('a')).toEqual({
@@ -99,7 +102,7 @@ describe('puzzleAttemptSpeedPercentage cache', () => {
         percentages: new Map([['puzzle-1', { percentage: 42, expirationTimestampMs: t + 60_000 }]]),
       });
 
-      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId });
+      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId, logger });
 
       expect(result.size).toBe(1);
       expect(result.get('puzzle-1')).toEqual({
@@ -116,7 +119,7 @@ describe('puzzleAttemptSpeedPercentage cache', () => {
         percentages: new Map([['puzzle-1', { percentage: 33 }]]),
       });
 
-      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId });
+      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId, logger });
       const entry = result.get('puzzle-1');
 
       expect(entry).toBeDefined();
@@ -136,7 +139,7 @@ describe('puzzleAttemptSpeedPercentage cache', () => {
         ]),
       });
 
-      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId });
+      const result = await getCachedPuzzleAttemptSpeedPercentages({ userId, logger });
 
       expect(result.size).toBe(0);
     });

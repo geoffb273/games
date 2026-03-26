@@ -1,3 +1,5 @@
+import { type Logger } from 'pino';
+
 import { getAdMobKeysCache, setAdMobKeysCache } from '@/cache/advertisment/adMobKeys';
 import { AdMobSsvVerificationError } from '@/schema/errors';
 
@@ -7,8 +9,12 @@ const VERIFIER_KEYS_URL = 'https://www.gstatic.com/admob/reward/verifier-keys.js
  * Fetches the AdMob verifier keys from the Google API.
  * @returns The AdMob verifier keys.
  */
-export async function fetchAdMobKeys(): Promise<Record<number, Buffer>> {
-  const keyCache = await getAdMobKeysCache();
+export async function fetchAdMobKeys({
+  logger,
+}: {
+  logger: Logger;
+}): Promise<Record<number, Buffer>> {
+  const keyCache = await getAdMobKeysCache({ logger });
   if (keyCache) {
     return keyCache;
   }
