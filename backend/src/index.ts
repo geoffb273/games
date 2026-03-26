@@ -12,8 +12,6 @@ import { buildContext, type Context } from './schema/context/context';
 import { AdMobSsvVerificationError } from './schema/errors';
 import { verifyAdMobSsvQueryString } from './utils/adMob/verify';
 
-import 'newrelic';
-
 const PORT = Number(process.env.PORT) || 8080;
 
 const app = express();

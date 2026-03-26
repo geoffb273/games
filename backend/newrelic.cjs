@@ -21,4 +21,9 @@ exports.config = {
       'response.headers.setCookie*',
     ],
   },
+  application_logging: {
+    forwarding: {
+      enabled: true,
+    },
+  },
 };

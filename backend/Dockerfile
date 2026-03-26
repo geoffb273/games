@@ -22,8 +22,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=8080
+ENV NODE_OPTIONS="--require newrelic"
 
-COPY package.json pnpm-lock.yaml tsconfig.runtime.json ./
+COPY package.json pnpm-lock.yaml tsconfig.runtime.json newrelic.cjs ./
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts && pnpm add tsx
 
 COPY --from=deps /app/src ./src
