@@ -14,11 +14,11 @@ allowed-tools: Read Write Edit Glob Grep
 
 # Backend platform: DAO and service creation
 
-This skill documents how to create and structure **DAO** and **service** files under `backend/src/platform/`, following the project’s layering so that schema, controllers, and scripts use **services only**, never DAOs directly.
+This skill documents how to create and structure **DAO** and **service** files under `backend/src/<domain>/`, following the project’s layering so that schema, controllers, and scripts use **services only**, never DAOs directly.
 
 ## Platform structure
 
-Each **domain** lives under `backend/src/platform/<domain>/` with up to three subfolders:
+Each **domain** lives under `backend/src/<domain>/` (with platform level data such as `user`, `puzzle`, `dailyChallenge` all living in the `platform` domain) with up to three subfolders:
 
 | Folder      | Purpose                                                                                                                                                                                                                                                                                                         |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -46,6 +46,16 @@ backend/src/platform/
     resource/dailyChallenge.ts
     dao/dailyChallengeDao.ts
     service/dailyChallengeService.ts
+```
+
+```
+backend/src/advertisment
+  dao/
+    advertisementRewardDao.ts
+  resource/
+    advertisementReward.ts
+  service/
+    advertisementRewardService.ts
 ```
 
 ## Layering rules
@@ -78,10 +88,11 @@ backend/src/platform/
 
 6. **Validation**: Validate input (e.g. JSON `data` for puzzle types) with Zod from resource before writing; throw `UnknownError` or `ValidationError` on parse failure. Map Prisma foreign key errors to `UnknownError` or `NotFoundError` as appropriate.
 
+7. **Mapping**: When adding helpers to map from Prisma types to resource types add helper to bottom of the files
+
 Example (conceptual):
 
 ```typescript
-// platform/user/dao/userDao.ts
 import { prisma } from '@/client/prisma';
 import { type Prisma, type User } from '@/generated/prisma';
 import { NotFoundError } from '@/schema/errors';
@@ -95,6 +106,10 @@ export async function getUser({ id }: { id: string }): Promise<User> {
     if (isNotFoundError(error)) throw new NotFoundError('User with the provided ID does not exist');
     throw error;
   });
+}
+
+function mapUser({ userId, deviceId }: Prisma.UserGetPayload<{ select: typeof USER_SELECT }>) {
+  return { userId, deviceId };
 }
 ```
 
