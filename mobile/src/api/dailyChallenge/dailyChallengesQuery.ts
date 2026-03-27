@@ -34,6 +34,7 @@ export type DailyChallenge = {
 type UseDailyChallengesQueryResult = {
   isLoading: boolean;
   isError: boolean;
+  error: Error | null | undefined;
   dailyChallenges: DailyChallenge[];
   hasNextPage: boolean;
   fetchMore: () => void;
@@ -84,6 +85,7 @@ export function useDailyChallengesQuery({
   return {
     isLoading: loading && !isFetchingMore,
     isError: error != null,
+    error,
     dailyChallenges,
     hasNextPage: pageInfo?.hasNextPage ?? false,
     fetchMore: handleFetchMore,

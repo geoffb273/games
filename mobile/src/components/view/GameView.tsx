@@ -24,7 +24,7 @@ type TransitionPhase = 'playing' | 'exiting' | 'completed';
 const BOARD_EXIT_DURATION_MS = 300;
 
 export function GameView({ id }: { id: string }) {
-  const { puzzle, isLoading, isError, isNotFound, refetch } = usePuzzleQuery({ id });
+  const { puzzle, isLoading, isError, isNotFound, refetch, error } = usePuzzleQuery({ id });
 
   const {
     shouldShowCompleted,
@@ -50,7 +50,7 @@ export function GameView({ id }: { id: string }) {
   if (isNotFound && !isLoading) {
     return (
       <View style={styles.centered}>
-        <ErrorView title="Puzzle not found" />
+        <ErrorView title="Puzzle not found" error={error} />
       </View>
     );
   }
@@ -58,7 +58,7 @@ export function GameView({ id }: { id: string }) {
   if (isError || isPuzzleMissing) {
     return (
       <View style={styles.centered}>
-        <ErrorView message="Unable to load puzzle" onRetry={refetch} />
+        <ErrorView message="Unable to load puzzle" onRetry={refetch} error={error} />
       </View>
     );
   }

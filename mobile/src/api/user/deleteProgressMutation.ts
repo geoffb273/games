@@ -3,6 +3,8 @@ import { useCallback } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 
+import { logError } from '@/client/newRelic';
+import { EVENT } from '@/constants/event';
 import { DeleteProgressMutationDocument } from '@/generated/gql/graphql';
 
 gql`
@@ -26,8 +28,11 @@ export function useDeleteProgress() {
     const { data } = await mutate();
 
     if (data?.deleteProgress.__typename !== 'MutationDeleteProgressSuccess') {
-      // TODO: ERROR LOGGING
-      throw new Error('Unknown error');
+      logError(
+        { event: EVENT.DELETE_PROGRESS_ERROR },
+        data?.deleteProgress.message ?? 'Unknown error',
+      );
+      throw new Error(data?.deleteProgress.message ?? 'Unknown error');
     }
 
     return data.deleteProgress.data;

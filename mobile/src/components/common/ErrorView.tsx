@@ -1,7 +1,10 @@
+import { useEffect } from 'react';
 import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
 
+import { logError } from '@/client/newRelic';
 import { Text } from '@/components/common/Text';
+import { EVENT } from '@/constants/event';
 import { Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -12,6 +15,7 @@ type ErrorViewProps = {
   message?: string | null;
   containerStyle?: StyleProp<ViewStyle>;
   onRetry?: () => void;
+  error?: unknown;
 };
 
 export function ErrorView({
@@ -19,7 +23,15 @@ export function ErrorView({
   message = 'Please try again.',
   containerStyle,
   onRetry,
+  error,
 }: ErrorViewProps) {
+  useEffect(() => {
+    logError(
+      { event: EVENT.ERROR_VIEW_ERROR },
+      error instanceof Error ? error.message : (error?.toString() ?? 'Unknown error'),
+    );
+  }, [error]);
+
   return (
     <View style={[styles.container, containerStyle]}>
       <ErrorIllustration />

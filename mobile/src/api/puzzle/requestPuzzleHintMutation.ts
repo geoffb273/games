@@ -3,6 +3,8 @@ import { useCallback } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 
+import { logError } from '@/client/newRelic';
+import { EVENT } from '@/constants/event';
 import { RequestPuzzleHintMutationDocument } from '@/generated/gql/graphql';
 
 import { type PuzzleType } from './puzzle';
@@ -97,7 +99,10 @@ export function useRequestPuzzleHint(): UseRequestPuzzleHintResult {
       });
 
       if (data?.requestPuzzleHint.__typename !== 'MutationRequestPuzzleHintSuccess') {
-        // TODO: ERROR LOGGING
+        logError(
+          { event: EVENT.REQUEST_PUZZLE_HINT_ERROR },
+          data?.requestPuzzleHint?.message ?? 'Unknown error',
+        );
         throw new Error(data?.requestPuzzleHint?.message ?? 'Unknown error');
       }
 

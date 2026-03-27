@@ -9,6 +9,7 @@ type GlobalErrorBoundaryProps = {
 
 type GlobalErrorBoundaryState = {
   hasError: boolean;
+  error: unknown;
 };
 
 /**
@@ -19,22 +20,23 @@ export class GlobalErrorBoundary extends Component<
   GlobalErrorBoundaryProps,
   GlobalErrorBoundaryState
 > {
-  state: GlobalErrorBoundaryState = { hasError: false };
+  state: GlobalErrorBoundaryState = { hasError: false, error: null };
 
-  static getDerivedStateFromError(): GlobalErrorBoundaryState {
-    return { hasError: true };
+  static getDerivedStateFromError(error: unknown): GlobalErrorBoundaryState {
+    return { hasError: true, error };
   }
+
   private reset = () => {
-    this.setState({ hasError: false });
+    this.setState({ hasError: false, error: null });
   };
 
   render() {
-    const { hasError } = this.state;
+    const { hasError, error } = this.state;
 
     if (hasError) {
       return (
         <View style={styles.container}>
-          <ErrorView title="Something went wrong" onRetry={this.reset} />
+          <ErrorView title="Something went wrong" onRetry={this.reset} error={error} />
         </View>
       );
     }

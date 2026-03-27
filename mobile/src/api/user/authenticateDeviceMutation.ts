@@ -3,6 +3,8 @@ import { useCallback } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 
+import { logError } from '@/client/newRelic';
+import { EVENT } from '@/constants/event';
 import { AuthenticateDeviceMutationDocument } from '@/generated/gql/graphql';
 
 gql`
@@ -33,7 +35,7 @@ export function useAuthenticateDevice() {
       });
 
       if (data == null) {
-        // TODO: ERROR LOGGING
+        logError({ event: EVENT.AUTHENTICATE_DEVICE_UNKNOWN_ERROR }, 'Unknown error');
         throw new Error('Unknown error');
       }
 

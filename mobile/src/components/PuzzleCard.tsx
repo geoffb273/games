@@ -136,10 +136,12 @@ export function PuzzleListEmptyState({
   isLoading,
   isError,
   onRetry,
+  error,
 }: {
   isLoading?: boolean;
   isError?: boolean;
   onRetry?: () => void;
+  error?: unknown;
 }) {
   const theme = useTheme();
 
@@ -148,7 +150,7 @@ export function PuzzleListEmptyState({
       {isLoading ? (
         <ActivityIndicator size="small" color={theme.text} />
       ) : isError ? (
-        <ErrorView title="Unable to load puzzles" message={null} onRetry={onRetry} />
+        <ErrorView title="Unable to load puzzles" message={null} onRetry={onRetry} error={error} />
       ) : (
         <Text type="body" color="textSecondary" textAlign="center">
           No puzzles available
