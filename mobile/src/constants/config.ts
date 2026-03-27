@@ -10,4 +10,5 @@ export const NEW_RELIC_APP_TOKEN = 'AA4777e80f92b85bb2028234beb9d7131e1da2e1e9-N
 
 export const NEW_RELIC_CONFIG = {
   crashReportingEnabled: true,
+  analyticsEventEnabled: true,
 };

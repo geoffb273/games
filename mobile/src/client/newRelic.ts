@@ -6,6 +6,11 @@ import { type EVENT } from '@/constants/event';
 NewRelic.startAgent(NEW_RELIC_APP_TOKEN, NEW_RELIC_CONFIG);
 
 type NewRelicAttributes = { event: EVENT } & Record<string, string | number | boolean>;
+const MOBILE_LOG_EVENT_TYPE = 'MobileLog';
+
+function toAttributeMap(attributes: Record<string, string | number | boolean>) {
+  return new Map<string, string | number | boolean>(Object.entries(attributes));
+}
 
 /**
  * Log an info message with attributes.
@@ -13,7 +18,8 @@ type NewRelicAttributes = { event: EVENT } & Record<string, string | number | bo
  * @param message - The message to log.
  */
 export function logInfo(attributes: NewRelicAttributes, message: string) {
-  NewRelic.logAttributes({ ...attributes, message, level: 'INFO' });
+  const payload = { ...attributes, message, level: 'INFO' as const };
+  NewRelic.recordCustomEvent(MOBILE_LOG_EVENT_TYPE, attributes.event, toAttributeMap(payload));
 }
 
 /**
@@ -22,5 +28,6 @@ export function logInfo(attributes: NewRelicAttributes, message: string) {
  * @param message - The message to log.
  */
 export function logError(attributes: NewRelicAttributes, message: string) {
-  NewRelic.logAttributes({ ...attributes, message, level: 'ERROR' });
+  const payload = { ...attributes, message, level: 'ERROR' as const };
+  NewRelic.recordCustomEvent(MOBILE_LOG_EVENT_TYPE, attributes.event, toAttributeMap(payload));
 }
