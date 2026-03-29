@@ -38,6 +38,8 @@ type UsePuzzleQueryResult = {
     completedAt?: Date | undefined | null;
     /** The duration of the puzzle in milliseconds. Only set if the puzzle was completed successfully. */
     durationMs?: number | undefined | null;
+    /** From server after solve; omit before mutation completes. */
+    percentage?: number | undefined | null;
   }) => void;
 };
 
@@ -72,11 +74,13 @@ export function usePuzzleQuery({ id }: { id: string }): UsePuzzleQueryResult {
     ({
       completedAt,
       durationMs,
+      percentage,
       startedAt,
     }: {
       startedAt: Date;
       completedAt?: Date | undefined | null;
       durationMs?: number | undefined | null;
+      percentage?: number | undefined | null;
     }) => {
       if (puzzle == null) return;
 
@@ -86,6 +90,7 @@ export function usePuzzleQuery({ id }: { id: string }): UsePuzzleQueryResult {
           startedAt,
           completedAt,
           durationMs,
+          percentage,
         },
       });
     },

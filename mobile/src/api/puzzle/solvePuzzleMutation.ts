@@ -20,6 +20,7 @@ gql`
           startedAt
           completedAt
           durationMs
+          percentage
         }
       }
     }

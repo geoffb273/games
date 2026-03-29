@@ -69,14 +69,21 @@ export function GameViewHanjiBoard({ puzzle, onAnimationComplete }: GameViewHanj
         durationMs,
       });
 
-      await solvePuzzle({
+      const attempt = await solvePuzzle({
         puzzleId: puzzle.id,
         puzzleType: PuzzleType.Hanji,
         startedAt,
         completedAt,
         durationMs,
         hanjiSolution,
-      }).then(refetch);
+      });
+      updateOptimisticallyPuzzleAttempt({
+        startedAt: attempt.startedAt,
+        completedAt: attempt.completedAt,
+        durationMs: attempt.durationMs,
+        percentage: attempt.percentage,
+      });
+      await refetch();
     },
   );
 

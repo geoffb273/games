@@ -53,14 +53,21 @@ export function GameViewHashiBoard({ puzzle, onAnimationComplete }: GameViewHash
       durationMs,
     });
 
-    await solvePuzzle({
+    const attempt = await solvePuzzle({
       puzzleId: puzzle.id,
       puzzleType: PuzzleType.Hashi,
       startedAt,
       completedAt,
       durationMs,
       hashiSolution,
-    }).then(refetch);
+    });
+    updateOptimisticallyPuzzleAttempt({
+      startedAt: attempt.startedAt,
+      completedAt: attempt.completedAt,
+      durationMs: attempt.durationMs,
+      percentage: attempt.percentage,
+    });
+    await refetch();
   });
 
   return (
