@@ -334,7 +334,7 @@ const service = new aws.ecs.Service('backend', {
 });
 
 // Origin URL for reference (e.g. point api.game-brain.net A record to this IP; Cloudflare proxy handles HTTPS)
-export const ec2OriginUrl = pulumi.interpolate`http://${eip.publicIp}:8080`;
+const ec2OriginUrl = pulumi.interpolate`http://${eip.publicIp}:8080`;
 
 lambdasConfig.forEach((entry) => {
   createScheduledLambda(buildScheduledLambdaOptions(entry, { ec2OriginUrl, adminSecretParam }));
