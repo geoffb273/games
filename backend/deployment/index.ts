@@ -221,18 +221,13 @@ const cluster = new aws.ecs.Cluster('backend', {
   name: 'game-brain-backend',
 });
 
-// ECS-optimized AMI (Amazon Linux 2, arm64 to match t4g.small)
-const ecsAmi = aws.ec2.getAmi({
-  mostRecent: true,
-  owners: ['amazon'],
-  filters: [
-    { name: 'name', values: ['amzn2-ami-ecs-arm64-hvm-2.0.*'] },
-    { name: 'architecture', values: ['arm64'] },
-  ],
+// ECS-optimized AMI (Amazon Linux 2023, arm64 to match t4g.small)
+const ecsAmiId = aws.ssm.getParameter({
+  name: '/aws/service/ecs/optimized-ami/amazon-linux-2023/arm64/recommended/image_id',
 });
 
 const instance = new aws.ec2.Instance('backend', {
-  ami: ecsAmi.then((a) => a.id),
+  ami: ecsAmiId.then((parameter) => parameter.value),
   instanceType: 't4g.small',
   subnetId,
   vpcSecurityGroupIds: [sg.id],
