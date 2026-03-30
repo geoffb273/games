@@ -17,10 +17,14 @@ const MIN_LOADING_VIEW_MS = 500;
  */
 export function InitialLoadGuard({ children }: { children: ReactNode }) {
   const { status } = useAuthFetchContext();
-  const { isLoading: isLoadingDailyChallenges, dailyChallenges } = useDailyChallengesQuery({
+  const {
+    isLoading: isLoadingDailyChallenges,
+    dailyChallenges,
+    error: errorDailyChallenges,
+  } = useDailyChallengesQuery({
     enabled: status === 'authenticated',
   });
-  const { isLoading: isLoadingPuzzles } = usePuzzlesQuery({
+  const { isLoading: isLoadingPuzzles, error: errorPuzzles } = usePuzzlesQuery({
     dailyChallengeId: dailyChallenges[0]?.id,
     enabled: status === 'authenticated' && !isLoadingDailyChallenges,
   });
@@ -61,6 +65,7 @@ export function InitialLoadGuard({ children }: { children: ReactNode }) {
         <ErrorView
           title="Error"
           message="An error occurred while loading the app. Please close and try again"
+          error={errorDailyChallenges ?? errorPuzzles}
         />
       </View>
     );

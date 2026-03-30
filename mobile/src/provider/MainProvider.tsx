@@ -12,6 +12,8 @@ import { AdConsentProvider } from './AdConsentProvider';
 import { AuthFetchProvider } from './AuthFetchProvider';
 import { InitialLoadGuard } from './InitialLoadGuard';
 
+import '@/client/newRelic';
+
 export function MainProvider({ children }: { children: ReactNode }) {
   const colorScheme = useColorScheme();
   const appColors = ThemeColor[colorScheme === 'dark' ? 'dark' : 'light'];

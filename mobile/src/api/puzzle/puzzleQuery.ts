@@ -29,6 +29,7 @@ type UsePuzzleQueryResult = {
   isLoading: boolean;
   isError: boolean;
   isNotFound: boolean;
+  error: Error | null | undefined;
   puzzle: Puzzle | null;
   refetch: () => void;
   /** Updates the puzzle attempt optimistically. Only use if puzzle has already been loaded */
@@ -96,6 +97,7 @@ export function usePuzzleQuery({ id }: { id: string }): UsePuzzleQueryResult {
     isLoading: loading,
     isError: error != null,
     isNotFound,
+    error,
     puzzle,
     refetch,
     updateOptimisticallyPuzzleAttempt,

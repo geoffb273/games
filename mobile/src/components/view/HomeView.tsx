@@ -17,6 +17,7 @@ export function HomeView() {
     dailyChallenges,
     isLoading: isChallengesLoading,
     isError: isChallengesError,
+    error: errorChallenges,
     fetchMore,
     hasNextPage,
     refetch: refetchChallenges,
@@ -31,13 +32,18 @@ export function HomeView() {
     puzzles,
     isLoading: isPuzzlesLoading,
     isError: isPuzzlesError,
+    error: errorPuzzles,
     refetch: refetchPuzzles,
   } = usePuzzlesQuery({ dailyChallengeId: activeChallengeId });
 
   if (isChallengesError && !isChallengesLoading) {
     return (
       <View style={[styles.centered, { backgroundColor: theme.background }]}>
-        <ErrorView message="Unable to load daily challenges" onRetry={refetchChallenges} />
+        <ErrorView
+          message="Unable to load daily challenges"
+          onRetry={refetchChallenges}
+          error={errorChallenges}
+        />
       </View>
     );
   }
@@ -77,6 +83,7 @@ export function HomeView() {
           isLoading={isPuzzlesLoading}
           isError={isPuzzlesError}
           onRetry={refetchPuzzles}
+          error={errorPuzzles}
         />
       }
     />
