@@ -12,7 +12,7 @@ export function safeParse<TSchema extends ZodType>({
 }): output<TSchema> | null {
   const result = schema.safeParse(value);
   if (!result.success) {
-    logger.error(result.error, 'Failed to parse Zod schema');
+    logger.error({ err: result.error }, 'Failed to parse Zod schema');
     return null;
   }
   return result.data;

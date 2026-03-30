@@ -53,7 +53,7 @@ app.get('/ad-mob-verification', async (req, res) => {
     logger.info('AdMob SSV verification successful');
     res.status(200).json({ ok: true });
   } catch (err) {
-    logger.error(err, 'AdMob SSV verification failed');
+    logger.error({ err }, 'AdMob SSV verification failed');
     if (err instanceof AdMobSsvVerificationError) {
       res.status(403).json({ error: 'Verification failed' });
       return;
