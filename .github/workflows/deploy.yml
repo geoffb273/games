@@ -51,10 +51,16 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push Docker image
-        run: |
-          docker build -t ${{ steps.aws-account.outputs.ecr_uri }} ./backend
-          docker push ${{ steps.aws-account.outputs.ecr_uri }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image (multi-arch)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.aws-account.outputs.ecr_uri }}
+          platforms: linux/amd64,linux/arm64
 
       - name: Install deployment dependencies
         run: pnpm install --frozen-lockfile

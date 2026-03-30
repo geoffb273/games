@@ -221,19 +221,14 @@ const cluster = new aws.ecs.Cluster('backend', {
   name: 'game-brain-backend',
 });
 
-// ECS-optimized AMI (Amazon Linux 2, x86_64 to match t3.micro)
-const ecsAmi = aws.ec2.getAmi({
-  mostRecent: true,
-  owners: ['amazon'],
-  filters: [
-    { name: 'name', values: ['amzn2-ami-ecs-hvm-2.0.*'] },
-    { name: 'architecture', values: ['x86_64'] },
-  ],
+// ECS-optimized AMI (Amazon Linux 2023, arm64 to match t4g.small)
+const ecsAmiId = aws.ssm.getParameter({
+  name: '/aws/service/ecs/optimized-ami/amazon-linux-2023/arm64/recommended/image_id',
 });
 
 const instance = new aws.ec2.Instance('backend', {
-  ami: ecsAmi.then((a) => a.id),
-  instanceType: 't3.micro',
+  ami: ecsAmiId.then((parameter) => parameter.value),
+  instanceType: 't4g.small',
   subnetId,
   vpcSecurityGroupIds: [sg.id],
   iamInstanceProfile: instanceProfile.name,
@@ -265,8 +260,11 @@ const taskDefinition = new aws.ecs.TaskDefinition('backend', {
   family: 'game-brain-backend',
   networkMode: 'host',
   requiresCompatibilities: ['EC2'],
-  cpu: '256',
-  memory: '256',
+  runtimePlatform: {
+    cpuArchitecture: 'ARM64',
+  },
+  cpu: '512',
+  memory: '512',
   executionRoleArn: taskExecutionRole.arn,
   containerDefinitions: pulumi
     .all([

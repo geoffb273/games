@@ -8,7 +8,7 @@ I use this setup in interviews to discuss how I deploy a production API: minimal
 
 ## 🚀 Overview
 
-- **Compute**: Backend runs on **EC2** (e.g. t3.micro, Amazon Linux 2), serving the GraphQL API inside **Docker** from an **ECR** image.
+- **Compute**: Backend runs on **EC2** (e.g. t4g.small, Amazon Linux 2 ARM), serving the GraphQL API inside **Docker** from an **ECR** image.
 - **Secrets**: `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `ADMIN_SECRET` (and optional `graphqlHiveAccessToken`) live in **SSM Parameter Store**; the app reads them at runtime.
 - **Database**: **Supabase** (external). No RDS in this stack.
 - **HTTPS**: **Cloudflare** DNS proxy in front of the instance. Origin is `http://<elastic-ip>:8080`; Cloudflare terminates TLS.
@@ -20,7 +20,7 @@ I use this setup in interviews to discuss how I deploy a production API: minimal
 
 | Resource           | Purpose                                                                                                            |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| **EC2**            | One instance (e.g. t3.micro), runs the backend in Docker from ECR                                                  |
+| **EC2**            | One instance (e.g. t4g.small), runs the backend in Docker from ECR                                                  |
 | **ECR**            | Repository for the backend image (built and pushed by GitHub Actions)                                              |
 | **Elastic IP**     | Stable public IP for the instance (used for API domain A record)                                                   |
 | **SSM Parameters** | `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `ADMIN_SECRET` (and optional Hive token); app receives them at runtime |
