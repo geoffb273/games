@@ -16,7 +16,7 @@ async function getRedis(): Promise<RedisClientType> {
       },
     });
 
-    redis.on('error', (err) => logger.error(err, 'Redis client error'));
+    redis.on('error', (err) => logger.error({ err }, 'Redis client error'));
     await redis.connect();
   }
 
