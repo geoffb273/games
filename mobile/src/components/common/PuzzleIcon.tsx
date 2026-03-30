@@ -43,11 +43,7 @@ export function PuzzleIcon({ type, size = 'md', style }: PuzzleIconProps) {
         style,
       ]}
     >
-      <MaterialCommunityIcons
-        name={PUZZLE_TYPE_ICONS[type]}
-        size={iconSize}
-        color={theme.accentInk}
-      />
+      <MaterialCommunityIcons name={PUZZLE_TYPE_ICONS[type]} size={iconSize} color={theme.text} />
     </View>
   );
 }

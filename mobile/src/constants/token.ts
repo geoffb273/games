@@ -26,6 +26,20 @@ export const Shadows = {
     shadowRadius: 3,
     elevation: 1,
   },
+  medium: {
+    shadowColor: COLOR.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  heavy: {
+    shadowColor: COLOR.black,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+  },
 } as const;
 
 export const Fonts = {
