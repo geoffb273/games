@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { FontAwesome } from '@expo/vector-icons';
+
 import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
 import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
@@ -9,6 +11,7 @@ import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { type SlitherlinkOnSolveInput, useSlitherlinkGame } from '@/hooks/game/useSlitherlinkGame';
+import { useTheme } from '@/hooks/useTheme';
 
 import { SlitherlinkCell } from './SlitherlinkCell';
 
@@ -44,6 +47,7 @@ export function SlitherlinkBoard({
 
   const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
   const hasEndGameAnimationTriggered = useRef(false);
+  const theme = useTheme();
 
   useEffect(() => {
     if (!isComplete || variant !== 'play' || hasEndGameAnimationTriggered.current) return;
@@ -99,18 +103,17 @@ export function SlitherlinkBoard({
 
       {variant === 'play' && (
         <View style={styles.actions}>
-          <Button
-            variant="secondary"
-            onPress={onClearPress}
-            disabled={isCompletionWaveActive || isComplete}
-          >
-            Clear
-          </Button>
           <HintButton
             puzzleType={PuzzleType.Slitherlink}
             puzzleId={puzzle.id}
             onHint={onHint}
             slitherlinkCurrentState={currentState}
+          />
+          <Button
+            variant="outline"
+            onPress={onClearPress}
+            disabled={isCompletionWaveActive || isComplete}
+            leadingIcon={<FontAwesome name="trash-o" size={24} color={theme.text} />}
           />
         </View>
       )}
@@ -133,7 +136,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   actions: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    flexDirection: 'row',
     gap: Spacing.two,
   },
 });

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { FontAwesome } from '@expo/vector-icons';
+
 import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
@@ -162,18 +164,17 @@ export function HanjiBoard({
       </View>
       {variant === 'play' && (
         <View style={styles.actions}>
-          <Button
-            variant="secondary"
-            onPress={onClearPress}
-            disabled={isDisabled || isCompletionWaveActive || isComplete}
-          >
-            Clear
-          </Button>
           <HintButton
             puzzleType={PuzzleType.Hanji}
             puzzleId={puzzle.id}
             onHint={onHint}
             hanjiCurrentState={currentState}
+          />
+          <Button
+            variant="outline"
+            onPress={onClearPress}
+            leadingIcon={<FontAwesome name="trash-o" size={24} color={theme.text} />}
+            disabled={isDisabled || isCompletionWaveActive || isComplete}
           />
         </View>
       )}
@@ -224,7 +225,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   actions: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: Spacing.two,
+    justifyContent: 'center',
+    flexDirection: 'row',
   },
 });

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { FontAwesome } from '@expo/vector-icons';
+
 import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
@@ -9,6 +11,7 @@ import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { type HashiOnSolve, useHashiGame } from '@/hooks/game/useHashiGame';
+import { useTheme } from '@/hooks/useTheme';
 
 import { HashiBridge } from './HashiBridge';
 import { HashiIsland } from './HashiIsland';
@@ -51,6 +54,7 @@ export function HashiBoard({
   } = useHashiGame({ puzzle, onSolve });
   const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
   const hasEndGameAnimationTriggered = useRef(false);
+  const theme = useTheme();
 
   useEffect(() => {
     if (!isComplete || variant !== 'play' || hasEndGameAnimationTriggered.current) return;
@@ -131,18 +135,17 @@ export function HashiBoard({
 
       {variant === 'play' && (
         <View style={styles.actions}>
-          <Button
-            variant="secondary"
-            onPress={onClearPress}
-            disabled={isDisabled || isCompletionWaveActive || isComplete}
-          >
-            Clear
-          </Button>
           <HintButton
             puzzleType={PuzzleType.Hashi}
             puzzleId={puzzle.id}
             onHint={onHint}
             hashiCurrentState={currentState}
+          />
+          <Button
+            variant="outline"
+            onPress={onClearPress}
+            disabled={isDisabled || isCompletionWaveActive || isComplete}
+            leadingIcon={<FontAwesome name="trash-o" size={24} color={theme.text} />}
           />
         </View>
       )}
@@ -162,7 +165,9 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   actions: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: Spacing.two,
+    justifyContent: 'center',
+    flexDirection: 'row',
   },
 });
