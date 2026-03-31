@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
 import { GameCompleteText } from '@/components/game/GameCompleteText';
 import { HintButton } from '@/components/game/HintButton';
@@ -44,10 +45,11 @@ export function HanjiBoard({
   const hasTriggeredShimmerRef = useRef(false);
 
   const theme = useTheme();
-  const { cells, onCellTap, onCellLongPress, onHint, currentState, isComplete } = useHanjiGame({
-    puzzle,
-    onSolve,
-  });
+  const { cells, onCellTap, onCellLongPress, onClearPress, onHint, currentState, isComplete } =
+    useHanjiGame({
+      puzzle,
+      onSolve,
+    });
 
   // Detect a fresh completion for this puzzle while in play variant, so we can play a one-off completion wave
   useEffect(() => {
@@ -159,12 +161,21 @@ export function HanjiBoard({
         </View>
       </View>
       {variant === 'play' && (
-        <HintButton
-          puzzleType={PuzzleType.Hanji}
-          puzzleId={puzzle.id}
-          onHint={onHint}
-          hanjiCurrentState={currentState}
-        />
+        <View style={styles.actions}>
+          <Button
+            variant="secondary"
+            onPress={onClearPress}
+            disabled={isDisabled || isCompletionWaveActive || isComplete}
+          >
+            Clear
+          </Button>
+          <HintButton
+            puzzleType={PuzzleType.Hanji}
+            puzzleId={puzzle.id}
+            onHint={onHint}
+            hanjiCurrentState={currentState}
+          />
+        </View>
       )}
       {variant === 'play' && isComplete && <GameCompleteText variant="success" />}
     </View>
@@ -211,5 +222,9 @@ const styles = StyleSheet.create({
   },
   gridRow: {
     flexDirection: 'row',
+  },
+  actions: {
+    alignItems: 'center',
+    gap: Spacing.two,
   },
 });

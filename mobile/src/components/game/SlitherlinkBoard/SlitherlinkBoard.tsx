@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
+import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
 import { GameCompleteText } from '@/components/game/GameCompleteText';
 import { HintButton } from '@/components/game/HintButton';
@@ -35,6 +36,7 @@ export function SlitherlinkBoard({
     vertical,
     onHorizontalEdgePress,
     onVerticalEdgePress,
+    onClearPress,
     onHint,
     currentState,
     isComplete,
@@ -96,12 +98,21 @@ export function SlitherlinkBoard({
       </View>
 
       {variant === 'play' && (
-        <HintButton
-          puzzleType={PuzzleType.Slitherlink}
-          puzzleId={puzzle.id}
-          onHint={onHint}
-          slitherlinkCurrentState={currentState}
-        />
+        <View style={styles.actions}>
+          <Button
+            variant="secondary"
+            onPress={onClearPress}
+            disabled={isCompletionWaveActive || isComplete}
+          >
+            Clear
+          </Button>
+          <HintButton
+            puzzleType={PuzzleType.Slitherlink}
+            puzzleId={puzzle.id}
+            onHint={onHint}
+            slitherlinkCurrentState={currentState}
+          />
+        </View>
       )}
       {variant === 'play' && isComplete && <GameCompleteText variant="success" />}
     </View>
@@ -120,5 +131,9 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
+  },
+  actions: {
+    alignItems: 'center',
+    gap: Spacing.two,
   },
 });

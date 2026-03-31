@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
 import { GameCompleteText } from '@/components/game/GameCompleteText';
 import { HintButton } from '@/components/game/HintButton';
@@ -42,6 +43,7 @@ export function HashiBoard({
     bridgeCounts,
     isValidBridge,
     onConnectionTap,
+    onClearPress,
     onHint,
     currentState,
     isComplete,
@@ -128,12 +130,21 @@ export function HashiBoard({
       </View>
 
       {variant === 'play' && (
-        <HintButton
-          puzzleType={PuzzleType.Hashi}
-          puzzleId={puzzle.id}
-          onHint={onHint}
-          hashiCurrentState={currentState}
-        />
+        <View style={styles.actions}>
+          <Button
+            variant="secondary"
+            onPress={onClearPress}
+            disabled={isDisabled || isCompletionWaveActive || isComplete}
+          >
+            Clear
+          </Button>
+          <HintButton
+            puzzleType={PuzzleType.Hashi}
+            puzzleId={puzzle.id}
+            onHint={onHint}
+            hashiCurrentState={currentState}
+          />
+        </View>
       )}
       {variant === 'play' && isComplete && <GameCompleteText variant="success" />}
     </View>
@@ -149,5 +160,9 @@ const styles = StyleSheet.create({
   },
   boardWrap: {
     position: 'relative',
+  },
+  actions: {
+    alignItems: 'center',
+    gap: Spacing.two,
   },
 });

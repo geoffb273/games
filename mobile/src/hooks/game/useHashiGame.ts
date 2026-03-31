@@ -49,6 +49,7 @@ export type HashiGame = {
   /** Returns true if adding a bridge on the given connection would not cross any existing bridges. */
   isValidBridge: (connectionIndex: number) => boolean;
   onConnectionTap: (connectionIndex: number) => void;
+  onClearPress: () => void;
   onHint: (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Hashi }>) => void;
   currentState: {
     bridges: number;
@@ -241,6 +242,16 @@ export function useHashiGame({
     lastIslandTapRef.current = { row, col };
   });
 
+  const onClearPress = useStableCallback(() => {
+    const nextState = gameReducer(bridgeCounts, {
+      type: 'RESET',
+      connectionCount: connections.length,
+    });
+    saveWithTime(nextState);
+    dispatch({ type: 'RESET', connectionCount: connections.length });
+    lastIslandTapRef.current = null;
+  });
+
   const currentState = useMemo(
     () => buildHashiCurrentState(connections, bridgeCounts, islands),
     [connections, bridgeCounts, islands],
@@ -252,6 +263,7 @@ export function useHashiGame({
     isComplete,
     isValidBridge,
     onConnectionTap,
+    onClearPress,
     onHint,
     currentState,
     onIslandPress,
