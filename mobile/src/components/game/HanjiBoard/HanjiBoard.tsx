@@ -52,7 +52,7 @@ export function HanjiBoard({
     onCellTap,
     onCellLongPress,
     onUndoPress,
-    canUndo,
+    isUndoEnabled,
     onClearPress,
     onHint,
     currentState,
@@ -173,17 +173,17 @@ export function HanjiBoard({
       </View>
       {variant === 'play' && (
         <View style={styles.actions}>
+          <Button
+            variant="outline"
+            onPress={onUndoPress}
+            leadingIcon={<FontAwesome name="undo" size={24} color={theme.text} />}
+            disabled={isDisabled || isCompletionWaveActive || isComplete || !isUndoEnabled}
+          />
           <HintButton
             puzzleType={PuzzleType.Hanji}
             puzzleId={puzzle.id}
             onHint={onHint}
             hanjiCurrentState={currentState}
-          />
-          <Button
-            variant="outline"
-            onPress={onUndoPress}
-            leadingIcon={<FontAwesome name="undo" size={24} color={theme.text} />}
-            disabled={isDisabled || isCompletionWaveActive || isComplete || !canUndo}
           />
           <Button
             variant="outline"

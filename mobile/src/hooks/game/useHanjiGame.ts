@@ -55,7 +55,7 @@ const CYCLE: Record<HanjiCellState, HanjiCellState> = {
 export type HanjiGame = {
   cells: GameState;
   isComplete: boolean;
-  canUndo: boolean;
+  isUndoEnabled: boolean;
   onCellTap: (row: number, col: number) => void;
   onCellLongPress: (row: number, col: number) => void;
   onUndoPress: () => void;
@@ -90,7 +90,7 @@ export function useHanjiGame({
   const stableOnSolve = useStableCallback(onSolve);
   const { width, height, rowClues, colClues, id: puzzleId } = puzzle;
   const undoStackRef = useRef<GameState[]>([]);
-  const [canUndo, setCanUndo] = useState(false);
+  const [isUndoEnabled, setIsUndoEnabled] = useState(false);
 
   const cellSchema = z.union([z.literal('empty'), z.literal('filled'), z.literal('marked')]);
   const cellsSchema = useMemo(
@@ -141,20 +141,24 @@ export function useHanjiGame({
     saveState({ cells: next, elapsedMs });
   };
 
+  // Push a new undo snapshot when a cell is changed
   const pushUndoSnapshot = (snapshot: GameState) => {
     undoStackRef.current.push(cloneCells(snapshot));
-    setCanUndo(true);
+    setIsUndoEnabled(true);
   };
 
+  // Sync the undo button state based on the undo stack
   const syncCanUndo = () => {
-    setCanUndo(undoStackRef.current.length > 0);
+    setIsUndoEnabled(undoStackRef.current.length > 0);
   };
 
+  // Reset undo stack and undo button when puzzle changes
   useEffect(() => {
     undoStackRef.current = [];
-    setCanUndo(false);
+    setIsUndoEnabled(false);
   }, [puzzleId]);
 
+  // Trigger endgame when the puzzle is completed
   useEffect(() => {
     if (!isComplete || submittedRef.current) return;
     submittedRef.current = true;
@@ -173,7 +177,7 @@ export function useHanjiGame({
       })
       .finally(() => {
         undoStackRef.current = [];
-        setCanUndo(false);
+        setIsUndoEnabled(false);
         clearState();
       });
   }, [cells, clearState, isComplete, stableOnSolve]);
@@ -236,7 +240,7 @@ export function useHanjiGame({
   return {
     cells,
     isComplete,
-    canUndo,
+    isUndoEnabled,
     onCellTap,
     onCellLongPress,
     onUndoPress,
