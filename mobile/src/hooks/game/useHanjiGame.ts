@@ -91,7 +91,7 @@ export function useHanjiGame({
 }): HanjiGame {
   const stableOnSolve = useStableCallback(onSolve);
   const { width, height, rowClues, colClues, id: puzzleId } = puzzle;
-  const { isUndoEnabled, pushStateSnapshot, popStateSnapshot } = useStateTracker<GameState>();
+  const { isEmpty, pushStateSnapshot, popStateSnapshot } = useStateTracker<GameState>();
 
   const cellSchema = z.union([z.literal('empty'), z.literal('filled'), z.literal('marked')]);
   const cellsSchema = useMemo(
@@ -221,7 +221,7 @@ export function useHanjiGame({
   return {
     cells,
     isComplete,
-    isUndoEnabled,
+    isUndoEnabled: !isEmpty,
     onCellTap,
     onCellLongPress,
     onUndoPress,
