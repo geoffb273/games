@@ -11,15 +11,22 @@ import { findConnections } from '@/utils/hashi/connections';
 import { wouldNewBridgeCrossExisting } from '@/utils/hashi/crossing';
 import { isHashiComplete } from '@/utils/hashi/validation';
 
+import { useStateTracker } from './useStateTracker';
+
 type GameState = number[];
 
 type GameAction =
   | { type: 'CYCLE_CONNECTION'; connectionIndex: number }
   | { type: 'RESET'; connectionCount: number }
-  | { type: 'SET_CONNECTION'; connectionIndex: number; bridges: number };
+  | { type: 'SET_CONNECTION'; connectionIndex: number; bridges: number }
+  | { type: 'REPLACE'; state: GameState };
 
 function createInitialState(connectionCount: number): GameState {
   return Array.from({ length: connectionCount }, () => 0);
+}
+
+function cloneGameState(state: GameState): GameState {
+  return [...state];
 }
 
 function gameReducer(state: GameState, action: GameAction): GameState {
@@ -34,6 +41,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const { connectionIndex, bridges } = action;
       const clamped = Math.max(0, Math.min(2, bridges));
       return state.map((v, i) => (i === connectionIndex ? clamped : v));
+    }
+    case 'REPLACE': {
+      return action.state;
     }
     case 'RESET':
       return createInitialState(action.connectionCount);
@@ -57,6 +67,8 @@ export type HashiGame = {
     to: { row: number; col: number };
   }[];
   onIslandPress: ({ row, col }: { row: number; col: number }) => void;
+  isUndoEnabled: boolean;
+  onUndoPress: () => void;
 };
 
 export type HashiOnSolve = (params: {
@@ -129,6 +141,8 @@ export function useHashiGame({
     [bridgeCountsSchema],
   );
 
+  const { isEmpty, pushStateSnapshot, popStateSnapshot } = useStateTracker<GameState>();
+
   const { persistedState, saveState, clearState } = usePersistedGameState<HashiPersisted>({
     puzzleId,
     puzzleType: PuzzleType.Hashi,
@@ -189,6 +203,7 @@ export function useHashiGame({
   const onConnectionTap = useStableCallback((connectionIndex: number) => {
     triggerHapticLight();
     const next = gameReducer(bridgeCounts, { type: 'CYCLE_CONNECTION', connectionIndex });
+    pushStateSnapshot(cloneGameState(bridgeCounts));
     saveWithTime(next);
     dispatch({ type: 'CYCLE_CONNECTION', connectionIndex });
   });
@@ -216,6 +231,7 @@ export function useHashiGame({
         connectionIndex,
         bridges: hint.bridges,
       });
+      pushStateSnapshot(cloneGameState(bridgeCounts));
       saveWithTime(next);
       dispatch({ type: 'SET_CONNECTION', connectionIndex, bridges: hint.bridges });
     },
@@ -248,8 +264,18 @@ export function useHashiGame({
       connectionCount: connections.length,
     });
     saveWithTime(nextState);
+    pushStateSnapshot(cloneGameState(bridgeCounts));
     dispatch({ type: 'RESET', connectionCount: connections.length });
     lastIslandTapRef.current = null;
+  });
+
+  const onUndoPress = useStableCallback(() => {
+    const previous = popStateSnapshot();
+
+    if (previous == null) return;
+    const next = gameReducer(previous, { type: 'REPLACE', state: previous });
+    saveWithTime(next);
+    dispatch({ type: 'REPLACE', state: previous });
   });
 
   const currentState = useMemo(
@@ -267,5 +293,7 @@ export function useHashiGame({
     onHint,
     currentState,
     onIslandPress,
+    isUndoEnabled: !isEmpty,
+    onUndoPress,
   };
 }

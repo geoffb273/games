@@ -9,6 +9,8 @@ import { useStableCallback } from '@/hooks/useStableCallback';
 import { triggerHapticHard, triggerHapticLight } from '@/utils/hapticUtils';
 import { isSlitherlinkComplete } from '@/utils/slitherlink/validation';
 
+import { useStateTracker } from './useStateTracker';
+
 type EdgeState = 'empty' | 'line';
 
 type EdgeGridState = EdgeState[][];
@@ -38,10 +40,18 @@ type GameAction =
       row: number;
       col: number;
       filled: boolean;
-    };
+    }
+  | { type: 'REPLACE'; state: GameState };
 
 function createEmptyGrid(rows: number, cols: number): EdgeGridState {
   return Array.from({ length: rows }, () => Array.from({ length: cols }, (): EdgeState => 'empty'));
+}
+
+function cloneGameState(state: GameState): GameState {
+  return {
+    horizontal: [...state.horizontal],
+    vertical: [...state.vertical],
+  };
 }
 
 function createInitialState(width: number, height: number): GameState {
@@ -88,6 +98,9 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         vertical: orientation === 'vertical' ? nextGrid : state.vertical,
       };
     }
+    case 'REPLACE': {
+      return action.state;
+    }
     case 'RESET':
       return createInitialState(action.width, action.height);
     default:
@@ -111,6 +124,8 @@ export type SlitherlinkGame = {
     horizontalEdges: boolean[][];
     verticalEdges: boolean[][];
   };
+  isUndoEnabled: boolean;
+  onUndoPress: () => void;
 };
 
 export type SlitherlinkOnSolveInput = {
@@ -181,6 +196,8 @@ export function useSlitherlinkGame({
           ),
   );
 
+  const { isEmpty, pushStateSnapshot, popStateSnapshot } = useStateTracker<GameState>();
+
   const startedAtRef = useRef<Date>(puzzle.attempt?.startedAt ?? new Date());
   const submittedRef = useRef(false);
 
@@ -220,6 +237,7 @@ export function useSlitherlinkGame({
   const onHorizontalEdgePress = useStableCallback((row: number, col: number) => {
     triggerHapticLight();
     const next = gameReducer(state, { type: 'TOGGLE_EDGE', orientation: 'horizontal', row, col });
+    pushStateSnapshot(cloneGameState(state));
     saveState(next);
     dispatch({ type: 'TOGGLE_EDGE', orientation: 'horizontal', row, col });
   });
@@ -227,6 +245,7 @@ export function useSlitherlinkGame({
   const onVerticalEdgePress = useStableCallback((row: number, col: number) => {
     triggerHapticLight();
     const next = gameReducer(state, { type: 'TOGGLE_EDGE', orientation: 'vertical', row, col });
+    pushStateSnapshot(cloneGameState(state));
     saveState(next);
     dispatch({ type: 'TOGGLE_EDGE', orientation: 'vertical', row, col });
   });
@@ -253,8 +272,17 @@ export function useSlitherlinkGame({
 
   const onClearPress = useStableCallback(() => {
     const next = gameReducer(state, { type: 'RESET', width, height });
+    pushStateSnapshot(cloneGameState(state));
     saveState(next);
     dispatch({ type: 'RESET', width, height });
+  });
+
+  const onUndoPress = useStableCallback(() => {
+    const previous = popStateSnapshot();
+    if (previous == null) return;
+    const next = gameReducer(previous, { type: 'REPLACE', state: previous });
+    saveState(next);
+    dispatch({ type: 'REPLACE', state: previous });
   });
 
   const currentState = useMemo(
@@ -274,5 +302,7 @@ export function useSlitherlinkGame({
     onClearPress,
     onHint,
     currentState,
+    isUndoEnabled: !isEmpty,
+    onUndoPress,
   };
 }
