@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useRef } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { z } from 'zod';
 
@@ -13,6 +13,7 @@ type GameState = HanjiCellState[][];
 
 type GameAction =
   | { type: 'SET_CELL'; row: number; col: number; state: HanjiCellState }
+  | { type: 'REPLACE'; cells: GameState }
   | { type: 'RESET'; width: number; height: number };
 
 function createInitialState(width: number, height: number): GameState {
@@ -27,11 +28,22 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const { row, col, state: next } = action;
       return state.map((r, ri) => (ri === row ? r.map((c, ci) => (ci === col ? next : c)) : r));
     }
+    case 'REPLACE':
+      return action.cells;
     case 'RESET':
       return createInitialState(action.width, action.height);
     default:
       return state;
   }
+}
+
+function cloneCells(cells: GameState): GameState {
+  return cells.map((row) => [...row]);
+}
+
+function areCellsEqual(a: GameState, b: GameState): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((row, rowIdx) => row.every((cell, colIdx) => cell === b[rowIdx]?.[colIdx]));
 }
 
 const CYCLE: Record<HanjiCellState, HanjiCellState> = {
@@ -43,8 +55,10 @@ const CYCLE: Record<HanjiCellState, HanjiCellState> = {
 export type HanjiGame = {
   cells: GameState;
   isComplete: boolean;
+  canUndo: boolean;
   onCellTap: (row: number, col: number) => void;
   onCellLongPress: (row: number, col: number) => void;
+  onUndoPress: () => void;
   onClearPress: () => void;
   onHint: (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Hanji }>) => void;
   currentState: number[][];
@@ -75,6 +89,8 @@ export function useHanjiGame({
 }): HanjiGame {
   const stableOnSolve = useStableCallback(onSolve);
   const { width, height, rowClues, colClues, id: puzzleId } = puzzle;
+  const undoStackRef = useRef<GameState[]>([]);
+  const [canUndo, setCanUndo] = useState(false);
 
   const cellSchema = z.union([z.literal('empty'), z.literal('filled'), z.literal('marked')]);
   const cellsSchema = useMemo(
@@ -125,6 +141,20 @@ export function useHanjiGame({
     saveState({ cells: next, elapsedMs });
   };
 
+  const pushUndoSnapshot = (snapshot: GameState) => {
+    undoStackRef.current.push(cloneCells(snapshot));
+    setCanUndo(true);
+  };
+
+  const syncCanUndo = () => {
+    setCanUndo(undoStackRef.current.length > 0);
+  };
+
+  useEffect(() => {
+    undoStackRef.current = [];
+    setCanUndo(false);
+  }, [puzzleId]);
+
   useEffect(() => {
     if (!isComplete || submittedRef.current) return;
     submittedRef.current = true;
@@ -142,6 +172,8 @@ export function useHanjiGame({
         submittedRef.current = false;
       })
       .finally(() => {
+        undoStackRef.current = [];
+        setCanUndo(false);
         clearState();
       });
   }, [cells, clearState, isComplete, stableOnSolve]);
@@ -150,6 +182,7 @@ export function useHanjiGame({
     const current = cells[row][col];
     triggerHapticLight();
     const nextState = gameReducer(cells, { type: 'SET_CELL', row, col, state: CYCLE[current] });
+    pushUndoSnapshot(cells);
     saveWithTime(nextState);
     dispatch({ type: 'SET_CELL', row, col, state: CYCLE[current] });
   });
@@ -161,6 +194,7 @@ export function useHanjiGame({
     if (next !== current) {
       triggerHapticMedium();
       const nextState = gameReducer(cells, { type: 'SET_CELL', row, col, state: next });
+      pushUndoSnapshot(cells);
       saveWithTime(nextState);
       dispatch({ type: 'SET_CELL', row, col, state: next });
     }
@@ -175,13 +209,24 @@ export function useHanjiGame({
 
       triggerHapticMedium();
       const nextState = gameReducer(cells, { type: 'SET_CELL', row, col, state: desired });
+      pushUndoSnapshot(cells);
       saveWithTime(nextState);
       dispatch({ type: 'SET_CELL', row, col, state: desired });
     },
   );
 
+  const onUndoPress = useStableCallback(() => {
+    const previous = undoStackRef.current.pop();
+    syncCanUndo();
+    if (previous == null) return;
+    saveWithTime(previous);
+    dispatch({ type: 'REPLACE', cells: previous });
+  });
+
   const onClearPress = useStableCallback(() => {
     const nextState = gameReducer(cells, { type: 'RESET', width, height });
+    if (areCellsEqual(cells, nextState)) return;
+    pushUndoSnapshot(cells);
     saveWithTime(nextState);
     dispatch({ type: 'RESET', width, height });
   });
@@ -191,8 +236,10 @@ export function useHanjiGame({
   return {
     cells,
     isComplete,
+    canUndo,
     onCellTap,
     onCellLongPress,
+    onUndoPress,
     onClearPress,
     onHint,
     currentState,
