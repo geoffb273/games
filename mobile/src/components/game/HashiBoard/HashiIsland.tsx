@@ -140,7 +140,11 @@ export const HashiIsland = memo(function HashiIsland({
         animatedIslandStyle,
       ]}
     >
-      <Pressable onPress={onPress} disabled={isDisabled || isCompletionWaveActive}>
+      <Pressable
+        onPress={onPress}
+        disabled={isDisabled || isCompletionWaveActive}
+        hitSlop={radius * 2}
+      >
         <Text type="emphasized_body" color={isAtMax ? 'background' : 'text'}>
           {requiredBridges}
         </Text>
