@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useEffect, useMemo, useReducer, useRef } from 'react';
 
 import { z } from 'zod';
 
@@ -8,6 +8,8 @@ import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { type HanjiCellState, isPuzzleComplete } from '@/utils/hanji/lineValidation';
 import { triggerHapticHard, triggerHapticLight, triggerHapticMedium } from '@/utils/hapticUtils';
+
+import { useStateTracker } from './useStateTracker';
 
 type GameState = HanjiCellState[][];
 
@@ -89,8 +91,7 @@ export function useHanjiGame({
 }): HanjiGame {
   const stableOnSolve = useStableCallback(onSolve);
   const { width, height, rowClues, colClues, id: puzzleId } = puzzle;
-  const undoStackRef = useRef<GameState[]>([]);
-  const [isUndoEnabled, setIsUndoEnabled] = useState(false);
+  const { isUndoEnabled, pushStateSnapshot, popStateSnapshot } = useStateTracker<GameState>();
 
   const cellSchema = z.union([z.literal('empty'), z.literal('filled'), z.literal('marked')]);
   const cellsSchema = useMemo(
@@ -141,23 +142,6 @@ export function useHanjiGame({
     saveState({ cells: next, elapsedMs });
   };
 
-  // Push a new undo snapshot when a cell is changed
-  const pushUndoSnapshot = (snapshot: GameState) => {
-    undoStackRef.current.push(cloneCells(snapshot));
-    setIsUndoEnabled(true);
-  };
-
-  // Sync the undo button state based on the undo stack
-  const syncCanUndo = () => {
-    setIsUndoEnabled(undoStackRef.current.length > 0);
-  };
-
-  // Reset undo stack and undo button when puzzle changes
-  useEffect(() => {
-    undoStackRef.current = [];
-    setIsUndoEnabled(false);
-  }, [puzzleId]);
-
   // Trigger endgame when the puzzle is completed
   useEffect(() => {
     if (!isComplete || submittedRef.current) return;
@@ -176,8 +160,6 @@ export function useHanjiGame({
         submittedRef.current = false;
       })
       .finally(() => {
-        undoStackRef.current = [];
-        setIsUndoEnabled(false);
         clearState();
       });
   }, [cells, clearState, isComplete, stableOnSolve]);
@@ -186,7 +168,7 @@ export function useHanjiGame({
     const current = cells[row][col];
     triggerHapticLight();
     const nextState = gameReducer(cells, { type: 'SET_CELL', row, col, state: CYCLE[current] });
-    pushUndoSnapshot(cells);
+    pushStateSnapshot(cloneCells(cells));
     saveWithTime(nextState);
     dispatch({ type: 'SET_CELL', row, col, state: CYCLE[current] });
   });
@@ -198,7 +180,7 @@ export function useHanjiGame({
     if (next !== current) {
       triggerHapticMedium();
       const nextState = gameReducer(cells, { type: 'SET_CELL', row, col, state: next });
-      pushUndoSnapshot(cells);
+      pushStateSnapshot(cloneCells(cells));
       saveWithTime(nextState);
       dispatch({ type: 'SET_CELL', row, col, state: next });
     }
@@ -213,15 +195,14 @@ export function useHanjiGame({
 
       triggerHapticMedium();
       const nextState = gameReducer(cells, { type: 'SET_CELL', row, col, state: desired });
-      pushUndoSnapshot(cells);
+      pushStateSnapshot(cloneCells(cells));
       saveWithTime(nextState);
       dispatch({ type: 'SET_CELL', row, col, state: desired });
     },
   );
 
   const onUndoPress = useStableCallback(() => {
-    const previous = undoStackRef.current.pop();
-    syncCanUndo();
+    const previous = popStateSnapshot();
     if (previous == null) return;
     saveWithTime(previous);
     dispatch({ type: 'REPLACE', cells: previous });
@@ -230,7 +211,7 @@ export function useHanjiGame({
   const onClearPress = useStableCallback(() => {
     const nextState = gameReducer(cells, { type: 'RESET', width, height });
     if (areCellsEqual(cells, nextState)) return;
-    pushUndoSnapshot(cells);
+    pushStateSnapshot(cloneCells(cells));
     saveWithTime(nextState);
     dispatch({ type: 'RESET', width, height });
   });
