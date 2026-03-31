@@ -51,6 +51,8 @@ export function HashiBoard({
     currentState,
     isComplete,
     onIslandPress,
+    onUndoPress,
+    isUndoEnabled,
   } = useHashiGame({ puzzle, onSolve });
   const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
   const hasEndGameAnimationTriggered = useRef(false);
@@ -135,6 +137,12 @@ export function HashiBoard({
 
       {variant === 'play' && (
         <View style={styles.actions}>
+          <Button
+            variant="outline"
+            onPress={onUndoPress}
+            leadingIcon={<FontAwesome name="undo" size={24} color={theme.text} />}
+            disabled={isDisabled || isCompletionWaveActive || isComplete || !isUndoEnabled}
+          />
           <HintButton
             puzzleType={PuzzleType.Hashi}
             puzzleId={puzzle.id}

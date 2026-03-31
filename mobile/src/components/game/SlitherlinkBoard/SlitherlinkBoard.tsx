@@ -43,6 +43,8 @@ export function SlitherlinkBoard({
     onHint,
     currentState,
     isComplete,
+    isUndoEnabled,
+    onUndoPress,
   } = useSlitherlinkGame({ puzzle, onSolve });
 
   const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
@@ -103,6 +105,12 @@ export function SlitherlinkBoard({
 
       {variant === 'play' && (
         <View style={styles.actions}>
+          <Button
+            variant="outline"
+            onPress={onUndoPress}
+            disabled={isCompletionWaveActive || isComplete || !isUndoEnabled}
+            leadingIcon={<FontAwesome name="undo" size={24} color={theme.text} />}
+          />
           <HintButton
             puzzleType={PuzzleType.Slitherlink}
             puzzleId={puzzle.id}
