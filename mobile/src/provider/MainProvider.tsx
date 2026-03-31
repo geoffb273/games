@@ -5,7 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { ApolloProvider } from '@apollo/client/react';
 
-import client from '@/client/apollo';
+import { apollo } from '@/client/apollo';
 import { ThemeColor } from '@/constants/theme';
 
 import { AdConsentProvider } from './AdConsentProvider';
@@ -34,7 +34,7 @@ export function MainProvider({ children }: { children: ReactNode }) {
           },
         }}
       >
-        <ApolloProvider client={client}>
+        <ApolloProvider client={apollo}>
           <AuthFetchProvider>
             <AdConsentProvider>
               <InitialLoadGuard>{children}</InitialLoadGuard>
