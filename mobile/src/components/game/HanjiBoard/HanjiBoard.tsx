@@ -47,11 +47,20 @@ export function HanjiBoard({
   const hasTriggeredShimmerRef = useRef(false);
 
   const theme = useTheme();
-  const { cells, onCellTap, onCellLongPress, onClearPress, onHint, currentState, isComplete } =
-    useHanjiGame({
-      puzzle,
-      onSolve,
-    });
+  const {
+    cells,
+    onCellTap,
+    onCellLongPress,
+    onUndoPress,
+    isUndoEnabled,
+    onClearPress,
+    onHint,
+    currentState,
+    isComplete,
+  } = useHanjiGame({
+    puzzle,
+    onSolve,
+  });
 
   // Detect a fresh completion for this puzzle while in play variant, so we can play a one-off completion wave
   useEffect(() => {
@@ -164,6 +173,12 @@ export function HanjiBoard({
       </View>
       {variant === 'play' && (
         <View style={styles.actions}>
+          <Button
+            variant="outline"
+            onPress={onUndoPress}
+            leadingIcon={<FontAwesome name="undo" size={24} color={theme.text} />}
+            disabled={isDisabled || isCompletionWaveActive || isComplete || !isUndoEnabled}
+          />
           <HintButton
             puzzleType={PuzzleType.Hanji}
             puzzleId={puzzle.id}
