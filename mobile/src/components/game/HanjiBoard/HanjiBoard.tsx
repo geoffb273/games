@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { FontAwesome } from '@expo/vector-icons';
+
 import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
 import { GameCompleteText } from '@/components/game/GameCompleteText';
 import { HintButton } from '@/components/game/HintButton';
@@ -44,10 +47,11 @@ export function HanjiBoard({
   const hasTriggeredShimmerRef = useRef(false);
 
   const theme = useTheme();
-  const { cells, onCellTap, onCellLongPress, onHint, currentState, isComplete } = useHanjiGame({
-    puzzle,
-    onSolve,
-  });
+  const { cells, onCellTap, onCellLongPress, onClearPress, onHint, currentState, isComplete } =
+    useHanjiGame({
+      puzzle,
+      onSolve,
+    });
 
   // Detect a fresh completion for this puzzle while in play variant, so we can play a one-off completion wave
   useEffect(() => {
@@ -159,12 +163,20 @@ export function HanjiBoard({
         </View>
       </View>
       {variant === 'play' && (
-        <HintButton
-          puzzleType={PuzzleType.Hanji}
-          puzzleId={puzzle.id}
-          onHint={onHint}
-          hanjiCurrentState={currentState}
-        />
+        <View style={styles.actions}>
+          <HintButton
+            puzzleType={PuzzleType.Hanji}
+            puzzleId={puzzle.id}
+            onHint={onHint}
+            hanjiCurrentState={currentState}
+          />
+          <Button
+            variant="outline"
+            onPress={onClearPress}
+            leadingIcon={<FontAwesome name="trash-o" size={24} color={theme.text} />}
+            disabled={isDisabled || isCompletionWaveActive || isComplete}
+          />
+        </View>
       )}
       {variant === 'play' && isComplete && <GameCompleteText variant="success" />}
     </View>
@@ -210,6 +222,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   gridRow: {
+    flexDirection: 'row',
+  },
+  actions: {
+    alignItems: 'flex-start',
+    gap: Spacing.two,
+    justifyContent: 'center',
     flexDirection: 'row',
   },
 });

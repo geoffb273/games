@@ -45,6 +45,7 @@ export type HanjiGame = {
   isComplete: boolean;
   onCellTap: (row: number, col: number) => void;
   onCellLongPress: (row: number, col: number) => void;
+  onClearPress: () => void;
   onHint: (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Hanji }>) => void;
   currentState: number[][];
 };
@@ -179,6 +180,12 @@ export function useHanjiGame({
     },
   );
 
+  const onClearPress = useStableCallback(() => {
+    const nextState = gameReducer(cells, { type: 'RESET', width, height });
+    saveWithTime(nextState);
+    dispatch({ type: 'RESET', width, height });
+  });
+
   const currentState = useMemo(() => cellsToHanjiSolution(cells), [cells]);
 
   return {
@@ -186,6 +193,7 @@ export function useHanjiGame({
     isComplete,
     onCellTap,
     onCellLongPress,
+    onClearPress,
     onHint,
     currentState,
   };

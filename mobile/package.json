@@ -18,7 +18,9 @@
     "lint": "expo lint",
     "lint:fix": "expo lint --fix",
     "generate": "graphql-codegen --config codegen.ts",
-    "generate:watch": "graphql-codegen --config codegen.ts --watch"
+    "generate:watch": "graphql-codegen --config codegen.ts --watch",
+    "pull-env:dev": "eas env:pull --environment development --non-interactive",
+    "pull-env:prod": "eas env:pull --environment production --non-interactive"
   },
   "jest": {
     "preset": "jest-expo",

@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { FontAwesome } from '@expo/vector-icons';
+
 import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
+import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
 import { GameCompleteText } from '@/components/game/GameCompleteText';
 import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { type SlitherlinkOnSolveInput, useSlitherlinkGame } from '@/hooks/game/useSlitherlinkGame';
+import { useTheme } from '@/hooks/useTheme';
 
 import { SlitherlinkCell } from './SlitherlinkCell';
 
@@ -35,6 +39,7 @@ export function SlitherlinkBoard({
     vertical,
     onHorizontalEdgePress,
     onVerticalEdgePress,
+    onClearPress,
     onHint,
     currentState,
     isComplete,
@@ -42,6 +47,7 @@ export function SlitherlinkBoard({
 
   const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
   const hasEndGameAnimationTriggered = useRef(false);
+  const theme = useTheme();
 
   useEffect(() => {
     if (!isComplete || variant !== 'play' || hasEndGameAnimationTriggered.current) return;
@@ -96,12 +102,20 @@ export function SlitherlinkBoard({
       </View>
 
       {variant === 'play' && (
-        <HintButton
-          puzzleType={PuzzleType.Slitherlink}
-          puzzleId={puzzle.id}
-          onHint={onHint}
-          slitherlinkCurrentState={currentState}
-        />
+        <View style={styles.actions}>
+          <HintButton
+            puzzleType={PuzzleType.Slitherlink}
+            puzzleId={puzzle.id}
+            onHint={onHint}
+            slitherlinkCurrentState={currentState}
+          />
+          <Button
+            variant="outline"
+            onPress={onClearPress}
+            disabled={isCompletionWaveActive || isComplete}
+            leadingIcon={<FontAwesome name="trash-o" size={24} color={theme.text} />}
+          />
+        </View>
       )}
       {variant === 'play' && isComplete && <GameCompleteText variant="success" />}
     </View>
@@ -120,5 +134,11 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
+  },
+  actions: {
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: Spacing.two,
   },
 });

@@ -105,6 +105,7 @@ export type SlitherlinkGame = {
   isComplete: boolean;
   onHorizontalEdgePress: (row: number, col: number) => void;
   onVerticalEdgePress: (row: number, col: number) => void;
+  onClearPress: () => void;
   onHint: (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Slitherlink }>) => void;
   currentState: {
     horizontalEdges: boolean[][];
@@ -250,6 +251,12 @@ export function useSlitherlinkGame({
     },
   );
 
+  const onClearPress = useStableCallback(() => {
+    const next = gameReducer(state, { type: 'RESET', width, height });
+    saveState(next);
+    dispatch({ type: 'RESET', width, height });
+  });
+
   const currentState = useMemo(
     () => ({
       horizontalEdges: horizontalLines,
@@ -264,6 +271,7 @@ export function useSlitherlinkGame({
     isComplete,
     onHorizontalEdgePress,
     onVerticalEdgePress,
+    onClearPress,
     onHint,
     currentState,
   };
