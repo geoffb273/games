@@ -143,7 +143,7 @@ export const HashiIsland = memo(function HashiIsland({
       <Pressable
         onPress={onPress}
         disabled={isDisabled || isCompletionWaveActive}
-        hitSlop={radius * 2}
+        style={styles.islandPressable}
       >
         <Text type="emphasized_body" color={isAtMax ? 'background' : 'text'}>
           {requiredBridges}
@@ -156,6 +156,12 @@ export const HashiIsland = memo(function HashiIsland({
 const styles = StyleSheet.create({
   island: {
     position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  islandPressable: {
+    height: '100%',
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
