@@ -16,7 +16,7 @@ const MIN_LOADING_VIEW_MS = 500;
  * Waits for auth and prefetch the first list of dailyChallenges and puzzles
  */
 export function InitialLoadGuard({ children }: { children: ReactNode }) {
-  const { status } = useAuthFetchContext();
+  const { status } = useAuthFetchContext({ required: false });
   const {
     isLoading: isLoadingDailyChallenges,
     dailyChallenges,

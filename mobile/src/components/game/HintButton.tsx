@@ -23,7 +23,7 @@ type HintButtonProps<T extends PuzzleType> = Extract<RequestPuzzleHintInput, { p
 export function HintButton<T extends PuzzleType>({ onHint, ...input }: HintButtonProps<T>) {
   const theme = useTheme();
   const { requestPuzzleHint, isLoading, isError } = useRequestPuzzleHint();
-  const { isDisabled, isEarnedReward, onPressShowAd } = useTriggerAd();
+  const { isDisabled, isEarnedReward, onPressShowAd } = useTriggerAd({ puzzleId: input.puzzleId });
 
   const onHintPress = useStableCallback(async () => {
     const hint = await requestPuzzleHint(input);
