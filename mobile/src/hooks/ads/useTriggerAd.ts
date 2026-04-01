@@ -3,6 +3,7 @@ import { useRewardedAd } from 'react-native-google-mobile-ads';
 
 import { AD_MOB_AD_ID } from '@/constants/config';
 import { useAdConsentContext } from '@/context/AdConsentContext';
+import { useAuthFetchContext } from '@/context/AuthFetchContext';
 
 type UseTriggerAdResult = {
   isDisabled: boolean;
@@ -14,7 +15,8 @@ type UseTriggerAdResult = {
 /**
  * Hook to trigger a rewarded ad.
  */
-export function useTriggerAd(): UseTriggerAdResult {
+export function useTriggerAd({ puzzleId }: { puzzleId: string }): UseTriggerAdResult {
+  const { user } = useAuthFetchContext({ required: true });
   const {
     isAllowedToRequestAds,
     isLoading: isConsentLoading,
@@ -23,6 +25,12 @@ export function useTriggerAd(): UseTriggerAdResult {
   } = useAdConsentContext();
   const { load, isLoaded, isEarnedReward, show } = useRewardedAd(AD_MOB_AD_ID, {
     requestNonPersonalizedAdsOnly: true,
+    serverSideVerificationOptions: {
+      userId: user.id,
+      customData: JSON.stringify({
+        puzzleId,
+      }),
+    },
   });
 
   useEffect(() => {

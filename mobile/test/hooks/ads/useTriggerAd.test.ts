@@ -4,9 +4,13 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import type { AdConsentContextType } from '@/context/AdConsentContext';
 import { useAdConsentContext } from '@/context/AdConsentContext';
+import { useAuthFetchContext } from '@/context/AuthFetchContext';
 import { useTriggerAd } from '@/hooks/ads/useTriggerAd';
 
 jest.mock('@/context/AdConsentContext');
+jest.mock('@/context/AuthFetchContext', () => ({
+  useAuthFetchContext: jest.fn(),
+}));
 
 jest.mock('react-native-google-mobile-ads', () => ({
   TestIds: { REWARDED: 'test-rewarded' },
@@ -42,12 +46,18 @@ function mockRewardedAdReturn(
   };
 }
 
+const TEST_PUZZLE_ID = 'test-puzzle-id';
+
 describe('useTriggerAd', () => {
   const load = jest.fn();
   const show = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.mocked(useAuthFetchContext).mockReturnValue({
+      status: 'authenticated',
+      user: { id: 'test-user-id' },
+    });
     jest.mocked(useAdConsentContext).mockReturnValue(baseConsent());
     jest
       .mocked(useRewardedAd)
@@ -57,13 +67,13 @@ describe('useTriggerAd', () => {
   it('exposes isDisabled true while consent is loading', () => {
     jest.mocked(useAdConsentContext).mockReturnValue(baseConsent({ isLoading: true }));
 
-    const { result } = renderHook(() => useTriggerAd());
+    const { result } = renderHook(() => useTriggerAd({ puzzleId: TEST_PUZZLE_ID }));
 
     expect(result.current.isDisabled).toBe(true);
   });
 
   it('exposes isDisabled true when ads are allowed but the rewarded ad is not loaded yet', () => {
-    const { result } = renderHook(() => useTriggerAd());
+    const { result } = renderHook(() => useTriggerAd({ puzzleId: TEST_PUZZLE_ID }));
 
     expect(result.current.isDisabled).toBe(true);
   });
@@ -73,7 +83,7 @@ describe('useTriggerAd', () => {
       .mocked(useRewardedAd)
       .mockReturnValue(mockRewardedAdReturn(load, show, { isLoaded: true, isEarnedReward: true }));
 
-    const { result } = renderHook(() => useTriggerAd());
+    const { result } = renderHook(() => useTriggerAd({ puzzleId: TEST_PUZZLE_ID }));
 
     expect(result.current.isDisabled).toBe(false);
   });
@@ -81,7 +91,7 @@ describe('useTriggerAd', () => {
   it('exposes isDisabled false when the user is not allowed to request ads (button can open consent)', () => {
     jest.mocked(useAdConsentContext).mockReturnValue(baseConsent({ isAllowedToRequestAds: false }));
 
-    const { result } = renderHook(() => useTriggerAd());
+    const { result } = renderHook(() => useTriggerAd({ puzzleId: TEST_PUZZLE_ID }));
 
     expect(result.current.isDisabled).toBe(false);
   });
@@ -91,13 +101,13 @@ describe('useTriggerAd', () => {
       .mocked(useRewardedAd)
       .mockReturnValue(mockRewardedAdReturn(load, show, { isLoaded: true, isEarnedReward: true }));
 
-    const { result } = renderHook(() => useTriggerAd());
+    const { result } = renderHook(() => useTriggerAd({ puzzleId: TEST_PUZZLE_ID }));
 
     expect(result.current.isEarnedReward).toBe(true);
   });
 
   it('calls load when consent allows requesting ads, consent is ready, and the ad is not loaded', async () => {
-    renderHook(() => useTriggerAd());
+    renderHook(() => useTriggerAd({ puzzleId: TEST_PUZZLE_ID }));
 
     await waitFor(() => {
       expect(load).toHaveBeenCalledTimes(1);
@@ -107,7 +117,7 @@ describe('useTriggerAd', () => {
   it('does not call load when consent is still loading', () => {
     jest.mocked(useAdConsentContext).mockReturnValue(baseConsent({ isLoading: true }));
 
-    renderHook(() => useTriggerAd());
+    renderHook(() => useTriggerAd({ puzzleId: TEST_PUZZLE_ID }));
 
     expect(load).not.toHaveBeenCalled();
   });
@@ -117,7 +127,7 @@ describe('useTriggerAd', () => {
       .mocked(useAdConsentContext)
       .mockReturnValue(baseConsent({ error: new Error('consent failed') }));
 
-    renderHook(() => useTriggerAd());
+    renderHook(() => useTriggerAd({ puzzleId: TEST_PUZZLE_ID }));
 
     expect(load).not.toHaveBeenCalled();
   });
@@ -125,7 +135,7 @@ describe('useTriggerAd', () => {
   it('does not call load when the user is not allowed to request ads', () => {
     jest.mocked(useAdConsentContext).mockReturnValue(baseConsent({ isAllowedToRequestAds: false }));
 
-    renderHook(() => useTriggerAd());
+    renderHook(() => useTriggerAd({ puzzleId: TEST_PUZZLE_ID }));
 
     expect(load).not.toHaveBeenCalled();
   });
@@ -135,7 +145,7 @@ describe('useTriggerAd', () => {
       .mocked(useRewardedAd)
       .mockReturnValue(mockRewardedAdReturn(load, show, { isLoaded: true }));
 
-    renderHook(() => useTriggerAd());
+    renderHook(() => useTriggerAd({ puzzleId: TEST_PUZZLE_ID }));
 
     await waitFor(() => {
       expect(load).not.toHaveBeenCalled();
@@ -148,7 +158,7 @@ describe('useTriggerAd', () => {
       .mocked(useAdConsentContext)
       .mockReturnValue(baseConsent({ isAllowedToRequestAds: false, showConsentForm }));
 
-    const { result } = renderHook(() => useTriggerAd());
+    const { result } = renderHook(() => useTriggerAd({ puzzleId: TEST_PUZZLE_ID }));
 
     await act(async () => {
       await result.current.onPressShowAd();
@@ -165,7 +175,7 @@ describe('useTriggerAd', () => {
       .mocked(useAdConsentContext)
       .mockReturnValue(baseConsent({ isAllowedToRequestAds: false, showConsentForm }));
 
-    const { result } = renderHook(() => useTriggerAd());
+    const { result } = renderHook(() => useTriggerAd({ puzzleId: TEST_PUZZLE_ID }));
 
     await act(async () => {
       await result.current.onPressShowAd();
@@ -176,7 +186,7 @@ describe('useTriggerAd', () => {
   });
 
   it('when allowed but the ad is not loaded, onPressShowAd does not show', async () => {
-    const { result } = renderHook(() => useTriggerAd());
+    const { result } = renderHook(() => useTriggerAd({ puzzleId: TEST_PUZZLE_ID }));
 
     await act(async () => {
       await result.current.onPressShowAd();
@@ -190,7 +200,7 @@ describe('useTriggerAd', () => {
       .mocked(useRewardedAd)
       .mockReturnValue(mockRewardedAdReturn(load, show, { isLoaded: true }));
 
-    const { result } = renderHook(() => useTriggerAd());
+    const { result } = renderHook(() => useTriggerAd({ puzzleId: TEST_PUZZLE_ID }));
 
     await act(async () => {
       await result.current.onPressShowAd();
