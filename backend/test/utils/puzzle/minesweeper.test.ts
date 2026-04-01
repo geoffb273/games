@@ -26,6 +26,39 @@ function adjacencyValue(mines: boolean[][], r: number, c: number): number {
   return count;
 }
 
+/**
+ * Every revealed cell with value 0 must include all safe 8-neighbors that are
+ * also 0 — otherwise the reveal looks like a truncated flood (old “orphan 0” bug).
+ */
+function assertRevealedCellsHaveNoOrphanZeros(
+  puzzleData: ReturnType<typeof generateMinesweeperPuzzleData>,
+): void {
+  const adjacency = computeAdjacencyCounts(
+    puzzleData.solution,
+    puzzleData.width,
+    puzzleData.height,
+  );
+  const revealed = new Set(puzzleData.revealedCells.map((c) => `${c.row},${c.col}`));
+
+  for (const cell of puzzleData.revealedCells) {
+    if (cell.value !== 0) continue;
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const nr = cell.row + dr;
+        const nc = cell.col + dc;
+        if (nr < 0 || nr >= puzzleData.height || nc < 0 || nc >= puzzleData.width) continue;
+        if (puzzleData.solution[nr][nc]) continue;
+        if (adjacency[nr][nc] !== 0) continue;
+        expect(
+          revealed.has(`${nr},${nc}`),
+          `Revealed 0 at (${cell.row},${cell.col}) has unrevealed 0-neighbor (${nr},${nc})`,
+        ).toBe(true);
+      }
+    }
+  }
+}
+
 describe('generateMinesweeperPuzzleData', () => {
   it('generates a valid puzzle with correct structure', () => {
     const puzzleData = generateMinesweeperPuzzleData({
@@ -91,6 +124,25 @@ describe('generateMinesweeperPuzzleData', () => {
       const expected = adjacencyValue(puzzleData.solution, cell.row, cell.col);
       expect(cell.value).toBe(expected);
     }
+  });
+
+  it('revealedCells have no orphan 0s (open regions are fully propagated)', () => {
+    const seeds = [
+      'orphan-check-1',
+      'orphan-check-2',
+      'test-seed',
+      'solver-verify',
+      'adjacency-check',
+      'deterministic',
+    ];
+    for (const seed of seeds) {
+      assertRevealedCellsHaveNoOrphanZeros(
+        generateMinesweeperPuzzleData({ width: 9, height: 9, mineCount: 10, seed }),
+      );
+    }
+    assertRevealedCellsHaveNoOrphanZeros(
+      generateMinesweeperPuzzleData({ width: 5, height: 5, mineCount: 4, seed: 'orphan-small' }),
+    );
   });
 
   it('produces deterministic output for the same seed', () => {
