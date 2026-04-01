@@ -226,33 +226,42 @@ function placeMines(
 }
 
 /**
- * Flood-fills from a starting "0" cell, revealing it and all
- * contiguous zero-valued cells plus their numbered border.
+ * Same reveal propagation as mobile `getCellsToReveal` on a safe cell:
+ * values 1–8 reveal only that cell; 0 flood-fills the zero region and its
+ * numbered border.
  */
-function floodFillReveal(
-  start: { row: number; col: number },
+function cellsRevealedByTap(
+  row: number,
+  col: number,
   adjacency: number[][],
   mines: boolean[][],
   width: number,
   height: number,
 ): Set<string> {
-  const revealed = new Set<string>();
-  const queue = [start];
   const key = (r: number, c: number) => `${r},${c}`;
+  if (mines[row][col]) return new Set();
 
-  revealed.add(key(start.row, start.col));
+  const v = adjacency[row][col];
+  if (v !== 0) {
+    return new Set([key(row, col)]);
+  }
+
+  const revealed = new Set<string>();
+  const queue: { row: number; col: number }[] = [{ row, col }];
 
   while (queue.length > 0) {
     const cell = queue.shift()!;
+    const k = key(cell.row, cell.col);
+    if (revealed.has(k)) continue;
+    revealed.add(k);
+    if (mines[cell.row][cell.col]) continue;
 
-    if (adjacency[cell.row][cell.col] !== 0) continue;
-
-    for (const n of getNeighbors(cell.row, cell.col, width, height)) {
-      if (mines[n.row][n.col]) continue;
-      const k = key(n.row, n.col);
-      if (revealed.has(k)) continue;
-      revealed.add(k);
-      if (adjacency[n.row][n.col] === 0) {
+    const cellVal = adjacency[cell.row][cell.col];
+    if (cellVal === 0) {
+      for (const n of getNeighbors(cell.row, cell.col, width, height)) {
+        const nk = key(n.row, n.col);
+        if (revealed.has(nk)) continue;
+        if (mines[n.row][n.col]) continue;
         queue.push(n);
       }
     }
@@ -293,7 +302,14 @@ function selectRevealedCells(
   const targetMax = Math.floor(totalSafe * 0.4);
 
   const startCell = zeroCells[Math.floor(random() * zeroCells.length)];
-  const revealedKeys = floodFillReveal(startCell, adjacency, mines, width, height);
+  const revealedKeys = cellsRevealedByTap(
+    startCell.row,
+    startCell.col,
+    adjacency,
+    mines,
+    width,
+    height,
+  );
 
   if (revealedKeys.size >= targetMax) {
     const cells: { row: number; col: number; value: number }[] = [];
@@ -310,7 +326,11 @@ function selectRevealedCells(
   const target = targetMin + Math.floor(random() * (targetMax - targetMin + 1));
   for (const cell of shuffled) {
     if (revealedKeys.size >= target) break;
-    revealedKeys.add(`${cell.row},${cell.col}`);
+    if (revealedKeys.has(`${cell.row},${cell.col}`)) continue;
+    const expanded = cellsRevealedByTap(cell.row, cell.col, adjacency, mines, width, height);
+    for (const k of expanded) {
+      revealedKeys.add(k);
+    }
   }
 
   const cells: { row: number; col: number; value: number }[] = [];
