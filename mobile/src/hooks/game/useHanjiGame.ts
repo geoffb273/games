@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useReducer, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useReducer, useRef } from 'react';
 
 import { z } from 'zod';
 
 import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
+import { usePlaytimeClock } from '@/context/PlaytimeClockContext';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { type HanjiCellState, isPuzzleComplete } from '@/utils/hanji/lineValidation';
@@ -90,6 +91,7 @@ export function useHanjiGame({
   onSolve: HanjiOnSolve;
 }): HanjiGame {
   const stableOnSolve = useStableCallback(onSolve);
+  const { getElapsedMs, getSolveTiming, replaceAccumulatedMs } = usePlaytimeClock();
   const { width, height, rowClues, colClues, id: puzzleId } = puzzle;
   const { isEmpty, pushStateSnapshot, popStateSnapshot } = useStateTracker<GameState>();
 
@@ -125,12 +127,16 @@ export function useHanjiGame({
     { width, height, persisted: persistedState?.cells },
     ({ width: w, height: h, persisted }) => persisted ?? createInitialState(w, h),
   );
-  const startedAtRef = useRef<Date>(
-    persistedState != null
-      ? new Date(Date.now() - persistedState.elapsedMs)
-      : (puzzle.attempt?.startedAt ?? new Date()),
-  );
   const submittedRef = useRef(false);
+  const hydratedPuzzleIdRef = useRef<string | null>(null);
+
+  useLayoutEffect(() => {
+    if (hydratedPuzzleIdRef.current === puzzleId) return;
+    hydratedPuzzleIdRef.current = puzzleId;
+    if (persistedState != null) {
+      replaceAccumulatedMs(persistedState.elapsedMs);
+    }
+  }, [persistedState, puzzleId, replaceAccumulatedMs]);
 
   const isComplete = useMemo(
     () => isPuzzleComplete(cells, rowClues, colClues, width, height),
@@ -138,8 +144,7 @@ export function useHanjiGame({
   );
 
   const saveWithTime = (next: GameState) => {
-    const elapsedMs = Date.now() - startedAtRef.current.getTime();
-    saveState({ cells: next, elapsedMs });
+    saveState({ cells: next, elapsedMs: getElapsedMs() });
   };
 
   // Trigger endgame when the puzzle is completed
@@ -148,13 +153,13 @@ export function useHanjiGame({
     submittedRef.current = true;
     triggerHapticHard();
     const completedAt = new Date();
-    const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
+    const { durationMs, startedAt } = getSolveTiming(completedAt);
 
     stableOnSolve({
       hanjiSolution: cellsToHanjiSolution(cells),
       durationMs,
       completedAt,
-      startedAt: startedAtRef.current,
+      startedAt,
     })
       .catch(() => {
         submittedRef.current = false;
@@ -162,7 +167,7 @@ export function useHanjiGame({
       .finally(() => {
         clearState();
       });
-  }, [cells, clearState, isComplete, stableOnSolve]);
+  }, [cells, clearState, getSolveTiming, isComplete, stableOnSolve]);
 
   const onCellTap = useStableCallback((row: number, col: number) => {
     const current = cells[row][col];

@@ -18,6 +18,7 @@ import { PuzzleCompletedView } from '@/components/game/PuzzleCompletedView';
 import { VerticallyCenteredLayout } from '@/components/layout/VerticallyCenteredLayout';
 import { Spacing } from '@/constants/token';
 import { useStableCallback } from '@/hooks/useStableCallback';
+import { PlaytimeClockProvider } from '@/provider/PlaytimeClockProvider';
 
 type TransitionPhase = 'playing' | 'exiting' | 'completed';
 
@@ -91,11 +92,13 @@ export function GameView({ id }: { id: string }) {
 
   return (
     <Animated.View exiting={boardExitAnimation} style={styles.boardExitWrapper}>
-      <PuzzleBoard
-        puzzle={puzzle}
-        markBoardShown={markBoardShown}
-        onBoardAnimationComplete={onBoardAnimationComplete}
-      />
+      <PlaytimeClockProvider key={puzzle.id}>
+        <PuzzleBoard
+          puzzle={puzzle}
+          markBoardShown={markBoardShown}
+          onBoardAnimationComplete={onBoardAnimationComplete}
+        />
+      </PlaytimeClockProvider>
     </Animated.View>
   );
 }

@@ -58,6 +58,7 @@ function setupMocks(overrides?: {
   mockUseTriggerAd.mockReturnValue({
     isDisabled: overrides?.isDisabled ?? false,
     isEarnedReward: overrides?.isEarnedReward,
+    isShowing: false,
     onPressShowAd: overrides?.onPressShowAd ?? jest.fn().mockResolvedValue(undefined),
   });
 

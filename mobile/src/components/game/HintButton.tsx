@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
 import { Spacing } from '@/constants/token';
+import { useOptionalPlaytimeClock } from '@/context/PlaytimeClockContext';
 import { useTriggerAd } from '@/hooks/ads/useTriggerAd';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { useTheme } from '@/hooks/useTheme';
@@ -22,8 +23,20 @@ type HintButtonProps<T extends PuzzleType> = Extract<RequestPuzzleHintInput, { p
 
 export function HintButton<T extends PuzzleType>({ onHint, ...input }: HintButtonProps<T>) {
   const theme = useTheme();
+  const playtime = useOptionalPlaytimeClock();
   const { requestPuzzleHint, isLoading, isError } = useRequestPuzzleHint();
-  const { isDisabled, isEarnedReward, onPressShowAd } = useTriggerAd({ puzzleId: input.puzzleId });
+  const onFullscreenPresentedChange = useStableCallback((isPresented: boolean) => {
+    if (playtime == null) return;
+    if (isPresented) {
+      playtime.pause();
+    } else {
+      playtime.resume();
+    }
+  });
+  const { isDisabled, isEarnedReward, onPressShowAd } = useTriggerAd({
+    puzzleId: input.puzzleId,
+    onFullscreenPresentedChange,
+  });
 
   const onHintPress = useStableCallback(async () => {
     const hint = await requestPuzzleHint(input);
