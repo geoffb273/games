@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useReducer, useRef } from 'react';
 import { z } from 'zod';
 
 import { type FlowPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
-import { usePlaytimeClock } from '@/context/PlaytimeClockContext';
+import { usePlaytimeClockContext } from '@/context/PlaytimeClockContext';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { isFlowComplete } from '@/utils/flow/validation';
@@ -65,7 +65,7 @@ export function useFlowGame({
   }) => Promise<void>;
 }): FlowGame {
   const stableOnSolve = useStableCallback(onSolve);
-  const { getElapsedMs, getSolveTiming, replaceAccumulatedMs } = usePlaytimeClock();
+  const { getElapsedMs, getSolveTiming, replaceAccumulatedMs } = usePlaytimeClockContext();
   const { id: puzzleId, width, height, pairs } = puzzle;
   const gridSchema = useMemo(
     () =>

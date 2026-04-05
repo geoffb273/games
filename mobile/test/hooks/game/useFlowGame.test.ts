@@ -5,12 +5,8 @@ import { useFlowGame } from '@/hooks/game/useFlowGame';
 import { isFlowComplete } from '@/utils/flow/validation';
 
 jest.mock('@/context/PlaytimeClockContext', () => {
-  const actual = jest.requireActual<typeof import('@/context/PlaytimeClockContext')>(
-    '@/context/PlaytimeClockContext',
-  );
   return {
-    ...actual,
-    usePlaytimeClock: () => ({
+    usePlaytimeClockContext: () => ({
       getElapsedMs: () => 0,
       getSolveTiming: (completedAt: Date) => ({
         durationMs: 0,

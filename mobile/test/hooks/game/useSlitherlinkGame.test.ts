@@ -6,12 +6,8 @@ import { useSlitherlinkGame } from '@/hooks/game/useSlitherlinkGame';
 import { isSlitherlinkComplete } from '@/utils/slitherlink/validation';
 
 jest.mock('@/context/PlaytimeClockContext', () => {
-  const actual = jest.requireActual<typeof import('@/context/PlaytimeClockContext')>(
-    '@/context/PlaytimeClockContext',
-  );
   return {
-    ...actual,
-    usePlaytimeClock: () => ({
+    usePlaytimeClockContext: () => ({
       getElapsedMs: () => 0,
       getSolveTiming: (completedAt: Date) => ({
         durationMs: 0,

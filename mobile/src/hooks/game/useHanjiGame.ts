@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
-import { usePlaytimeClock } from '@/context/PlaytimeClockContext';
+import { usePlaytimeClockContext } from '@/context/PlaytimeClockContext';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { type HanjiCellState, isPuzzleComplete } from '@/utils/hanji/lineValidation';
@@ -91,7 +91,7 @@ export function useHanjiGame({
   onSolve: HanjiOnSolve;
 }): HanjiGame {
   const stableOnSolve = useStableCallback(onSolve);
-  const { getElapsedMs, getSolveTiming, replaceAccumulatedMs } = usePlaytimeClock();
+  const { getElapsedMs, getSolveTiming, replaceAccumulatedMs } = usePlaytimeClockContext();
   const { width, height, rowClues, colClues, id: puzzleId } = puzzle;
   const { isEmpty, pushStateSnapshot, popStateSnapshot } = useStateTracker<GameState>();
 

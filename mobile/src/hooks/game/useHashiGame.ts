@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
-import { usePlaytimeClock } from '@/context/PlaytimeClockContext';
+import { usePlaytimeClockContext } from '@/context/PlaytimeClockContext';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { triggerHapticHard, triggerHapticLight } from '@/utils/hapticUtils';
@@ -124,7 +124,7 @@ export function useHashiGame({
   const lastIslandTapRef = useRef<{ row: number; col: number } | null>(null);
 
   const stableOnSolve = useStableCallback(onSolve);
-  const { getElapsedMs, getSolveTiming, replaceAccumulatedMs } = usePlaytimeClock();
+  const { getElapsedMs, getSolveTiming, replaceAccumulatedMs } = usePlaytimeClockContext();
   const connections = useMemo(() => findConnections(islands), [islands]);
   const bridgeCountsSchema = useMemo(
     () =>

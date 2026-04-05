@@ -1,6 +1,6 @@
 import { createContext, use } from 'react';
 
-export type PlaytimeClockApi = {
+export type PlaytimeClockContextType = {
   getElapsedMs: () => number;
   getSolveTiming: (completedAt: Date) => { durationMs: number; startedAt: Date };
   /** Replace accumulated active ms (e.g. after loading persisted game state). */
@@ -11,9 +11,9 @@ export type PlaytimeClockApi = {
   resume: () => void;
 };
 
-export const PlaytimeClockContext = createContext<PlaytimeClockApi | null>(null);
+export const PlaytimeClockContext = createContext<PlaytimeClockContextType | null>(null);
 
-export function usePlaytimeClock(): PlaytimeClockApi {
+export function usePlaytimeClockContext(): PlaytimeClockContextType {
   const ctx = use(PlaytimeClockContext);
 
   if (ctx == null) {
@@ -21,9 +21,4 @@ export function usePlaytimeClock(): PlaytimeClockApi {
   }
 
   return ctx;
-}
-
-/** Returns null when no provider (e.g. HintButton used outside a game). */
-export function useOptionalPlaytimeClock(): PlaytimeClockApi | null {
-  return use(PlaytimeClockContext);
 }

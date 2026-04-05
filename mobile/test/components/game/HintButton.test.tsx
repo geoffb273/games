@@ -4,6 +4,15 @@ import { PuzzleType } from '@/api/puzzle/puzzle';
 import { Text as MockText } from '@/components/common/Text';
 import { HintButton } from '@/components/game/HintButton';
 
+jest.mock('@/context/PlaytimeClockContext', () => {
+  return {
+    usePlaytimeClockContext: () => ({
+      pause: jest.fn(),
+      resume: jest.fn(),
+    }),
+  };
+});
+
 jest.mock('@expo/vector-icons', () => {
   return {
     FontAwesome: ({ name }: { name: string }) => <MockText>{name}</MockText>,

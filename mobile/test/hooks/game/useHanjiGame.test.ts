@@ -6,12 +6,8 @@ import { useHanjiGame } from '@/hooks/game/useHanjiGame';
 import { isPuzzleComplete } from '@/utils/hanji/lineValidation';
 
 jest.mock('@/context/PlaytimeClockContext', () => {
-  const actual = jest.requireActual<typeof import('@/context/PlaytimeClockContext')>(
-    '@/context/PlaytimeClockContext',
-  );
   return {
-    ...actual,
-    usePlaytimeClock: () => ({
+    usePlaytimeClockContext: () => ({
       getElapsedMs: () => 0,
       getSolveTiming: (completedAt: Date) => ({
         durationMs: 0,

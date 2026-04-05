@@ -9,7 +9,10 @@ import {
 } from 'react';
 import { AppState } from 'react-native';
 
-import { type PlaytimeClockApi, PlaytimeClockContext } from '@/context/PlaytimeClockContext';
+import {
+  PlaytimeClockContext,
+  type PlaytimeClockContextType,
+} from '@/context/PlaytimeClockContext';
 
 function closeSegment(
   accumulatedMsRef: RefObject<number>,
@@ -87,8 +90,8 @@ export function PlaytimeClockProvider({ children }: PlaytimeClockProviderProps) 
     }
   }, []);
 
-  const value = useMemo(
-    (): PlaytimeClockApi => ({
+  const value: PlaytimeClockContextType = useMemo(
+    () => ({
       getElapsedMs,
       getSolveTiming,
       replaceAccumulatedMs,
