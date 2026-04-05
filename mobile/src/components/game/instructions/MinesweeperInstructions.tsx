@@ -1,12 +1,12 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { InstructionBulletList } from '@/components/game/instructions/InstructionBulletList';
 import { InstructionSection } from '@/components/game/instructions/InstructionSection';
+import { PuzzleBoard } from '@/components/game/PuzzleBoard';
 import { Spacing } from '@/constants/token';
-
-import { InstructionsMinesweeperBoard } from './InstructionsMinesweeperBoard';
 
 export function MinesweeperInstructions() {
   return (
@@ -48,7 +48,7 @@ export function MinesweeperInstructions() {
             Here&apos;s a tiny example board so you can see how revealing and flags work:
           </Text>
           <View style={styles.previewBoard}>
-            <InstructionsMinesweeperBoard />
+            <PuzzleBoard puzzleType={PuzzleType.Minesweeper} variant="instructions" />
           </View>
         </View>
       </InstructionSection>

@@ -2,32 +2,39 @@ import { useMemo } from 'react';
 import { useWindowDimensions } from 'react-native';
 
 import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
-import { type FlowPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
+import {
+  AVAILABLE_HEIGHT_RATIO,
+  CELL_GAP,
+  MAX_CELL_SIZE,
+  SlitherlinkBoard,
+} from '@/components/game/SlitherlinkBoard/SlitherlinkBoard';
 import { Spacing } from '@/constants/token';
+import { type SlitherlinkOnSolveInput } from '@/hooks/game/useSlitherlinkGame';
 import { useStableCallback } from '@/hooks/useStableCallback';
 
-import { AVAILABLE_HEIGHT_RATIO, CELL_GAP, FlowBoard, MAX_CELL_SIZE } from './FlowBoard/FlowBoard';
-
-type GameViewFlowBoardProps = {
-  puzzle: FlowPuzzle;
+type GameViewSlitherlinkBoardProps = {
+  puzzle: SlitherlinkPuzzle;
   onAnimationComplete: () => void;
 };
 
-export function GameViewFlowBoard({ puzzle, onAnimationComplete }: GameViewFlowBoardProps) {
+export function GameViewSlitherlinkBoard({
+  puzzle,
+  onAnimationComplete,
+}: GameViewSlitherlinkBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzle.id });
   const { refetch } = useDailyChallengesQuery();
 
-  const { cellSize } = useMemo(() => {
+  const cellSize = useMemo(() => {
     const availW = screenWidth - Spacing.four * 2;
     const availH = screenHeight * AVAILABLE_HEIGHT_RATIO;
     const fromW = Math.floor((availW - CELL_GAP * (puzzle.width - 1)) / puzzle.width);
     const fromH = Math.floor((availH - CELL_GAP * (puzzle.height - 1)) / puzzle.height);
-    const size = Math.min(fromW, fromH, MAX_CELL_SIZE);
-    return { cellSize: size };
+    return Math.min(fromW, fromH, MAX_CELL_SIZE);
   }, [screenWidth, screenHeight, puzzle.width, puzzle.height]);
 
   const onSolve = useStableCallback(
@@ -35,32 +42,23 @@ export function GameViewFlowBoard({ puzzle, onAnimationComplete }: GameViewFlowB
       durationMs,
       completedAt,
       startedAt,
-      flowSolution,
-    }: {
-      durationMs: number;
-      completedAt: Date;
-      startedAt: Date;
-      flowSolution: number[][];
-    }) => {
-      updateOptimisticallyPuzzleAttempt({
-        startedAt,
-        completedAt,
-        durationMs,
-      });
+      slitherlinkSolution,
+    }: SlitherlinkOnSolveInput) => {
+      updateOptimisticallyPuzzleAttempt({ startedAt, completedAt, durationMs });
 
       await solvePuzzle({
         puzzleId: puzzle.id,
-        puzzleType: PuzzleType.Flow,
+        puzzleType: PuzzleType.Slitherlink,
         startedAt,
         completedAt,
         durationMs,
-        flowSolution,
+        slitherlinkSolution,
       }).then(refetch);
     },
   );
 
   return (
-    <FlowBoard
+    <SlitherlinkBoard
       puzzle={puzzle}
       cellSize={cellSize}
       onSolve={onSolve}

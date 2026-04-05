@@ -2,66 +2,69 @@ import { useMemo } from 'react';
 import { useWindowDimensions } from 'react-native';
 
 import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
-import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { type FlowPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
-import { Spacing } from '@/constants/token';
-import { type MinesweeperOnSolveInput } from '@/hooks/game/useMinesweeperGame';
-import { useStableCallback } from '@/hooks/useStableCallback';
-
 import {
   AVAILABLE_HEIGHT_RATIO,
   CELL_GAP,
+  FlowBoard,
   MAX_CELL_SIZE,
-  MinesweeperBoard,
-} from './MinesweeperBoard/MinesweeperBoard';
+} from '@/components/game/FlowBoard/FlowBoard';
+import { Spacing } from '@/constants/token';
+import { useStableCallback } from '@/hooks/useStableCallback';
 
-type GameViewMinesweeperBoardProps = {
-  puzzle: MinesweeperPuzzle;
+type GameViewFlowBoardProps = {
+  puzzle: FlowPuzzle;
   onAnimationComplete: () => void;
 };
 
-export function GameViewMinesweeperBoard({
-  puzzle,
-  onAnimationComplete,
-}: GameViewMinesweeperBoardProps) {
+export function GameViewFlowBoard({ puzzle, onAnimationComplete }: GameViewFlowBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzle.id });
   const { refetch } = useDailyChallengesQuery();
 
-  const cellSize = useMemo(() => {
+  const { cellSize } = useMemo(() => {
     const availW = screenWidth - Spacing.four * 2;
     const availH = screenHeight * AVAILABLE_HEIGHT_RATIO;
     const fromW = Math.floor((availW - CELL_GAP * (puzzle.width - 1)) / puzzle.width);
     const fromH = Math.floor((availH - CELL_GAP * (puzzle.height - 1)) / puzzle.height);
-    return Math.min(fromW, fromH, MAX_CELL_SIZE);
+    const size = Math.min(fromW, fromH, MAX_CELL_SIZE);
+    return { cellSize: size };
   }, [screenWidth, screenHeight, puzzle.width, puzzle.height]);
 
   const onSolve = useStableCallback(
     async ({
-      startedAt,
-      completedAt,
       durationMs,
-      minesweeperSolution,
-    }: MinesweeperOnSolveInput) => {
+      completedAt,
+      startedAt,
+      flowSolution,
+    }: {
+      durationMs: number;
+      completedAt: Date;
+      startedAt: Date;
+      flowSolution: number[][];
+    }) => {
       updateOptimisticallyPuzzleAttempt({
         startedAt,
-        ...(completedAt != null && durationMs != null && { completedAt, durationMs }),
+        completedAt,
+        durationMs,
       });
 
       await solvePuzzle({
         puzzleId: puzzle.id,
-        puzzleType: PuzzleType.Minesweeper,
+        puzzleType: PuzzleType.Flow,
         startedAt,
-        ...(completedAt != null && durationMs != null && { completedAt, durationMs }),
-        minesweeperSolution,
+        completedAt,
+        durationMs,
+        flowSolution,
       }).then(refetch);
     },
   );
 
   return (
-    <MinesweeperBoard
+    <FlowBoard
       puzzle={puzzle}
       cellSize={cellSize}
       onSolve={onSolve}

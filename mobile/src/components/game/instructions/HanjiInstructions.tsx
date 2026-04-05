@@ -1,12 +1,12 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { InstructionBulletList } from '@/components/game/instructions/InstructionBulletList';
 import { InstructionSection } from '@/components/game/instructions/InstructionSection';
+import { PuzzleBoard } from '@/components/game/PuzzleBoard';
 import { Spacing } from '@/constants/token';
-
-import { InstructionsHanjiBoard } from './InstructionsHanjiBoard';
 
 export function HanjiInstructions() {
   return (
@@ -33,7 +33,7 @@ export function HanjiInstructions() {
             Here&apos;s a tiny example board so you can see how the clues line up:
           </Text>
           <View style={styles.previewBoard}>
-            <InstructionsHanjiBoard />
+            <PuzzleBoard puzzleType={PuzzleType.Hanji} variant="instructions" />
           </View>
         </View>
       </InstructionSection>

@@ -8,17 +8,12 @@ import { type Puzzle } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { usePuzzlesQuery } from '@/api/puzzle/puzzlesQuery';
 import { ErrorView } from '@/components/common/ErrorView';
-import { GameViewFlowBoard } from '@/components/game/GameViewFlowBoard';
-import { GameViewHanjiBoard } from '@/components/game/GameViewHanjiBoard';
-import { GameViewHashiBoard } from '@/components/game/GameViewHashiBoard';
-import { GameViewMinesweeperBoard } from '@/components/game/GameViewMinesweeperBoard';
-import { GameViewSlitherlinkBoard } from '@/components/game/GameViewSlitherlinkBoard';
 import { GameInstructionsButton } from '@/components/game/instructions/GameInstructionsButton';
+import { PuzzleBoard } from '@/components/game/PuzzleBoard';
 import { PuzzleCompletedView } from '@/components/game/PuzzleCompletedView';
 import { VerticallyCenteredLayout } from '@/components/layout/VerticallyCenteredLayout';
 import { Spacing } from '@/constants/token';
 import { useStableCallback } from '@/hooks/useStableCallback';
-import { PlaytimeClockProvider } from '@/provider/PlaytimeClockProvider';
 
 type TransitionPhase = 'playing' | 'exiting' | 'completed';
 
@@ -92,18 +87,16 @@ export function GameView({ id }: { id: string }) {
 
   return (
     <Animated.View exiting={boardExitAnimation} style={styles.boardExitWrapper}>
-      <PlaytimeClockProvider key={puzzle.id}>
-        <PuzzleBoard
-          puzzle={puzzle}
-          markBoardShown={markBoardShown}
-          onBoardAnimationComplete={onBoardAnimationComplete}
-        />
-      </PlaytimeClockProvider>
+      <BoardContainer
+        puzzle={puzzle}
+        markBoardShown={markBoardShown}
+        onBoardAnimationComplete={onBoardAnimationComplete}
+      />
     </Animated.View>
   );
 }
 
-function PuzzleBoard({
+function BoardContainer({
   puzzle,
   markBoardShown,
   onBoardAnimationComplete,
@@ -129,22 +122,13 @@ function PuzzleBoard({
     });
   }, [navigation, renderGameInstructionsButton]);
 
-  switch (puzzle.type) {
-    case 'FLOW':
-      return <GameViewFlowBoard puzzle={puzzle} onAnimationComplete={onBoardAnimationComplete} />;
-    case 'HANJI':
-      return <GameViewHanjiBoard puzzle={puzzle} onAnimationComplete={onBoardAnimationComplete} />;
-    case 'HASHI':
-      return <GameViewHashiBoard puzzle={puzzle} onAnimationComplete={onBoardAnimationComplete} />;
-    case 'MINESWEEPER':
-      return (
-        <GameViewMinesweeperBoard puzzle={puzzle} onAnimationComplete={onBoardAnimationComplete} />
-      );
-    case 'SLITHERLINK':
-      return (
-        <GameViewSlitherlinkBoard puzzle={puzzle} onAnimationComplete={onBoardAnimationComplete} />
-      );
-  }
+  return (
+    <PuzzleBoard
+      puzzle={puzzle}
+      variant="game-view"
+      onBoardAnimationComplete={onBoardAnimationComplete}
+    />
+  );
 }
 
 type UsePuzzleBoardTransitionResult = {

@@ -1,12 +1,12 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { InstructionBulletList } from '@/components/game/instructions/InstructionBulletList';
 import { InstructionSection } from '@/components/game/instructions/InstructionSection';
+import { PuzzleBoard } from '@/components/game/PuzzleBoard';
 import { Spacing } from '@/constants/token';
-
-import { InstructionsHashiBoard } from './InstructionsHashiBoard';
 
 export function HashiInstructions() {
   return (
@@ -35,7 +35,7 @@ export function HashiInstructions() {
         />
         <View style={styles.previewContainer}>
           <View style={styles.previewBoard}>
-            <InstructionsHashiBoard />
+            <PuzzleBoard puzzleType={PuzzleType.Hashi} variant="instructions" />
           </View>
         </View>
       </InstructionSection>

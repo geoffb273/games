@@ -2,29 +2,28 @@ import { useMemo } from 'react';
 import { useWindowDimensions } from 'react-native';
 
 import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
-import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
+import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
-import { Spacing } from '@/constants/token';
-import { type SlitherlinkOnSolveInput } from '@/hooks/game/useSlitherlinkGame';
-import { useStableCallback } from '@/hooks/useStableCallback';
-
 import {
   AVAILABLE_HEIGHT_RATIO,
   CELL_GAP,
   MAX_CELL_SIZE,
-  SlitherlinkBoard,
-} from './SlitherlinkBoard/SlitherlinkBoard';
+  MinesweeperBoard,
+} from '@/components/game/MinesweeperBoard/MinesweeperBoard';
+import { Spacing } from '@/constants/token';
+import { type MinesweeperOnSolveInput } from '@/hooks/game/useMinesweeperGame';
+import { useStableCallback } from '@/hooks/useStableCallback';
 
-type GameViewSlitherlinkBoardProps = {
-  puzzle: SlitherlinkPuzzle;
+type GameViewMinesweeperBoardProps = {
+  puzzle: MinesweeperPuzzle;
   onAnimationComplete: () => void;
 };
 
-export function GameViewSlitherlinkBoard({
+export function GameViewMinesweeperBoard({
   puzzle,
   onAnimationComplete,
-}: GameViewSlitherlinkBoardProps) {
+}: GameViewMinesweeperBoardProps) {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzle.id });
@@ -40,26 +39,28 @@ export function GameViewSlitherlinkBoard({
 
   const onSolve = useStableCallback(
     async ({
-      durationMs,
-      completedAt,
       startedAt,
-      slitherlinkSolution,
-    }: SlitherlinkOnSolveInput) => {
-      updateOptimisticallyPuzzleAttempt({ startedAt, completedAt, durationMs });
+      completedAt,
+      durationMs,
+      minesweeperSolution,
+    }: MinesweeperOnSolveInput) => {
+      updateOptimisticallyPuzzleAttempt({
+        startedAt,
+        ...(completedAt != null && durationMs != null && { completedAt, durationMs }),
+      });
 
       await solvePuzzle({
         puzzleId: puzzle.id,
-        puzzleType: PuzzleType.Slitherlink,
+        puzzleType: PuzzleType.Minesweeper,
         startedAt,
-        completedAt,
-        durationMs,
-        slitherlinkSolution,
+        ...(completedAt != null && durationMs != null && { completedAt, durationMs }),
+        minesweeperSolution,
       }).then(refetch);
     },
   );
 
   return (
-    <SlitherlinkBoard
+    <MinesweeperBoard
       puzzle={puzzle}
       cellSize={cellSize}
       onSolve={onSolve}

@@ -1,12 +1,12 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { InstructionBulletList } from '@/components/game/instructions/InstructionBulletList';
 import { InstructionSection } from '@/components/game/instructions/InstructionSection';
+import { PuzzleBoard } from '@/components/game/PuzzleBoard';
 import { Spacing } from '@/constants/token';
-
-import { InstructionsFlowBoard } from './InstructionsFlowBoard';
 
 export function FlowInstructions() {
   return (
@@ -34,7 +34,7 @@ export function FlowInstructions() {
             Here&apos;s a tiny example board so you can see the dots you&apos;ll be connecting:
           </Text>
           <View style={styles.previewBoard}>
-            <InstructionsFlowBoard />
+            <PuzzleBoard puzzleType={PuzzleType.Flow} variant="instructions" />
           </View>
         </View>
       </InstructionSection>
