@@ -26,7 +26,7 @@ export async function getLatestDailyChallenge(): Promise<DailyChallenge> {
  */
 export async function createDailyChallenge({ date }: { date: Date }): Promise<DailyChallenge> {
   const dailyChallenge = await createDailyChallengeDao({ date });
-  await createPuzzlesForDailyChallenge({ dailyChallengeId: dailyChallenge.id });
+  await createPuzzlesForDailyChallenge(dailyChallenge);
   return dailyChallenge;
 }
 

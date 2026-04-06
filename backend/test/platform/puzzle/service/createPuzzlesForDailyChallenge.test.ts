@@ -38,16 +38,22 @@ describe('createPuzzlesForDailyChallenge', () => {
   });
 
   it('persists generated puzzles via DAO and writes the list to cache', async () => {
-    const dailyChallengeId = randomUUID();
     const id = randomUUID();
-    const puzzles: Puzzle[] = [minimalFlowPuzzle({ id, dailyChallengeId })];
+    const createdAt = new Date('2024-06-01T12:00:00.000Z');
+    const updatedAt = new Date('2024-06-02T15:30:00.000Z');
+    const puzzles: Puzzle[] = [minimalFlowPuzzle({ id, dailyChallengeId: id })];
     vi.mocked(createPuzzles).mockResolvedValue(puzzles);
 
-    const result = await createPuzzlesForDailyChallenge({ dailyChallengeId });
+    const result = await createPuzzlesForDailyChallenge({
+      id,
+      date: new Date(Date.UTC(2024, 5, 2, 17, 0, 0)),
+      createdAt,
+      updatedAt,
+    });
 
     expect(createPuzzles).toHaveBeenCalledWith(
       expect.objectContaining({
-        dailyChallengeId,
+        dailyChallengeId: id,
         data: expect.objectContaining({
           flow: expect.any(Object),
           hanji: expect.any(Object),
@@ -57,7 +63,7 @@ describe('createPuzzlesForDailyChallenge', () => {
         }),
       }),
     );
-    expect(setCachedPuzzles).toHaveBeenCalledWith({ dailyChallengeId, puzzles });
+    expect(setCachedPuzzles).toHaveBeenCalledWith({ dailyChallengeId: id, puzzles });
     expect(result).toEqual(puzzles);
   });
 });
