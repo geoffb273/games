@@ -5,16 +5,15 @@ import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQue
 import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
-import { Spacing } from '@/constants/token';
-import { type HashiOnSolve } from '@/hooks/game/useHashiGame';
-import { useStableCallback } from '@/hooks/useStableCallback';
-
 import {
   AVAILABLE_HEIGHT_RATIO,
   CELL_GAP,
   HashiBoard,
   MAX_CELL_SIZE,
-} from './HashiBoard/HashiBoard';
+} from '@/components/game/HashiBoard/HashiBoard';
+import { Spacing } from '@/constants/token';
+import { type HashiOnSolve } from '@/hooks/game/useHashiGame';
+import { useStableCallback } from '@/hooks/useStableCallback';
 
 type GameViewHashiBoardProps = {
   puzzle: HashiPuzzle;

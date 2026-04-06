@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useReducer, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useReducer, useRef } from 'react';
 
 import { z } from 'zod';
 
 import { type FlowPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
+import { usePlaytimeClockContext } from '@/context/PlaytimeClockContext';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { isFlowComplete } from '@/utils/flow/validation';
@@ -64,6 +65,7 @@ export function useFlowGame({
   }) => Promise<void>;
 }): FlowGame {
   const stableOnSolve = useStableCallback(onSolve);
+  const { getElapsedMs, getSolveTiming, replaceAccumulatedMs } = usePlaytimeClockContext();
   const { id: puzzleId, width, height, pairs } = puzzle;
   const gridSchema = useMemo(
     () =>
@@ -97,12 +99,16 @@ export function useFlowGame({
     ({ width: w, height: h, persisted }) => persisted ?? createInitialGrid(w, h),
   );
 
-  const startedAtRef = useRef<Date>(
-    persistedState != null
-      ? new Date(Date.now() - persistedState.elapsedMs)
-      : (puzzle.attempt?.startedAt ?? new Date()),
-  );
   const submittedRef = useRef(false);
+  const hydratedPuzzleIdRef = useRef<string | null>(null);
+
+  useLayoutEffect(() => {
+    if (hydratedPuzzleIdRef.current === puzzleId) return;
+    hydratedPuzzleIdRef.current = puzzleId;
+    if (persistedState != null) {
+      replaceAccumulatedMs(persistedState.elapsedMs);
+    }
+  }, [persistedState, puzzleId, replaceAccumulatedMs]);
 
   const isComplete = useMemo(
     () => isFlowComplete(width, height, pairs, grid),
@@ -110,8 +116,7 @@ export function useFlowGame({
   );
 
   const saveWithTime = (nextGrid: number[][]) => {
-    const elapsedMs = Date.now() - startedAtRef.current.getTime();
-    saveState({ grid: nextGrid, elapsedMs });
+    saveState({ grid: nextGrid, elapsedMs: getElapsedMs() });
   };
 
   useEffect(() => {
@@ -120,12 +125,12 @@ export function useFlowGame({
     submittedRef.current = true;
     triggerHapticHard();
     const completedAt = new Date();
-    const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
+    const { durationMs, startedAt } = getSolveTiming(completedAt);
 
     stableOnSolve({
       durationMs,
       completedAt,
-      startedAt: startedAtRef.current,
+      startedAt,
       flowSolution: grid.map((row) => row.slice()),
     })
       .catch(() => {
@@ -134,7 +139,7 @@ export function useFlowGame({
       .finally(() => {
         clearState();
       });
-  }, [clearState, grid, isComplete, stableOnSolve]);
+  }, [clearState, getSolveTiming, grid, isComplete, stableOnSolve]);
 
   const setCell = useStableCallback((row: number, col: number, value: number) => {
     triggerHapticLight();

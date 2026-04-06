@@ -5,16 +5,15 @@ import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQue
 import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
-import { Spacing } from '@/constants/token';
-import { useStableCallback } from '@/hooks/useStableCallback';
-
 import {
   AVAILABLE_HEIGHT_RATIO,
   CELL_GAP,
   CLUE_LINE_HEIGHT,
   HanjiBoard,
   MAX_CELL_SIZE,
-} from './HanjiBoard/HanjiBoard';
+} from '@/components/game/HanjiBoard/HanjiBoard';
+import { Spacing } from '@/constants/token';
+import { useStableCallback } from '@/hooks/useStableCallback';
 
 type GameViewHanjiBoardProps = {
   puzzle: HanjiPuzzle;

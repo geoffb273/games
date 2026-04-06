@@ -1,12 +1,12 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { PuzzleType } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
 import { InstructionBulletList } from '@/components/game/instructions/InstructionBulletList';
 import { InstructionSection } from '@/components/game/instructions/InstructionSection';
+import { PuzzleBoard } from '@/components/game/PuzzleBoard';
 import { Spacing } from '@/constants/token';
-
-import { InstructionsSlitherlinkBoard } from './InstructionsSlitherlinkBoard';
 
 export function SlitherlinkInstructions() {
   return (
@@ -28,7 +28,7 @@ export function SlitherlinkInstructions() {
         />
         <View style={styles.previewContainer}>
           <View style={styles.previewBoard}>
-            <InstructionsSlitherlinkBoard />
+            <PuzzleBoard puzzleType={PuzzleType.Slitherlink} variant="instructions" />
           </View>
         </View>
       </InstructionSection>

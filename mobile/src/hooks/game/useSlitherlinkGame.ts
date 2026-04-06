@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useReducer, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useReducer, useRef } from 'react';
 
 import { z } from 'zod';
 
 import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
 import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
+import { usePlaytimeClockContext } from '@/context/PlaytimeClockContext';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { triggerHapticHard, triggerHapticLight } from '@/utils/hapticUtils';
@@ -137,6 +138,10 @@ export type SlitherlinkOnSolveInput = {
 
 const edgeSchema = z.union([z.literal('empty'), z.literal('line')]);
 
+type SlitherlinkPersisted = GameState & {
+  elapsedMs: number;
+};
+
 export function useSlitherlinkGame({
   puzzle,
   onSolve,
@@ -145,6 +150,7 @@ export function useSlitherlinkGame({
   onSolve: (input: SlitherlinkOnSolveInput) => Promise<void>;
 }): SlitherlinkGame {
   const stableOnSolve = useStableCallback(onSolve);
+  const { getElapsedMs, getSolveTiming, replaceAccumulatedMs } = usePlaytimeClockContext();
   const { id: puzzleId, width, height, clues } = puzzle;
 
   const horizontalSchema = useMemo(
@@ -168,38 +174,48 @@ export function useSlitherlinkGame({
     [width, height],
   );
 
-  const stateSchema = useMemo(
+  const persistedSchema = useMemo(
     () =>
       z.object({
         horizontal: horizontalSchema,
         vertical: verticalSchema,
+        elapsedMs: z.number().nonnegative(),
       }),
     [horizontalSchema, verticalSchema],
   );
 
-  const { persistedState, saveState, clearState } = usePersistedGameState<GameState>({
+  const { persistedState, saveState, clearState } = usePersistedGameState<SlitherlinkPersisted>({
     puzzleId,
     puzzleType: PuzzleType.Slitherlink,
-    version: 1,
-    schema: stateSchema,
+    version: 2,
+    schema: persistedSchema,
   });
 
   const [state, dispatch] = useReducer(
     gameReducer,
-    persistedState ?? { width, height },
-    (initial) =>
-      'horizontal' in initial
-        ? (initial as GameState)
-        : createInitialState(
-            (initial as { width: number; height: number }).width,
-            (initial as { width: number; height: number }).height,
-          ),
+    { width, height, persisted: persistedState },
+    ({ width: w, height: h, persisted }) =>
+      persisted != null
+        ? { horizontal: persisted.horizontal, vertical: persisted.vertical }
+        : createInitialState(w, h),
   );
 
   const { isEmpty, pushStateSnapshot, popStateSnapshot } = useStateTracker<GameState>();
 
-  const startedAtRef = useRef<Date>(puzzle.attempt?.startedAt ?? new Date());
   const submittedRef = useRef(false);
+  const hydratedPuzzleIdRef = useRef<string | null>(null);
+
+  useLayoutEffect(() => {
+    if (hydratedPuzzleIdRef.current === puzzleId) return;
+    hydratedPuzzleIdRef.current = puzzleId;
+    if (persistedState != null) {
+      replaceAccumulatedMs(persistedState.elapsedMs);
+    }
+  }, [persistedState, puzzleId, replaceAccumulatedMs]);
+
+  const saveWithTime = (next: GameState) => {
+    saveState({ ...next, elapsedMs: getElapsedMs() });
+  };
 
   const horizontalLines = useMemo(() => toBooleanGrid(state.horizontal), [state.horizontal]);
   const verticalLines = useMemo(() => toBooleanGrid(state.vertical), [state.vertical]);
@@ -215,7 +231,7 @@ export function useSlitherlinkGame({
     submittedRef.current = true;
     triggerHapticHard();
     const completedAt = new Date();
-    const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
+    const { durationMs, startedAt } = getSolveTiming(completedAt);
 
     stableOnSolve({
       slitherlinkSolution: {
@@ -224,7 +240,7 @@ export function useSlitherlinkGame({
       },
       durationMs,
       completedAt,
-      startedAt: startedAtRef.current,
+      startedAt,
     })
       .catch(() => {
         submittedRef.current = false;
@@ -232,13 +248,13 @@ export function useSlitherlinkGame({
       .finally(() => {
         clearState();
       });
-  }, [clearState, horizontalLines, isComplete, stableOnSolve, verticalLines]);
+  }, [clearState, getSolveTiming, horizontalLines, isComplete, stableOnSolve, verticalLines]);
 
   const onHorizontalEdgePress = useStableCallback((row: number, col: number) => {
     triggerHapticLight();
     const next = gameReducer(state, { type: 'TOGGLE_EDGE', orientation: 'horizontal', row, col });
     pushStateSnapshot(cloneGameState(state));
-    saveState(next);
+    saveWithTime(next);
     dispatch({ type: 'TOGGLE_EDGE', orientation: 'horizontal', row, col });
   });
 
@@ -246,7 +262,7 @@ export function useSlitherlinkGame({
     triggerHapticLight();
     const next = gameReducer(state, { type: 'TOGGLE_EDGE', orientation: 'vertical', row, col });
     pushStateSnapshot(cloneGameState(state));
-    saveState(next);
+    saveWithTime(next);
     dispatch({ type: 'TOGGLE_EDGE', orientation: 'vertical', row, col });
   });
 
@@ -265,7 +281,7 @@ export function useSlitherlinkGame({
         col,
         filled,
       });
-      saveState(next);
+      saveWithTime(next);
       dispatch({ type: 'SET_EDGE', orientation, row, col, filled });
     },
   );
@@ -273,15 +289,14 @@ export function useSlitherlinkGame({
   const onClearPress = useStableCallback(() => {
     const next = gameReducer(state, { type: 'RESET', width, height });
     pushStateSnapshot(cloneGameState(state));
-    saveState(next);
+    saveWithTime(next);
     dispatch({ type: 'RESET', width, height });
   });
 
   const onUndoPress = useStableCallback(() => {
     const previous = popStateSnapshot();
     if (previous == null) return;
-    const next = gameReducer(previous, { type: 'REPLACE', state: previous });
-    saveState(next);
+    saveWithTime(previous);
     dispatch({ type: 'REPLACE', state: previous });
   });
 

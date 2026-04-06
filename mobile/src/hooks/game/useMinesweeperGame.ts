@@ -1,9 +1,18 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react';
 
 import { z } from 'zod';
 
 import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
+import { usePlaytimeClockContext } from '@/context/PlaytimeClockContext';
 import { usePersistedGameState } from '@/hooks/game/usePersistedGameState';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { triggerHapticHard, triggerHapticLight } from '@/utils/hapticUtils';
@@ -121,6 +130,7 @@ export function useMinesweeperGame({
   onSolve: (input: MinesweeperOnSolveInput) => Promise<void>;
 }): MinesweeperGame {
   const stableOnSolve = useStableCallback(onSolve);
+  const { getElapsedMs, getSolveTiming, replaceAccumulatedMs } = usePlaytimeClockContext();
   const { id: puzzleId, width, height, mineCount, mineField } = puzzle;
 
   const stateSchema = useMemo(
@@ -162,12 +172,16 @@ export function useMinesweeperGame({
     (initial) => ('cells' in initial ? initial : createInitialState(initial)),
   );
   const [mode, setMode] = useState<InteractionMode>(persistedState?.mode ?? 'flag');
-  const startedAtRef = useRef<Date>(
-    persistedState != null
-      ? new Date(Date.now() - persistedState.elapsedMs)
-      : (puzzle.attempt?.startedAt ?? new Date()),
-  );
   const submittedRef = useRef(false);
+  const hydratedPuzzleIdRef = useRef<string | null>(null);
+
+  useLayoutEffect(() => {
+    if (hydratedPuzzleIdRef.current === puzzleId) return;
+    hydratedPuzzleIdRef.current = puzzleId;
+    if (persistedState != null) {
+      replaceAccumulatedMs(persistedState.elapsedMs);
+    }
+  }, [persistedState, puzzleId, replaceAccumulatedMs]);
 
   const revealedMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -185,8 +199,7 @@ export function useMinesweeperGame({
   const isWin = !state.gameOver && revealedMap.size === width * height - mineCount;
 
   const saveWithTime = useStableCallback((nextState: GameState, nextMode: InteractionMode) => {
-    const elapsedMs = Date.now() - startedAtRef.current.getTime();
-    saveState({ state: nextState, mode: nextMode, elapsedMs });
+    saveState({ state: nextState, mode: nextMode, elapsedMs: getElapsedMs() });
   });
 
   // Submit the puzzle when the game is over or won
@@ -196,12 +209,12 @@ export function useMinesweeperGame({
     submittedRef.current = true;
     triggerHapticHard();
     const completedAt = new Date();
-    const durationMs = completedAt.getTime() - startedAtRef.current.getTime();
+    const { durationMs, startedAt } = getSolveTiming(completedAt);
     const success = isWin;
 
     stableOnSolve({
       minesweeperSolution: buildMinesweeperSolution(mineField),
-      startedAt: startedAtRef.current,
+      startedAt,
       completedAt: success ? completedAt : undefined,
       durationMs: success ? durationMs : undefined,
       success,
@@ -212,7 +225,7 @@ export function useMinesweeperGame({
       .finally(() => {
         clearState();
       });
-  }, [clearState, isWin, mineField, state.gameOver, stableOnSolve]);
+  }, [clearState, getSolveTiming, isWin, mineField, state.gameOver, stableOnSolve]);
 
   const onRevealTap = useStableCallback(({ row, col }: { row: number; col: number }) => {
     const result = getCellsToReveal(row, col, puzzle.mineField, puzzle.width, puzzle.height);

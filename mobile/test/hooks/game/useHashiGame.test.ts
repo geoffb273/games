@@ -7,6 +7,21 @@ import { findConnections, type HashiConnection } from '@/utils/hashi/connections
 import { wouldNewBridgeCrossExisting } from '@/utils/hashi/crossing';
 import { isHashiComplete } from '@/utils/hashi/validation';
 
+jest.mock('@/context/PlaytimeClockContext', () => {
+  return {
+    usePlaytimeClockContext: () => ({
+      getElapsedMs: () => 0,
+      getSolveTiming: (completedAt: Date) => ({
+        durationMs: 0,
+        startedAt: new Date(completedAt.getTime()),
+      }),
+      replaceAccumulatedMs: jest.fn(),
+      pause: jest.fn(),
+      resume: jest.fn(),
+    }),
+  };
+});
+
 jest.mock('@/hooks/game/usePersistedGameState', () => {
   return {
     usePersistedGameState: jest.fn(() => ({

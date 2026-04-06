@@ -5,6 +5,21 @@ import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
 import { useSlitherlinkGame } from '@/hooks/game/useSlitherlinkGame';
 import { isSlitherlinkComplete } from '@/utils/slitherlink/validation';
 
+jest.mock('@/context/PlaytimeClockContext', () => {
+  return {
+    usePlaytimeClockContext: () => ({
+      getElapsedMs: () => 0,
+      getSolveTiming: (completedAt: Date) => ({
+        durationMs: 0,
+        startedAt: new Date(completedAt.getTime()),
+      }),
+      replaceAccumulatedMs: jest.fn(),
+      pause: jest.fn(),
+      resume: jest.fn(),
+    }),
+  };
+});
+
 jest.mock('@/hooks/game/usePersistedGameState', () => {
   return {
     usePersistedGameState: jest.fn(() => ({

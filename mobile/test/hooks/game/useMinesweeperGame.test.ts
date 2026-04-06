@@ -5,6 +5,21 @@ import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
 import { buildMinesweeperSolution, useMinesweeperGame } from '@/hooks/game/useMinesweeperGame';
 import { getCellsToReveal } from '@/utils/minesweeper/reveal';
 
+jest.mock('@/context/PlaytimeClockContext', () => {
+  return {
+    usePlaytimeClockContext: () => ({
+      getElapsedMs: () => 0,
+      getSolveTiming: (completedAt: Date) => ({
+        durationMs: 0,
+        startedAt: new Date(completedAt.getTime()),
+      }),
+      replaceAccumulatedMs: jest.fn(),
+      pause: jest.fn(),
+      resume: jest.fn(),
+    }),
+  };
+});
+
 jest.mock('@/hooks/game/usePersistedGameState', () => {
   return {
     usePersistedGameState: jest.fn(() => ({

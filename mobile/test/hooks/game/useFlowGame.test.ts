@@ -4,6 +4,21 @@ import { type FlowPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { useFlowGame } from '@/hooks/game/useFlowGame';
 import { isFlowComplete } from '@/utils/flow/validation';
 
+jest.mock('@/context/PlaytimeClockContext', () => {
+  return {
+    usePlaytimeClockContext: () => ({
+      getElapsedMs: () => 0,
+      getSolveTiming: (completedAt: Date) => ({
+        durationMs: 0,
+        startedAt: new Date(completedAt.getTime()),
+      }),
+      replaceAccumulatedMs: jest.fn(),
+      pause: jest.fn(),
+      resume: jest.fn(),
+    }),
+  };
+});
+
 jest.mock('@/hooks/game/usePersistedGameState', () => {
   return {
     usePersistedGameState: jest.fn(() => ({
