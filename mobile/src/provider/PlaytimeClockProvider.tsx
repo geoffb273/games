@@ -1,12 +1,4 @@
-import {
-  type MutableRefObject,
-  type ReactNode,
-  type RefObject,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import { type ReactNode, type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 import { AppState } from 'react-native';
 
 import {
@@ -26,8 +18,8 @@ function closeSegment(
 }
 
 function openSegment(
-  pauseCountRef: MutableRefObject<number>,
-  segmentStartRef: MutableRefObject<Date | null>,
+  pauseCountRef: RefObject<number>,
+  segmentStartRef: RefObject<Date | null>,
 ): void {
   if (pauseCountRef.current === 0) {
     segmentStartRef.current = new Date();
@@ -40,7 +32,6 @@ type PlaytimeClockProviderProps = {
 
 export function PlaytimeClockProvider({ children }: PlaytimeClockProviderProps) {
   const accumulatedMsRef = useRef(0);
-  /** Assumes the app is active when the game screen mounts; AppState listener handles background/inactive after that. */
   const segmentStartRef = useRef<Date | null>(new Date());
   const pauseCountRef = useRef(0);
 
@@ -56,11 +47,14 @@ export function PlaytimeClockProvider({ children }: PlaytimeClockProviderProps) 
     openSegment(pauseCountRef, segmentStartRef);
   }, []);
 
+  // Subscribe to AppState changes to pause on background and resume on active
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next) => {
-      if (next !== 'active') {
+      // iOS: background → inactive → active when returning
+      // Only pause on background and resume on active (ignore inactive)
+      if (next === 'background') {
         pause();
-      } else {
+      } else if (next === 'active') {
         resume();
       }
     });
