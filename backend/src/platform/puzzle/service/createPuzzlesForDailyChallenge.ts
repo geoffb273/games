@@ -1,4 +1,5 @@
 import { setCachedPuzzles } from '@/cache/puzzle/puzzle';
+import { type DailyChallenge } from '@/platform/dailyChallenge/resource/dailyChallenge';
 import { generateFlowPuzzleData } from '@/utils/puzzle/flow';
 import { generateHanjiPuzzleData } from '@/utils/puzzle/hanji';
 import { generateHashiPuzzleData } from '@/utils/puzzle/hashi';
@@ -8,52 +9,123 @@ import { generateSlitherlinkPuzzleData } from '@/utils/puzzle/slitherlink';
 import { createPuzzles } from '../dao/puzzleDao';
 import { type Puzzle } from '../resource/puzzle';
 
+const PUZZLE_CONFIGS: {
+  flow: { size: number };
+  hanji: { size: number; fillProbability: number };
+  hashi: { size: number; islandCount: number };
+  minesweeper: { size: number; mineCount: number };
+  slitherlink: { size: number };
+}[] = [
+  // Monday (easiest) → Sunday (hardest). Row index = (getUTCDay() + 6) % 7
+  {
+    flow: { size: 6 },
+    hanji: { size: 6, fillProbability: 0.4 },
+    hashi: { size: 8, islandCount: 14 },
+    minesweeper: { size: 9, mineCount: 15 },
+    slitherlink: { size: 5 },
+  },
+  // Tuesday
+  {
+    flow: { size: 7 },
+    hanji: { size: 6, fillProbability: 0.43 },
+    hashi: { size: 8, islandCount: 15 },
+    minesweeper: { size: 9, mineCount: 15 },
+    slitherlink: { size: 5 },
+  },
+  // Wednesday
+  {
+    flow: { size: 8 },
+    hanji: { size: 7, fillProbability: 0.47 },
+    hashi: { size: 8, islandCount: 16 },
+    minesweeper: { size: 10, mineCount: 20 },
+    slitherlink: { size: 6 },
+  },
+  // Thursday
+  {
+    flow: { size: 8 },
+    hanji: { size: 7, fillProbability: 0.5 },
+    hashi: { size: 9, islandCount: 18 },
+    minesweeper: { size: 10, mineCount: 20 },
+    slitherlink: { size: 6 },
+  },
+  // Friday
+  {
+    flow: { size: 8 },
+    hanji: { size: 8, fillProbability: 0.53 },
+    hashi: { size: 10, islandCount: 22 },
+    minesweeper: { size: 12, mineCount: 28 },
+    slitherlink: { size: 6 },
+  },
+  // Saturday
+  {
+    flow: { size: 8 },
+    hanji: { size: 8, fillProbability: 0.57 },
+    hashi: { size: 10, islandCount: 24 },
+    minesweeper: { size: 12, mineCount: 32 },
+    slitherlink: { size: 7 },
+  },
+  // Sunday
+  {
+    flow: { size: 9 },
+    hanji: { size: 8, fillProbability: 0.6 },
+    hashi: { size: 10, islandCount: 28 },
+    minesweeper: { size: 12, mineCount: 36 },
+    slitherlink: { size: 7 },
+  },
+];
+
 export async function createPuzzlesForDailyChallenge({
-  dailyChallengeId,
-}: {
-  dailyChallengeId: string;
-}): Promise<Puzzle[]> {
-  const seed = dailyChallengeId;
+  id,
+  date,
+}: DailyChallenge): Promise<Puzzle[]> {
+  const seed = id;
+  const {
+    flow: flowConfig,
+    hanji: hanjiConfig,
+    hashi: hashiConfig,
+    minesweeper: minesweeperConfig,
+    slitherlink: slitherlinkConfig,
+  } = PUZZLE_CONFIGS[(date.getUTCDay() + 6) % 7];
 
   const flow = generateFlowPuzzleData({
-    width: 8,
-    height: 8,
+    width: flowConfig.size,
+    height: flowConfig.size,
     seed,
   });
 
   const hanji = generateHanjiPuzzleData({
-    width: 8,
-    height: 8,
+    width: hanjiConfig.size,
+    height: hanjiConfig.size,
     seed,
-    fillProbability: 0.5,
+    fillProbability: hanjiConfig.fillProbability,
   });
 
   const hashi = generateHashiPuzzleData({
-    width: 10,
-    height: 10,
+    width: hashiConfig.size,
+    height: hashiConfig.size,
     seed,
-    islandCount: 24,
+    islandCount: hashiConfig.islandCount,
     oddClueBias: 1,
   });
 
   const minesweeper = generateMinesweeperPuzzleData({
-    width: 12,
-    height: 12,
-    mineCount: 32,
+    width: minesweeperConfig.size,
+    height: minesweeperConfig.size,
+    mineCount: minesweeperConfig.mineCount,
     seed,
   });
 
   const slitherlink = generateSlitherlinkPuzzleData({
-    width: 6,
-    height: 6,
+    width: slitherlinkConfig.size,
+    height: slitherlinkConfig.size,
     seed,
   });
 
   const puzzles = await createPuzzles({
-    dailyChallengeId,
+    dailyChallengeId: id,
     data: { flow, hanji, hashi, minesweeper, slitherlink },
   });
 
-  void setCachedPuzzles({ dailyChallengeId, puzzles });
+  void setCachedPuzzles({ dailyChallengeId: id, puzzles });
   return puzzles;
 }

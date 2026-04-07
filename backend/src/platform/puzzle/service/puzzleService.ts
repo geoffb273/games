@@ -10,6 +10,7 @@ import {
   getCachedPuzzleAttemptSpeedPercentages,
   setCachedPuzzleAttemptSpeedPercentages,
 } from '@/cache/puzzle/puzzleAttemptSpeedPercentage';
+import { type DailyChallenge } from '@/platform/dailyChallenge/resource/dailyChallenge';
 import { serializePuzzleAttemptSpeedPercentageKey } from '@/utils/puzzle/attemptUtil';
 
 import {
@@ -152,12 +153,10 @@ export async function getPuzzleAttemptSpeedPercentages({
  * @throws {UnknownError} if the puzzle type is unknown
  * @returns the created puzzle
  */
-export async function createPuzzlesForDailyChallenge({
-  dailyChallengeId,
-}: {
-  dailyChallengeId: string;
-}): Promise<Puzzle[]> {
-  return createPuzzlesForDailyChallengeCommand({ dailyChallengeId });
+export async function createPuzzlesForDailyChallenge(
+  dailyChallenge: DailyChallenge,
+): Promise<Puzzle[]> {
+  return createPuzzlesForDailyChallengeCommand(dailyChallenge);
 }
 
 /**
