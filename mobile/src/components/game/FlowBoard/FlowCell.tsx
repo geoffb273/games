@@ -9,11 +9,11 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Text } from '@/components/common/Text';
-import { COLOR } from '@/constants/color';
 import {
   SUCCESS_COMPLETION_WAVE_DELAY_MS,
   SUCCESS_COMPLETION_WAVE_DURATIONS_MS,
 } from '@/components/game/successCompletionTiming';
+import { COLOR } from '@/constants/color';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { useTheme } from '@/hooks/useTheme';
 import { useColorBlindEnabled } from '@/store/colorBlindStore';

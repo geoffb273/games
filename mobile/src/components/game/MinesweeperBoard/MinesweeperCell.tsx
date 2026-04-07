@@ -14,12 +14,12 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Text } from '@/components/common/Text';
-import { COLOR } from '@/constants/color';
-import { Spacing } from '@/constants/token';
 import {
   SUCCESS_COMPLETION_WAVE_DELAY_MS,
   SUCCESS_COMPLETION_WAVE_DURATIONS_MS,
 } from '@/components/game/successCompletionTiming';
+import { COLOR } from '@/constants/color';
+import { Spacing } from '@/constants/token';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -95,7 +95,11 @@ export const MinesweeperCell = memo(function MinesweeperCell({
         withTiming(1.1, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.firstPulse }),
         withTiming(0.95, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.settle }),
         withTiming(1.25, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.bounce }),
-        withTiming(1, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.finalSettle }, notifyComplete),
+        withTiming(
+          1,
+          { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.finalSettle },
+          notifyComplete,
+        ),
       );
     } else {
       translate.value = withTiming(
