@@ -1,6 +1,6 @@
 ---
 name: gh-feature-branch-pr
-description: Use GitHub CLI (gh) and git to ensure work is on a feature branch (create one if currently on main/master), summarize local changes, and create a pull request with a concise description. Use when the user wants to open a PR for current changes or asks to automate branch/PR workflow.
+description: Use GitHub CLI (gh) and git to ensure work is on a feature branch (create one if currently on main/master), summarize local changes, and create a pull request with a concise description. Excludes Plan.md from title/summary synthesis; embeds repository root Plan.md in the PR body when present. Use when the user wants to open a PR for current changes or asks to automate branch/PR workflow.
 ---
 
 # GH Feature Branch & PR Helper
@@ -50,7 +50,22 @@ git diff --stat
 git diff
 ```
 
-From this output, synthesize:
+#### `Plan.md` (repository root)
+
+Treat **`Plan.md`** at the repo root as planning notes, not the product change itself.
+
+- For the **PR title** and **Summary** bullets, **do not** use `Plan.md` as the source of truth for what shipped. Synthesize from **code and config diffs that exclude `Plan.md`** so the PR headline matches implementation work.
+
+When running diffs for that synthesis, pass a pathspec that omits the plan file (adjust the left-hand ref if you are comparing against `main`/`master` for an already-pushed branch, e.g. `main...HEAD`):
+
+```bash
+git diff --stat HEAD -- . ':!Plan.md'
+git diff HEAD -- . ':!Plan.md'
+```
+
+If there are staged changes only, also run `git diff --cached --stat -- . ':!Plan.md'` and `git diff --cached -- . ':!Plan.md'`.
+
+From the **excluded-Plan.md** diff output (plus `git status --short` for context), synthesize:
 
 - A short description of what areas of the code were touched.
 - Whether this looks like a bug fix, new feature, refactor, or minor tweak.
@@ -59,6 +74,8 @@ Use this analysis to draft:
 
 - A **PR title** (one concise sentence, ~80 characters or less).
 - 1–3 bullet points summarizing the main changes.
+
+**PR body:** If `Plan.md` exists at the repository root, **read the file** and include its full contents in the description under a `## Plan` heading (after `## Summary`). For long plans, wrap the body in a `<details>` / `<summary>Plan.md</summary>` block so the summary stays scannable on GitHub.
 
 ### 2. Detect current branch
 
@@ -145,6 +162,9 @@ gh pr create \
 
 ## Testing
 - <how this was tested or "Not specified">
+
+## Plan
+<If Plan.md exists: paste full contents here, or use a details block for long files>
 EOF
 )"
 ```
