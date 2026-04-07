@@ -38,14 +38,14 @@ flowchart TD
 
 **Required sections** (headings may vary; content must be present):
 
-| Section | Content |
-|--------|---------|
-| Objective | Goal and definition of done |
-| Scope | backend / mobile / both; out of scope |
-| Breaking changes & migration | GraphQL, Prisma/DB, clients, versioning; or explicit “none” |
-| Assumptions | Defaults chosen without asking the user |
-| Implementation plan | Ordered steps with **concrete file paths** |
-| Verification | Commands (`pnpm lint` in `backend` / `mobile`, tests, codegen if applicable) |
+| Section                      | Content                                                                      |
+| ---------------------------- | ---------------------------------------------------------------------------- |
+| Objective                    | Goal and definition of done                                                  |
+| Scope                        | backend / mobile / both; out of scope                                        |
+| Breaking changes & migration | GraphQL, Prisma/DB, clients, versioning; or explicit “none”                  |
+| Assumptions                  | Defaults chosen without asking the user                                      |
+| Implementation plan          | Ordered steps with **concrete file paths**                                   |
+| Verification                 | Commands (`pnpm lint` in `backend` / `mobile`, tests, codegen if applicable) |
 
 While drafting, explicitly scan: GraphQL schema, Prisma/migrations, response shapes, mobile codegen, feature flags, env vars. Prefer order: schema → migration → backend resolvers/services → mobile operations → UI.
 
@@ -59,7 +59,7 @@ Ask or stop **only** for: missing secrets/credentials, irreversible data loss, a
 
 1. Complete **write `Plan.md`** first (no feature code before that, except read-only exploration).
 2. Implement in small, reviewable steps; match existing patterns (DAO/service on backend; `@/` and generated GraphQL types on mobile).
-3. Run linters after edits (`pnpm lint` in the affected app directories per workspace rules).
+3. Run linters after edits (`pnpm lint:fix` in the affected app directories per workspace rules).
 4. Update `Plan.md` **Done** section and give a short chat summary.
 
 ## Pull request
