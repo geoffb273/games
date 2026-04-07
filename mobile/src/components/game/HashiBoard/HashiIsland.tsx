@@ -10,13 +10,15 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Text } from '@/components/common/Text';
+import {
+  SUCCESS_COMPLETION_WAVE_DELAY_MS,
+  SUCCESS_COMPLETION_WAVE_DURATIONS_MS,
+} from '@/components/game/successCompletionTiming';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { useTheme } from '@/hooks/useTheme';
 
 const ISLAND_RADIUS_RATIO = 0.4;
 const COLOR_ANIMATION_DURATION = 200;
-const COMPLETION_WAVE_DELAY_MS = 50;
-
 export type HashiIslandProps = {
   requiredBridges: number;
   currentBridges: number;
@@ -70,11 +72,11 @@ export const HashiIsland = memo(function HashiIsland({
       : undefined;
 
     scaleProgress.value = withSequence(
-      withTiming(1, { duration: delayNumber * COMPLETION_WAVE_DELAY_MS }),
-      withTiming(1.2, { duration: 400 }),
-      withTiming(0.9, { duration: 200 }),
-      withTiming(1.4, { duration: 600 }),
-      withTiming(1, { duration: 400 }, notifyComplete),
+      withTiming(1, { duration: delayNumber * SUCCESS_COMPLETION_WAVE_DELAY_MS }),
+      withTiming(1.2, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.firstPulse }),
+      withTiming(0.9, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.settle }),
+      withTiming(1.4, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.bounce }),
+      withTiming(1, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.finalSettle }, notifyComplete),
     );
   }, [scaleProgress, isLastInWave, stableOnWaveComplete, delayNumber, isCompletionWaveActive]);
 

@@ -10,6 +10,10 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Text } from '@/components/common/Text';
+import {
+  SUCCESS_COMPLETION_WAVE_DELAY_MS,
+  SUCCESS_COMPLETION_WAVE_DURATIONS_MS,
+} from '@/components/game/successCompletionTiming';
 import { Spacing } from '@/constants/token';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { useTheme } from '@/hooks/useTheme';
@@ -39,8 +43,6 @@ type SlitherlinkCellProps = {
 
 const LINE_THICKNESS = 4;
 const DOT_SIZE = 8;
-const COMPLETION_WAVE_DELAY_MS = 50;
-
 /**
  * Renders a cells clues and edges.
  *
@@ -107,11 +109,11 @@ export function SlitherlinkCell({
       : undefined;
 
     scale.value = withSequence(
-      withTiming(1, { duration: waveDelayNumber * COMPLETION_WAVE_DELAY_MS }),
-      withTiming(1.1, { duration: 400 }),
-      withTiming(0.95, { duration: 300 }),
-      withTiming(1.15, { duration: 500 }),
-      withTiming(1, { duration: 500 }, notifyComplete),
+      withTiming(1, { duration: waveDelayNumber * SUCCESS_COMPLETION_WAVE_DELAY_MS }),
+      withTiming(1.1, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.firstPulse }),
+      withTiming(0.95, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.settle }),
+      withTiming(1.15, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.bounce }),
+      withTiming(1, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.finalSettle }, notifyComplete),
     );
   }, [isCompletionWaveActive, isLastInWave, scale, stableOnWaveComplete, waveDelayNumber]);
 

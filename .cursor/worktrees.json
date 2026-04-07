@@ -1,7 +1,0 @@
-{
-  "setup-worktree": [
-    "pnpm install",
-    "cd backend && pnpm install && pnpm generate && cp $ROOT_WORKTREE_PATH/.env .env",
-    "cd mobile && pnpm install && pnpm generate && pnpm pull-env:dev"
-  ]
-}
