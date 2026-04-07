@@ -44,4 +44,5 @@ persistCache({
 export const apollo = new ApolloClient({
   cache,
   link: authLink.concat(httpLink),
+  defaultOptions: { watchQuery: { fetchPolicy: 'cache-and-network' } },
 });
