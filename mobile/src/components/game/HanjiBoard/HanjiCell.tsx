@@ -12,6 +12,10 @@ import Animated, {
 
 import { Text } from '@/components/common/Text';
 import { COLOR } from '@/constants/color';
+import {
+  SUCCESS_COMPLETION_WAVE_DELAY_MS,
+  SUCCESS_COMPLETION_WAVE_DURATIONS_MS,
+} from '@/components/game/successCompletionTiming';
 import { useStableCallback } from '@/hooks/useStableCallback';
 import { useTheme } from '@/hooks/useTheme';
 import type { HanjiCellState } from '@/utils/hanji/lineValidation';
@@ -30,8 +34,6 @@ type HanjiCellProps = {
   /** Callback to call when the animation is complete. Only called if `isLastInWave` is true. */
   onWaveComplete?: () => void;
 };
-
-const COMPLETION_WAVE_DELAY_MS = 50;
 
 export const HanjiCell = memo(function HanjiCell({
   row,
@@ -61,11 +63,11 @@ export const HanjiCell = memo(function HanjiCell({
       : undefined;
 
     scale.value = withSequence(
-      withTiming(1, { duration: (row + col) * COMPLETION_WAVE_DELAY_MS }),
-      withTiming(1.1, { duration: 400 }),
-      withTiming(0.95, { duration: 300 }),
-      withTiming(1.15, { duration: 500 }),
-      withTiming(1, { duration: 500 }, notifyComplete),
+      withTiming(1, { duration: (row + col) * SUCCESS_COMPLETION_WAVE_DELAY_MS }),
+      withTiming(1.1, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.firstPulse }),
+      withTiming(0.95, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.settle }),
+      withTiming(1.15, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.bounce }),
+      withTiming(1, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.finalSettle }, notifyComplete),
     );
   }, [col, isLastInWave, stableOnWaveComplete, row, scale, state, isCompletionWaveActive]);
 
