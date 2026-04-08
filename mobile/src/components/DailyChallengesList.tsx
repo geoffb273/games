@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { type DailyChallenge as DailyChallengeType } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { usePuzzlesQuery } from '@/api/puzzle/puzzlesQuery';
@@ -19,6 +20,10 @@ function formatDate(date: Date): string {
     day: 'numeric',
     timeZone: 'America/New_York',
   });
+}
+
+function isChallengeFullyComplete(challenge: DailyChallengeType): boolean {
+  return challenge.puzzleCount > 0 && challenge.completedPuzzleCount >= challenge.puzzleCount;
 }
 
 type DailyChallengesListProps = {
@@ -91,9 +96,22 @@ type DailyChallengeProps = {
 
 function DailyChallenge({ challenge, isSelected, onPress }: DailyChallengeProps) {
   const theme = useTheme();
+  const fullyComplete = isChallengeFullyComplete(challenge);
 
   // Prefetch puzzles for the daily challenge
   usePuzzlesQuery({ dailyChallengeId: challenge.id });
+
+  const backgroundColor = fullyComplete
+    ? theme.successSurface
+    : isSelected
+      ? theme.highlightWash
+      : theme.background;
+
+  const borderColor = isSelected
+    ? theme.accentInk
+    : fullyComplete
+      ? theme.success
+      : theme.borderSubtle;
 
   return (
     <Pressable
@@ -101,15 +119,34 @@ function DailyChallenge({ challenge, isSelected, onPress }: DailyChallengeProps)
       style={[
         styles.challengeChip,
         {
-          backgroundColor: isSelected ? theme.highlightWash : theme.background,
-          borderColor: isSelected ? theme.accentInk : theme.borderSubtle,
+          backgroundColor,
+          borderColor,
         },
       ]}
     >
-      <Text type="body">{formatDate(challenge.date)}</Text>
-      <Text type="caption" color="textSecondary">
-        {`${challenge.completedPuzzleCount}/${challenge.puzzleCount} complete`}
-      </Text>
+      <View style={styles.challengeChipRow}>
+        {fullyComplete ? (
+          <View
+            style={[
+              styles.completeBadge,
+              {
+                borderColor: theme.success,
+                backgroundColor: theme.successSurface,
+              },
+            ]}
+          >
+            <MaterialCommunityIcons name="check" size={14} color={theme.success} />
+          </View>
+        ) : null}
+        <View style={styles.challengeChipText}>
+          <Text type="body">{formatDate(challenge.date)}</Text>
+          <Text type="caption" color={fullyComplete ? 'success' : 'textSecondary'}>
+            {fullyComplete
+              ? 'Complete'
+              : `${challenge.completedPuzzleCount}/${challenge.puzzleCount} complete`}
+          </Text>
+        </View>
+      </View>
     </Pressable>
   );
 }
@@ -144,5 +181,21 @@ const styles = StyleSheet.create({
     borderRadius: Radii.sm,
     borderWidth: 1,
     alignItems: 'center',
+  },
+  challengeChipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  challengeChipText: {
+    alignItems: 'center',
+  },
+  completeBadge: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Radii.pill,
+    height: 22,
+    width: 22,
+    borderWidth: 1,
   },
 });
