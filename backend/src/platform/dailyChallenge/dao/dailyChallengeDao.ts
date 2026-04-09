@@ -1,7 +1,11 @@
 import { prisma } from '@/client/prisma';
 import { type Prisma } from '@/generated/prisma';
 import { AlreadyExistsError, NotFoundError } from '@/schema/errors';
-import { asAmericaNewYorkMidnight, getTodayInAmericaNewYorkAsUtcMidnight } from '@/utils/dateUtils';
+import {
+  asAmericaNewYorkMidnight,
+  getAmericaNewYorkYmd,
+  getTodayInAmericaNewYorkAsUtcMidnight,
+} from '@/utils/dateUtils';
 import { isAlreadyExistsError, isNotFoundError } from '@/utils/errorUtils';
 import { type CursorArgs } from '@/utils/paginationUtils';
 
@@ -133,6 +137,60 @@ export async function getCompletedPuzzleCountsByDailyChallengeIds({
     map.set(puzzle.dailyChallengeId, (map.get(puzzle.dailyChallengeId) ?? 0) + 1);
     return map;
   }, new Map<string, number>());
+}
+
+/**
+ * Dates (`DailyChallenge.date`, UTC midnight) where the user has a {@link UserPuzzleAttempt}
+ * on every puzzle in the challenge, and each attempt's `startedAt` falls on the same
+ * America/New_York calendar day as that challenge.
+ */
+export async function getQualifyingDailyChallengeDatesForUserStreak({
+  userId,
+}: {
+  userId: string;
+}): Promise<Date[]> {
+  const todayEstAsUtcMidnight = getTodayInAmericaNewYorkAsUtcMidnight();
+
+  const challenges = await prisma.dailyChallenge.findMany({
+    where: { date: { lte: todayEstAsUtcMidnight } },
+    orderBy: { date: 'asc' },
+    select: {
+      date: true,
+      puzzles: { select: { id: true } },
+    },
+  });
+
+  const puzzleIds = [...new Set(challenges.flatMap((c) => c.puzzles.map((p) => p.id)))];
+  if (puzzleIds.length === 0) {
+    return [];
+  }
+
+  const attempts = await prisma.userPuzzleAttempt.findMany({
+    where: { userId, puzzleId: { in: puzzleIds } },
+    select: { puzzleId: true, startedAt: true },
+  });
+  const attemptByPuzzleId = new Map(attempts.map((a) => [a.puzzleId, a]));
+
+  const qualifying: Date[] = [];
+  for (const c of challenges) {
+    if (c.puzzles.length === 0) {
+      continue;
+    }
+    const expectedYmd = getAmericaNewYorkYmd(c.date);
+    let fullyAttemptedSameDay = true;
+    for (const p of c.puzzles) {
+      const att = attemptByPuzzleId.get(p.id);
+      if (!att || getAmericaNewYorkYmd(att.startedAt) !== expectedYmd) {
+        fullyAttemptedSameDay = false;
+        break;
+      }
+    }
+    if (fullyAttemptedSameDay) {
+      qualifying.push(c.date);
+    }
+  }
+
+  return qualifying;
 }
 
 function mapToDailyChallenge(

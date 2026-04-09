@@ -1,4 +1,5 @@
 import { createPuzzlesForDailyChallenge } from '@/platform/puzzle/service/puzzleService';
+import { getTodayInAmericaNewYorkAsUtcMidnight } from '@/utils/dateUtils';
 import { type CursorArgs } from '@/utils/paginationUtils';
 
 import {
@@ -6,9 +7,14 @@ import {
   getCompletedPuzzleCountsByDailyChallengeIds as getCompletedPuzzleCountsByDailyChallengeIdsDao,
   getLatestDailyChallenge as getLatestDailyChallengeDao,
   getPuzzleCountsByDailyChallengeIds as getPuzzleCountsByDailyChallengeIdsDao,
+  getQualifyingDailyChallengeDatesForUserStreak as getQualifyingDailyChallengeDatesForUserStreakDao,
   listDailyChallenges as listDailyChallengesDao,
 } from '../dao/dailyChallengeDao';
 import { type DailyChallenge } from '../resource/dailyChallenge';
+import {
+  computeDailyChallengeStreaks,
+  type DailyChallengeStreak,
+} from '../resource/dailyChallengeStreak';
 
 /**
  * Gets the latest daily challenge
@@ -60,4 +66,16 @@ export async function getCompletedPuzzleCountsByDailyChallengeIds({
   userId: string;
 }): Promise<Map<string, number>> {
   return getCompletedPuzzleCountsByDailyChallengeIdsDao({ dailyChallengeIds, userId });
+}
+
+export async function getDailyChallengeStreakForUser({
+  userId,
+}: {
+  userId: string;
+}): Promise<DailyChallengeStreak> {
+  const qualifyingChallengeDates = await getQualifyingDailyChallengeDatesForUserStreakDao({
+    userId,
+  });
+  const todayUtcMidnight = getTodayInAmericaNewYorkAsUtcMidnight();
+  return computeDailyChallengeStreaks({ qualifyingChallengeDates, todayUtcMidnight });
 }
