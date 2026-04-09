@@ -2,7 +2,6 @@ import { useCallback } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { LinearGradient } from 'expo-linear-gradient';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { type DailyChallenge as DailyChallengeType } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { usePuzzlesQuery } from '@/api/puzzle/puzzlesQuery';
@@ -125,19 +124,6 @@ function DailyChallenge({ challenge, isSelected, onPress }: DailyChallengeProps)
       ]}
     >
       <View style={styles.challengeChipRow}>
-        {fullyComplete ? (
-          <View
-            style={[
-              styles.completeBadge,
-              {
-                borderColor: theme.success,
-                backgroundColor: theme.successSurface,
-              },
-            ]}
-          >
-            <MaterialCommunityIcons name="check" size={14} color={theme.success} />
-          </View>
-        ) : null}
         <View style={styles.challengeChipText}>
           <Text type="body">{formatDate(challenge.date)}</Text>
           <Text type="caption" color={fullyComplete ? 'success' : 'textSecondary'}>
@@ -189,13 +175,5 @@ const styles = StyleSheet.create({
   },
   challengeChipText: {
     alignItems: 'center',
-  },
-  completeBadge: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Radii.pill,
-    height: 22,
-    width: 22,
-    borderWidth: 1,
   },
 });
