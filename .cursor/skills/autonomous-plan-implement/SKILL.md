@@ -45,7 +45,7 @@ flowchart TD
 | Breaking changes & migration | GraphQL, Prisma/DB, clients, versioning; or explicit “none”                  |
 | Assumptions                  | Defaults chosen without asking the user                                      |
 | Implementation plan          | Ordered steps with **concrete file paths**                                   |
-| Verification                 | Commands (`pnpm lint` in `backend` / `mobile`, tests, codegen if applicable) |
+| Verification                 | Commands (`pnpm install` then `pnpm lint` / typecheck in `backend` / `mobile`, tests, codegen if applicable) |
 
 While drafting, explicitly scan: GraphQL schema, Prisma/migrations, response shapes, mobile codegen, feature flags, env vars. Prefer order: schema → migration → backend resolvers/services → mobile operations → UI.
 
@@ -59,8 +59,9 @@ Ask or stop **only** for: missing secrets/credentials, irreversible data loss, a
 
 1. Complete **write `Plan.md`** first (no feature code before that, except read-only exploration).
 2. Implement in small, reviewable steps; match existing patterns (DAO/service on backend; `@/` and generated GraphQL types on mobile).
-3. Run linters after edits (`pnpm lint:fix` in the affected app directories per workspace rules).
-4. Update `Plan.md` **Done** section and give a short chat summary.
+3. In each **affected app directory** (`backend`, `mobile`, or both), run `pnpm install` **before** `pnpm lint`, `pnpm lint:fix`, typecheck, or tests—so dependencies match the lockfile and tooling is available.
+4. Run linters and typecheck after edits (`pnpm lint:fix` and any project typecheck script in the affected app directories per workspace rules).
+5. Update `Plan.md` **Done** section and give a short chat summary.
 
 ## Pull request
 
