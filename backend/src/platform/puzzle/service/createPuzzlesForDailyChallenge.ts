@@ -51,7 +51,7 @@ const PUZZLE_CONFIGS: {
   // Friday
   {
     flow: { size: 8 },
-    hanji: { size: 8, fillProbability: 0.53 },
+    hanji: { size: 8, fillProbability: 0.55 },
     hashi: { size: 10, islandCount: 22 },
     minesweeper: { size: 12, mineCount: 28 },
     slitherlink: { size: 6 },
@@ -59,7 +59,7 @@ const PUZZLE_CONFIGS: {
   // Saturday
   {
     flow: { size: 8 },
-    hanji: { size: 8, fillProbability: 0.57 },
+    hanji: { size: 8, fillProbability: 0.6 },
     hashi: { size: 10, islandCount: 24 },
     minesweeper: { size: 12, mineCount: 32 },
     slitherlink: { size: 7 },
@@ -67,10 +67,10 @@ const PUZZLE_CONFIGS: {
   // Sunday
   {
     flow: { size: 9 },
-    hanji: { size: 8, fillProbability: 0.6 },
-    hashi: { size: 10, islandCount: 28 },
+    hanji: { size: 8, fillProbability: 0.65 },
+    hashi: { size: 10, islandCount: 30 },
     minesweeper: { size: 12, mineCount: 36 },
-    slitherlink: { size: 7 },
+    slitherlink: { size: 8 },
   },
 ];
 
