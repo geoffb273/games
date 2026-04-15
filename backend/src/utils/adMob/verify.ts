@@ -5,8 +5,26 @@ import { AdMobSsvVerificationError } from '@/schema/errors';
 
 import { fetchAdMobKeys } from './fetchKeys';
 
-const SIGNATURE_PARAM = 'signature=';
-const KEY_ID_PARAM = 'key_id=';
+const SIGNATURE_NAME = 'signature';
+const KEY_ID_NAME = 'key_id';
+
+type QueryPart = {
+  raw: string;
+  key: string;
+  value: string;
+};
+
+function parseRawQueryParam(raw: string): QueryPart {
+  const separator = raw.indexOf('=');
+  if (separator === -1) {
+    return { raw, key: raw, value: '' };
+  }
+  return {
+    raw,
+    key: raw.slice(0, separator),
+    value: raw.slice(separator + 1),
+  };
+}
 
 /** Pulls `signature` and `key_id` from an SSV query and the UTF-8 substring that was signed (before `signature=`). */
 function parseSignatureAndKeyId(queryString: string): {
@@ -14,29 +32,36 @@ function parseSignatureAndKeyId(queryString: string): {
   signatureFromQuery: string;
   keyId: number;
 } {
-  const sigIdx = queryString.indexOf(SIGNATURE_PARAM);
-  if (sigIdx === -1) {
+  const queryParts = queryString.split('&').map(parseRawQueryParam);
+  const signaturePartIndex = queryParts.findIndex((queryPart) => queryPart.key === SIGNATURE_NAME);
+  if (signaturePartIndex === -1) {
     throw new AdMobSsvVerificationError('Missing signature parameter');
   }
 
-  const contentToVerify = sigIdx === 0 ? '' : queryString.slice(0, sigIdx - 1);
+  const signaturePart = queryParts[signaturePartIndex];
+  const signatureFromQuery = signaturePart.value;
+  if (signatureFromQuery.length === 0) {
+    throw new AdMobSsvVerificationError('Missing signature parameter');
+  }
 
-  const afterSig = queryString.slice(sigIdx);
-  const keyIdIdx = afterSig.indexOf(KEY_ID_PARAM);
-  if (keyIdIdx === -1) {
+  const keyIdPart = queryParts.find((queryPart) => queryPart.key === KEY_ID_NAME);
+  if (keyIdPart == null) {
     throw new AdMobSsvVerificationError('Missing key_id parameter');
   }
 
-  const sigValueStart = SIGNATURE_PARAM.length;
-  const signatureFromQuery = afterSig.slice(sigValueStart, keyIdIdx - 1);
-
-  const afterKeyId = afterSig.slice(keyIdIdx + KEY_ID_PARAM.length);
-  const amp = afterKeyId.indexOf('&');
-  const keyIdStr = amp === -1 ? afterKeyId : afterKeyId.slice(0, amp);
+  const keyIdStr = keyIdPart.value;
   const keyId = Number(keyIdStr);
   if (!Number.isFinite(keyId)) {
     throw new AdMobSsvVerificationError('Invalid key_id');
   }
+
+  const contentToVerify =
+    signaturePartIndex === 0
+      ? ''
+      : queryParts
+          .slice(0, signaturePartIndex)
+          .map(({ raw }) => raw)
+          .join('&');
 
   return { contentToVerify, signatureFromQuery, keyId };
 }
