@@ -1,4 +1,4 @@
-import { getDailyChallengeMaxStreakCache } from '@/cache/dailyChallenge/dailyChallengeStreak';
+import { getDailyChallengeStreakForUser } from '@/platform/dailyChallenge/service/dailyChallengeService';
 import { UnknownError, ValidationError } from '@/schema/errors';
 import { isValidFlowSolution } from '@/utils/puzzle/flow';
 
@@ -40,7 +40,7 @@ export async function solvePuzzle(input: SolvePuzzleInput): Promise<UserPuzzleAt
     durationMs: isCorrect ? durationMs : undefined,
   });
 
-  void getDailyChallengeMaxStreakCache({ userId, logger });
+  void getDailyChallengeStreakForUser({ userId, logger });
 
   return userPuzzleAttempt;
 }

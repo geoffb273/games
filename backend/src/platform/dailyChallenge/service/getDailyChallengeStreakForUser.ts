@@ -11,6 +11,11 @@ import {
 } from '../dao/dailyChallengeDao';
 import { type DailyChallengeStreak } from '../resource/dailyChallenge';
 
+/**
+ * Gets the daily challenge streak for the given user.
+ *
+ * Syncs the daily challenge max streak cache if the current streak is greater than the cached max streak.
+ */
 export async function getDailyChallengeStreakForUser({
   userId,
   logger,
