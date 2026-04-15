@@ -191,13 +191,16 @@ export async function createUserPuzzleAttempt({
 export async function createUserPuzzleHint({
   userId,
   puzzleId,
+  adRewardVerificationId,
 }: {
   userId: string;
   puzzleId: string;
+  // TODO: Make required once ad reward verification is implemented
+  adRewardVerificationId?: string;
 }): Promise<UserPuzzleHint> {
   return prisma.userPuzzleHint
     .create({
-      data: { userId, puzzleId },
+      data: { userId, puzzleId, adRewardVerificationId },
       select: USER_PUZZLE_HINT_SELECT,
     })
     .catch((error) => {
@@ -205,7 +208,7 @@ export async function createUserPuzzleHint({
         throw new AlreadyExistsError('User has already requested a hint for this puzzle');
       }
       if (isForeignKeyViolationError(error)) {
-        throw new NotFoundError('User or puzzle not found');
+        throw new NotFoundError('User, puzzle, or ad reward verification not found');
       }
       throw error;
     });

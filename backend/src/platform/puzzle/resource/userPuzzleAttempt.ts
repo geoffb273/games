@@ -62,6 +62,8 @@ export type UserPuzzleHint = {
 type BaseRequestPuzzleHintInput = {
   userId: string;
   puzzleId: string;
+  uniqueKey?: string | null;
+  logger: Logger;
 };
 
 export type RequestPuzzleHintInput =

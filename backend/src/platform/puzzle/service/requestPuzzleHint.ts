@@ -1,3 +1,5 @@
+import { AdvertisementRewardType } from '@/advertisement/resource/advertisementRewardVerification';
+import { getAdvertisementRewardVerification } from '@/advertisement/service/advertisementRewardService';
 import { ValidationError } from '@/schema/errors';
 
 import { getPuzzle as getPuzzleDao } from '../dao/puzzleDao';
@@ -20,9 +22,19 @@ import type { PuzzleHint, RequestPuzzleHintInput } from '../resource/userPuzzleA
  * @throws {AlreadyExistsError} if the DB still has unique on (userId, puzzleId) and hint already requested
  */
 export async function requestPuzzleHint(input: RequestPuzzleHintInput): Promise<PuzzleHint> {
-  const { userId, puzzleId, puzzleType } = input;
+  const { userId, puzzleId, puzzleType, uniqueKey, logger } = input;
 
-  const puzzle = await getPuzzleDao({ id: puzzleId });
+  const [puzzle, adRewardVerification] = await Promise.all([
+    getPuzzleDao({ id: puzzleId }),
+    uniqueKey != null
+      ? getAdvertisementRewardVerification({
+          userId,
+          uniqueKey,
+          type: AdvertisementRewardType.PUZZLE_HINT,
+          puzzleId,
+        }).catch(() => null)
+      : null,
+  ]);
 
   if (puzzle.type !== puzzleType) {
     throw new ValidationError('Puzzle type mismatch');
@@ -33,7 +45,17 @@ export async function requestPuzzleHint(input: RequestPuzzleHintInput): Promise<
     throw new ValidationError('Puzzle already matches solution');
   }
 
-  await createUserPuzzleHint({ userId, puzzleId });
+  if (uniqueKey != null && adRewardVerification == null) {
+    logger.warn({ userId, puzzleId, uniqueKey }, 'Ad reward verification not found');
+    // TODO: Throw error once ad reward verification is implemented
+    // throw new ValidationError('Ad reward verification not found');
+  }
+
+  await createUserPuzzleHint({
+    userId,
+    puzzleId,
+    adRewardVerificationId: adRewardVerification?.id,
+  });
 
   return hint;
 }
