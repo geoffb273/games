@@ -83,6 +83,7 @@ export type MinesweeperGame = {
   revealedMap: Map<string, number>;
   cells: CellStatus[][];
   remaining: number;
+  triggeredMineCell: { row: number; col: number } | null;
   mode: InteractionMode;
   onCellTap: (row: number, col: number) => void;
   onCellLongPress: (row: number, col: number) => void;
@@ -171,6 +172,9 @@ export function useMinesweeperGame({
     persistedState?.state ?? { height, width },
     (initial) => ('cells' in initial ? initial : createInitialState(initial)),
   );
+  const [triggeredMineCell, setTriggeredMineCell] = useState<{ row: number; col: number } | null>(
+    null,
+  );
   const [mode, setMode] = useState<InteractionMode>(persistedState?.mode ?? 'flag');
   const submittedRef = useRef(false);
   const hydratedPuzzleIdRef = useRef<string | null>(null);
@@ -230,6 +234,7 @@ export function useMinesweeperGame({
   const onRevealTap = useStableCallback(({ row, col }: { row: number; col: number }) => {
     const result = getCellsToReveal(row, col, puzzle.mineField, puzzle.width, puzzle.height);
     if (result.hitMine) {
+      setTriggeredMineCell({ row, col });
       const next = gameReducer(state, { type: 'GAME_OVER' });
       saveWithTime(next, mode);
       dispatch({ type: 'GAME_OVER' });
@@ -296,6 +301,7 @@ export function useMinesweeperGame({
     revealedMap,
     cells: state.cells,
     remaining,
+    triggeredMineCell,
     mode,
     onCellTap,
     onCellLongPress,

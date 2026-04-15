@@ -25,6 +25,8 @@ import { useTheme } from '@/hooks/useTheme';
 
 import { MinesweeperColors } from './minesweeperColor';
 
+const LOSS_EXPLOSION_DELAY_MS = 300;
+
 type CellProps = {
   row: number;
   col: number;
@@ -32,6 +34,7 @@ type CellProps = {
   isRevealed: boolean;
   isFlagged: boolean;
   value: number | null;
+  isTriggeredMine: boolean;
   onTap: (row: number, col: number) => void;
   onLongPress: (row: number, col: number) => void;
   isCompletionAnimationActive?: boolean;
@@ -50,6 +53,7 @@ export const MinesweeperCell = memo(function MinesweeperCell({
   isRevealed,
   isFlagged,
   value,
+  isTriggeredMine,
   onTap,
   onLongPress,
   isCompletionAnimationActive = false,
@@ -62,6 +66,7 @@ export const MinesweeperCell = memo(function MinesweeperCell({
   const theme = useTheme();
   const scale = useSharedValue(1);
   const translate = useSharedValue(0);
+  const opacity = useSharedValue(1);
   const stableOnWaveComplete = useStableCallback(() => onWaveComplete?.());
 
   const directions = useMemo(() => {
@@ -102,10 +107,12 @@ export const MinesweeperCell = memo(function MinesweeperCell({
         ),
       );
     } else {
-      translate.value = withTiming(
-        1,
-        { duration: 2000, easing: Easing.out(Easing.exp) },
-        notifyComplete,
+      translate.value = withSequence(
+        withTiming(0, { duration: LOSS_EXPLOSION_DELAY_MS }, () => {
+          'worklet';
+          opacity.value = 0;
+        }),
+        withTiming(1, { duration: 2000, easing: Easing.out(Easing.exp) }, notifyComplete),
       );
     }
   }, [
@@ -113,6 +120,7 @@ export const MinesweeperCell = memo(function MinesweeperCell({
     completionAnimationType,
     isCompletionAnimationActive,
     isLastInWave,
+    opacity,
     row,
     scale,
     stableOnWaveComplete,
@@ -156,17 +164,19 @@ export const MinesweeperCell = memo(function MinesweeperCell({
       { translateX: translate.value * directions.x * width },
       { translateY: translate.value * directions.y * height },
     ],
+    opacity: isTriggeredMine ? opacity.value : 1,
   }));
 
   const innerAnimatedStyle = useAnimatedStyle(() => ({
     transform: isCompletionAnimationActive ? [{ scale: scale.value }] : [{ scale: 1 }],
   }));
 
-  const bg = isRevealed
-    ? theme.background
-    : isFlagged
-      ? theme.backgroundSelected
-      : theme.backgroundElement;
+  const bg =
+    isRevealed || isTriggeredMine
+      ? theme.background
+      : isFlagged
+        ? theme.backgroundSelected
+        : theme.backgroundElement;
 
   return (
     <GestureDetector gesture={gesture}>
@@ -179,11 +189,19 @@ export const MinesweeperCell = memo(function MinesweeperCell({
             borderRadius: size > 36 ? 6 : 4,
             backgroundColor: bg,
           },
-          !isRevealed && styles.cellRaised,
+          !isRevealed && !isTriggeredMine && styles.cellRaised,
           animatedStyle,
         ]}
       >
-        {isRevealed && value != null && value > 0 ? (
+        {isTriggeredMine ? (
+          <Animated.View entering={ZoomIn.duration(120)}>
+            <Animated.View style={innerAnimatedStyle}>
+              <Text color="error" size="lg">
+                💣
+              </Text>
+            </Animated.View>
+          </Animated.View>
+        ) : isRevealed && value != null && value > 0 ? (
           <Animated.View
             entering={FadeIn.duration(200).delay(Math.min(20 * (row + col), 600))}
             style={innerAnimatedStyle}
@@ -199,15 +217,17 @@ export const MinesweeperCell = memo(function MinesweeperCell({
               {value}
             </Text>
           </Animated.View>
-        ) : isFlagged ? (
-          <Animated.View entering={ZoomIn.duration(200)}>
-            <Animated.View style={innerAnimatedStyle}>
-              <Text color="error" size="lg">
-                ▲
-              </Text>
+        ) : (
+          isFlagged && (
+            <Animated.View entering={ZoomIn.duration(200)}>
+              <Animated.View style={innerAnimatedStyle}>
+                <Text color="error" size="lg">
+                  ▲
+                </Text>
+              </Animated.View>
             </Animated.View>
-          </Animated.View>
-        ) : null}
+          )
+        )}
       </Animated.View>
     </GestureDetector>
   );

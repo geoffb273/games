@@ -36,6 +36,7 @@ export function MinesweeperBoard({
     revealedMap,
     cells,
     remaining,
+    triggeredMineCell,
     isWin,
     isLoss,
     mode,
@@ -106,6 +107,7 @@ export function MinesweeperBoard({
                   isRevealed={isRevealed}
                   isFlagged={isFlagged}
                   value={revealedValue ?? null}
+                  isTriggeredMine={triggeredMineCell?.row === row && triggeredMineCell?.col === col}
                   onTap={onCellTap}
                   onLongPress={onCellLongPress}
                   completionAnimationType={isLoss ? 'explosion' : 'wave'}
