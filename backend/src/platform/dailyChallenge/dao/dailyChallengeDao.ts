@@ -1,5 +1,5 @@
 import { prisma } from '@/client/prisma';
-import { Prisma, type Prisma as PrismaTypes } from '@/generated/prisma';
+import { Prisma } from '@/generated/prisma';
 import { AlreadyExistsError, NotFoundError } from '@/schema/errors';
 import { asAmericaNewYorkMidnight, getTodayInAmericaNewYorkAsUtcMidnight } from '@/utils/dateUtils';
 import { isAlreadyExistsError, isNotFoundError } from '@/utils/errorUtils';
@@ -12,7 +12,7 @@ const DAILY_CHALLENGE_SELECT = {
   date: true,
   createdAt: true,
   updatedAt: true,
-} satisfies PrismaTypes.DailyChallengeSelect;
+} satisfies Prisma.DailyChallengeSelect;
 
 /**
  * Gets the latest daily challenge where the date is today or before
@@ -247,7 +247,7 @@ export async function getDailyChallengeCurrentStreakForUser({
 }
 
 function mapToDailyChallenge(
-  dailyChallenge: PrismaTypes.DailyChallengeGetPayload<{ select: typeof DAILY_CHALLENGE_SELECT }>,
+  dailyChallenge: Prisma.DailyChallengeGetPayload<{ select: typeof DAILY_CHALLENGE_SELECT }>,
 ): DailyChallenge {
   return {
     ...dailyChallenge,
