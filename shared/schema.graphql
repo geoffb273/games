@@ -209,6 +209,11 @@ input MutationRequestPuzzleHintInput {
   Edges the user has already set. Only provide when puzzle type is SLITHERLINK.
   """
   slitherlinkCurrentState: SlitherlinkSolutionInput
+
+  """
+  The unique key of the ad reward verification. Only provide when requesting a hint via an ad reward verification.
+  """
+  uniqueKey: String
 }
 
 union MutationRequestPuzzleHintResult = AlreadyExistsError | MutationRequestPuzzleHintSuccess | NotFoundError | UnauthorizedError | UnknownError | ValidationError

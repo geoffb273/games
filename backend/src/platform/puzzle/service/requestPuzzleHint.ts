@@ -1,5 +1,5 @@
-import { getAdvertisementRewardVerification } from '@/advertisement/dao/advertisementRewardVerificationDao';
 import { AdvertisementRewardType } from '@/advertisement/resource/advertisementRewardVerification';
+import { getAdvertisementRewardVerification } from '@/advertisement/service/advertisementRewardService';
 import { ValidationError } from '@/schema/errors';
 
 import { getPuzzle as getPuzzleDao } from '../dao/puzzleDao';
