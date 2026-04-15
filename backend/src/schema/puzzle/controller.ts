@@ -163,6 +163,7 @@ builder.mutationField('solvePuzzle', (t) =>
               value: flowSolution,
               logger,
             }),
+            logger,
           });
         case 'HANJI':
           return solvePuzzle({
@@ -177,6 +178,7 @@ builder.mutationField('solvePuzzle', (t) =>
               value: hanjiSolution,
               logger,
             }),
+            logger,
           });
         case 'HASHI':
           return solvePuzzle({
@@ -191,6 +193,7 @@ builder.mutationField('solvePuzzle', (t) =>
               value: hashiSolution,
               logger,
             }),
+            logger,
           });
         case 'MINESWEEPER':
           return solvePuzzle({
@@ -205,6 +208,7 @@ builder.mutationField('solvePuzzle', (t) =>
               value: minesweeperSolution,
               logger,
             }),
+            logger,
           });
         case 'SLITHERLINK':
           return solvePuzzle({
@@ -219,6 +223,7 @@ builder.mutationField('solvePuzzle', (t) =>
               value: slitherlinkSolution,
               logger,
             }),
+            logger,
           });
         default:
           // This should be unreachable because puzzleType is validated by GraphQL enum

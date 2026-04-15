@@ -52,3 +52,16 @@ export function getTodayInAmericaNewYorkAsUtcMidnight(now: Date = new Date()): D
 
   return new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
 }
+
+/**
+ * Calendar date string (YYYY-MM-DD) for {@link date} in America/New_York.
+ */
+export function getAmericaNewYorkYmd(date: Date): string {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ_AMERICA_NEW_YORK,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return formatter.format(date);
+}

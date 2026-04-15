@@ -1,5 +1,5 @@
 import { prisma } from '@/client/prisma';
-import { type Prisma } from '@/generated/prisma';
+import { Prisma } from '@/generated/prisma';
 import { AlreadyExistsError, NotFoundError } from '@/schema/errors';
 import { asAmericaNewYorkMidnight, getTodayInAmericaNewYorkAsUtcMidnight } from '@/utils/dateUtils';
 import { isAlreadyExistsError, isNotFoundError } from '@/utils/errorUtils';
@@ -133,6 +133,117 @@ export async function getCompletedPuzzleCountsByDailyChallengeIds({
     map.set(puzzle.dailyChallengeId, (map.get(puzzle.dailyChallengeId) ?? 0) + 1);
     return map;
   }, new Map<string, number>());
+}
+
+export async function getDailyChallengeMaxStreakForUser({
+  userId,
+}: {
+  userId: string;
+}): Promise<number> {
+  const todayEstAsUtcMidnight = getTodayInAmericaNewYorkAsUtcMidnight();
+  const [{ maxStreak }] = await prisma.$queryRaw<{ maxStreak: number }[]>(Prisma.sql`
+    WITH RECURSIVE qualifying AS (
+      SELECT dc."date" AS "challengeDate"
+      FROM "DailyChallenge" dc
+      JOIN "Puzzle" p ON p."dailyChallengeId" = dc."id"
+      LEFT JOIN "UserPuzzleAttempt" upa
+        ON upa."puzzleId" = p."id"
+       AND upa."userId" = ${userId}::uuid
+      WHERE dc."date" <= ${todayEstAsUtcMidnight}::date
+      GROUP BY dc."id", dc."date"
+      HAVING
+        COUNT(*) > 0
+        AND COUNT(*) = COUNT(upa."id")
+        AND COUNT(*) = COUNT(*) FILTER (
+          WHERE (
+            (
+              (upa."startedAt" AT TIME ZONE 'UTC')
+              AT TIME ZONE 'America/New_York'
+            )::date
+            =
+            (
+              ((dc."date"::timestamp AT TIME ZONE 'UTC')
+              AT TIME ZONE 'America/New_York')
+            )::date
+          )
+        )
+    ),
+    grouped AS (
+      SELECT
+        "challengeDate",
+        "challengeDate" - ROW_NUMBER() OVER (ORDER BY "challengeDate")::integer AS "runGroup"
+      FROM qualifying
+    )
+    SELECT COALESCE(MAX(runs."runLength"), 0)::integer AS "maxStreak"
+    FROM (
+      SELECT COUNT(*)::integer AS "runLength"
+      FROM grouped
+      GROUP BY "runGroup"
+    ) runs
+  `);
+
+  return maxStreak;
+}
+
+export async function getDailyChallengeCurrentStreakForUser({
+  userId,
+}: {
+  userId: string;
+}): Promise<number> {
+  const todayEstAsUtcMidnight = getTodayInAmericaNewYorkAsUtcMidnight();
+  const [{ currentStreak }] = await prisma.$queryRaw<{ currentStreak: number }[]>(Prisma.sql`
+    WITH RECURSIVE qualifying AS (
+      SELECT dc."date" AS "challengeDate"
+      FROM "DailyChallenge" dc
+      JOIN "Puzzle" p ON p."dailyChallengeId" = dc."id"
+      LEFT JOIN "UserPuzzleAttempt" upa
+        ON upa."puzzleId" = p."id"
+       AND upa."userId" = ${userId}::uuid
+      WHERE dc."date" <= ${todayEstAsUtcMidnight}::date
+      GROUP BY dc."id", dc."date"
+      HAVING
+        COUNT(*) > 0
+        AND COUNT(*) = COUNT(upa."id")
+        AND COUNT(*) = COUNT(*) FILTER (
+          WHERE (
+            (
+              (upa."startedAt" AT TIME ZONE 'UTC')
+              AT TIME ZONE 'America/New_York'
+            )::date
+            =
+            (
+              ((dc."date"::timestamp AT TIME ZONE 'UTC')
+              AT TIME ZONE 'America/New_York')
+            )::date
+          )
+        )
+    ),
+    anchor AS (
+      SELECT
+        CASE
+          WHEN EXISTS (
+            SELECT 1 FROM qualifying q WHERE q."challengeDate" = ${todayEstAsUtcMidnight}::date
+          ) THEN ${todayEstAsUtcMidnight}::date
+          WHEN EXISTS (
+            SELECT 1 FROM qualifying q WHERE q."challengeDate" = (${todayEstAsUtcMidnight}::date - 1)
+          ) THEN (${todayEstAsUtcMidnight}::date - 1)
+          ELSE NULL::date
+        END AS "anchorDate"
+    ),
+    streak AS (
+      SELECT a."anchorDate" AS "challengeDate"
+      FROM anchor a
+      WHERE a."anchorDate" IS NOT NULL
+      UNION ALL
+      SELECT s."challengeDate" - 1
+      FROM streak s
+      JOIN qualifying q ON q."challengeDate" = s."challengeDate" - 1
+    )
+    SELECT COUNT(*)::integer AS "currentStreak"
+    FROM streak
+  `);
+
+  return currentStreak;
 }
 
 function mapToDailyChallenge(

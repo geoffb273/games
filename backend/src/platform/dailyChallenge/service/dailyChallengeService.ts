@@ -1,3 +1,5 @@
+import { type Logger } from 'pino';
+
 import { createPuzzlesForDailyChallenge } from '@/platform/puzzle/service/puzzleService';
 import { type CursorArgs } from '@/utils/paginationUtils';
 
@@ -8,7 +10,8 @@ import {
   getPuzzleCountsByDailyChallengeIds as getPuzzleCountsByDailyChallengeIdsDao,
   listDailyChallenges as listDailyChallengesDao,
 } from '../dao/dailyChallengeDao';
-import { type DailyChallenge } from '../resource/dailyChallenge';
+import { type DailyChallenge, type DailyChallengeStreak } from '../resource/dailyChallenge';
+import { getDailyChallengeStreakForUser as getDailyChallengeStreakForUserCommand } from './getDailyChallengeStreakForUser';
 
 /**
  * Gets the latest daily challenge
@@ -60,4 +63,19 @@ export async function getCompletedPuzzleCountsByDailyChallengeIds({
   userId: string;
 }): Promise<Map<string, number>> {
   return getCompletedPuzzleCountsByDailyChallengeIdsDao({ dailyChallengeIds, userId });
+}
+
+/**
+ * Gets the daily challenge streak for the given user.
+ *
+ * Syncs the daily challenge max streak cache if the current streak is greater than the cached max streak.
+ */
+export async function getDailyChallengeStreakForUser({
+  userId,
+  logger,
+}: {
+  userId: string;
+  logger: Logger;
+}): Promise<DailyChallengeStreak> {
+  return getDailyChallengeStreakForUserCommand({ userId, logger });
 }
