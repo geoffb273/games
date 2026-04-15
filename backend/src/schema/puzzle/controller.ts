@@ -246,6 +246,11 @@ builder.mutationField('requestPuzzleHint', (t) =>
         type: PuzzleTypeEnum,
         required: true,
       }),
+      uniqueKey: t.input.string({
+        required: false,
+        description:
+          'The unique key of the ad reward verification. Only provide when requesting a hint via an ad reward verification.',
+      }),
       hanjiCurrentState: t.input.field({
         type: t.input.listRef(t.input.listRef('Int')),
         required: false,
@@ -279,6 +284,7 @@ builder.mutationField('requestPuzzleHint', (t) =>
         input: {
           puzzleId,
           puzzleType,
+          uniqueKey,
           hanjiCurrentState,
           hashiCurrentState,
           minesweeperCurrentState,
@@ -293,7 +299,7 @@ builder.mutationField('requestPuzzleHint', (t) =>
         throw new ValidationError('Hints are not supported for FLOW puzzles');
       }
 
-      const base = { userId: user.id, puzzleId, puzzleType };
+      const base = { userId: user.id, puzzleId, puzzleType, uniqueKey, logger };
       switch (puzzleType) {
         case 'HANJI':
           return requestPuzzleHint({
