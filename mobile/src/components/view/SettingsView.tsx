@@ -16,7 +16,6 @@ import { setThemePreference, useThemePreference } from '@/store/themeStore';
 import { clearToken } from '@/store/token';
 
 export function SettingsView() {
-  const theme = useTheme();
   const client = useApolloClient();
   const { preference } = useThemePreference();
   const { preference: hapticsPreference } = useHapticsPreference();
@@ -55,7 +54,7 @@ export function SettingsView() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <View style={styles.header}>
           <Text type="h2">Settings</Text>
