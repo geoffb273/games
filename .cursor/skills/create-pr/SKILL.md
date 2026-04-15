@@ -8,7 +8,7 @@ description: Use GitHub CLI (gh) and git to ensure work is on a feature branch (
 This skill guides the agent to use `git` and `gh` CLI to:
 
 1. Analyze local changes and draft a short PR title/body
-2. Verify the current branch is a feature branch (not `main`/`master`)
+2. Verify the current branch is a feature branch (not `main`)
 3. If needed, create and switch to a new feature branch
 4. Create a GitHub pull request via `gh pr create`
 
@@ -16,7 +16,7 @@ Assumptions:
 
 - The repo is already configured with a remote (typically `origin`)
 - `gh` CLI is installed, authenticated, and authorized for the repo
-- The user’s preferred default branch is `main` (fall back to `master` if `main` does not exist)
+- The user’s preferred default branch is `main
 
 ## When to use this skill
 
@@ -24,7 +24,7 @@ Use this skill when:
 
 - The user asks to "create a PR", "open a PR", "turn this into a PR", or similar
 - The user mentions "feature branch", "branch workflow", or "gh cli PR"
-- You need to ensure work is not committed directly to `main`/`master` before opening a PR
+- You need to ensure work is not committed directly to `main` before opening a PR
 
 ## High-level workflow
 
@@ -148,7 +148,7 @@ If this fails due to authentication or permission issues, explain the error to t
 
 ### 6. Create the GitHub PR with `gh`
 
-Use `gh pr create` with a generated title and body.
+Use `gh pr create` with a generated title and body. Do not ask for permission unless the user has explicitly asked you to require it
 
 Example:
 
