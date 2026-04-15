@@ -1,5 +1,6 @@
+import { type Logger } from 'pino';
+
 import { createPuzzlesForDailyChallenge } from '@/platform/puzzle/service/puzzleService';
-import { getTodayInAmericaNewYorkAsUtcMidnight } from '@/utils/dateUtils';
 import { type CursorArgs } from '@/utils/paginationUtils';
 
 import {
@@ -7,14 +8,10 @@ import {
   getCompletedPuzzleCountsByDailyChallengeIds as getCompletedPuzzleCountsByDailyChallengeIdsDao,
   getLatestDailyChallenge as getLatestDailyChallengeDao,
   getPuzzleCountsByDailyChallengeIds as getPuzzleCountsByDailyChallengeIdsDao,
-  getQualifyingDailyChallengeDatesForUserStreak as getQualifyingDailyChallengeDatesForUserStreakDao,
   listDailyChallenges as listDailyChallengesDao,
 } from '../dao/dailyChallengeDao';
-import { type DailyChallenge } from '../resource/dailyChallenge';
-import {
-  computeDailyChallengeStreaks,
-  type DailyChallengeStreak,
-} from '../resource/dailyChallengeStreak';
+import { type DailyChallenge, type DailyChallengeStreak } from '../resource/dailyChallenge';
+import { getDailyChallengeStreakForUser as getDailyChallengeStreakForUserCommand } from './getDailyChallengeStreakForUser';
 
 /**
  * Gets the latest daily challenge
@@ -68,14 +65,17 @@ export async function getCompletedPuzzleCountsByDailyChallengeIds({
   return getCompletedPuzzleCountsByDailyChallengeIdsDao({ dailyChallengeIds, userId });
 }
 
+/**
+ * Gets the daily challenge streak for the given user.
+ *
+ * Syncs the daily challenge max streak cache if the current streak is greater than the cached max streak.
+ */
 export async function getDailyChallengeStreakForUser({
   userId,
+  logger,
 }: {
   userId: string;
+  logger: Logger;
 }): Promise<DailyChallengeStreak> {
-  const qualifyingChallengeDates = await getQualifyingDailyChallengeDatesForUserStreakDao({
-    userId,
-  });
-  const todayUtcMidnight = getTodayInAmericaNewYorkAsUtcMidnight();
-  return computeDailyChallengeStreaks({ qualifyingChallengeDates, todayUtcMidnight });
+  return getDailyChallengeStreakForUserCommand({ userId, logger });
 }

@@ -1,3 +1,4 @@
+import { getDailyChallengeMaxStreakCache } from '@/cache/dailyChallenge/dailyChallengeStreak';
 import { UnknownError, ValidationError } from '@/schema/errors';
 import { isValidFlowSolution } from '@/utils/puzzle/flow';
 
@@ -25,19 +26,23 @@ import { type SolvePuzzleInput, type UserPuzzleAttempt } from '../resource/userP
  * @throws {ValidationError} if the puzzle type does not match the claimed puzzle type
  */
 export async function solvePuzzle(input: SolvePuzzleInput): Promise<UserPuzzleAttempt> {
-  const { puzzleId, userId, startedAt, completedAt, durationMs } = input;
+  const { puzzleId, userId, startedAt, completedAt, durationMs, logger } = input;
 
   const puzzle = await getPuzzleDao({ id: puzzleId });
 
   const isCorrect = isSolutionCorrect(puzzle, input);
 
-  return createUserPuzzleAttempt({
+  const userPuzzleAttempt = await createUserPuzzleAttempt({
     puzzleId: puzzle.id,
     userId,
     startedAt,
     completedAt: isCorrect ? completedAt : undefined,
     durationMs: isCorrect ? durationMs : undefined,
   });
+
+  void getDailyChallengeMaxStreakCache({ userId, logger });
+
+  return userPuzzleAttempt;
 }
 
 /**

@@ -1,3 +1,5 @@
+import { type Logger } from 'pino';
+
 import {
   type FlowPuzzleData,
   type HanjiPuzzleData,
@@ -24,6 +26,7 @@ type BaseSolvePuzzleInput = {
   completedAt?: Date | null;
   /** Duration in milliseconds the user took to solve. Only persisted if the solution is correct. */
   durationMs?: number | null;
+  logger: Logger;
 };
 
 export type SolvePuzzleInput =

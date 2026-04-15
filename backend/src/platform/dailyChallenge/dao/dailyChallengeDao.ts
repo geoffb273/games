@@ -1,11 +1,7 @@
 import { prisma } from '@/client/prisma';
-import { type Prisma } from '@/generated/prisma';
+import { Prisma, type Prisma as PrismaTypes } from '@/generated/prisma';
 import { AlreadyExistsError, NotFoundError } from '@/schema/errors';
-import {
-  asAmericaNewYorkMidnight,
-  getAmericaNewYorkYmd,
-  getTodayInAmericaNewYorkAsUtcMidnight,
-} from '@/utils/dateUtils';
+import { asAmericaNewYorkMidnight, getTodayInAmericaNewYorkAsUtcMidnight } from '@/utils/dateUtils';
 import { isAlreadyExistsError, isNotFoundError } from '@/utils/errorUtils';
 import { type CursorArgs } from '@/utils/paginationUtils';
 
@@ -16,7 +12,7 @@ const DAILY_CHALLENGE_SELECT = {
   date: true,
   createdAt: true,
   updatedAt: true,
-} satisfies Prisma.DailyChallengeSelect;
+} satisfies PrismaTypes.DailyChallengeSelect;
 
 /**
  * Gets the latest daily challenge where the date is today or before
@@ -139,62 +135,119 @@ export async function getCompletedPuzzleCountsByDailyChallengeIds({
   }, new Map<string, number>());
 }
 
-/**
- * Dates (`DailyChallenge.date`, UTC midnight) where the user has a {@link UserPuzzleAttempt}
- * on every puzzle in the challenge, and each attempt's `startedAt` falls on the same
- * America/New_York calendar day as that challenge.
- */
-export async function getQualifyingDailyChallengeDatesForUserStreak({
+export async function getDailyChallengeMaxStreakForUser({
   userId,
 }: {
   userId: string;
-}): Promise<Date[]> {
+}): Promise<number> {
   const todayEstAsUtcMidnight = getTodayInAmericaNewYorkAsUtcMidnight();
+  const [{ maxStreak }] = await prisma.$queryRaw<{ maxStreak: number }[]>(Prisma.sql`
+    WITH RECURSIVE qualifying AS (
+      SELECT dc."date" AS "challengeDate"
+      FROM "DailyChallenge" dc
+      JOIN "Puzzle" p ON p."dailyChallengeId" = dc."id"
+      LEFT JOIN "UserPuzzleAttempt" upa
+        ON upa."puzzleId" = p."id"
+       AND upa."userId" = ${userId}::uuid
+      WHERE dc."date" <= ${todayEstAsUtcMidnight}::date
+      GROUP BY dc."id", dc."date"
+      HAVING
+        COUNT(*) > 0
+        AND COUNT(*) = COUNT(upa."id")
+        AND COUNT(*) = COUNT(*) FILTER (
+          WHERE (
+            (
+              (upa."startedAt" AT TIME ZONE 'UTC')
+              AT TIME ZONE 'America/New_York'
+            )::date
+            =
+            (
+              ((dc."date"::timestamp AT TIME ZONE 'UTC')
+              AT TIME ZONE 'America/New_York')
+            )::date
+          )
+        )
+    ),
+    grouped AS (
+      SELECT
+        "challengeDate",
+        "challengeDate" - ROW_NUMBER() OVER (ORDER BY "challengeDate")::integer AS "runGroup"
+      FROM qualifying
+    )
+    SELECT COALESCE(MAX(runs."runLength"), 0)::integer AS "maxStreak"
+    FROM (
+      SELECT COUNT(*)::integer AS "runLength"
+      FROM grouped
+      GROUP BY "runGroup"
+    ) runs
+  `);
 
-  const challenges = await prisma.dailyChallenge.findMany({
-    where: { date: { lte: todayEstAsUtcMidnight } },
-    orderBy: { date: 'asc' },
-    select: {
-      date: true,
-      puzzles: { select: { id: true } },
-    },
-  });
+  return maxStreak;
+}
 
-  const puzzleIds = [...new Set(challenges.flatMap((c) => c.puzzles.map((p) => p.id)))];
-  if (puzzleIds.length === 0) {
-    return [];
-  }
+export async function getDailyChallengeCurrentStreakForUser({
+  userId,
+}: {
+  userId: string;
+}): Promise<number> {
+  const todayEstAsUtcMidnight = getTodayInAmericaNewYorkAsUtcMidnight();
+  const [{ currentStreak }] = await prisma.$queryRaw<{ currentStreak: number }[]>(Prisma.sql`
+    WITH RECURSIVE qualifying AS (
+      SELECT dc."date" AS "challengeDate"
+      FROM "DailyChallenge" dc
+      JOIN "Puzzle" p ON p."dailyChallengeId" = dc."id"
+      LEFT JOIN "UserPuzzleAttempt" upa
+        ON upa."puzzleId" = p."id"
+       AND upa."userId" = ${userId}::uuid
+      WHERE dc."date" <= ${todayEstAsUtcMidnight}::date
+      GROUP BY dc."id", dc."date"
+      HAVING
+        COUNT(*) > 0
+        AND COUNT(*) = COUNT(upa."id")
+        AND COUNT(*) = COUNT(*) FILTER (
+          WHERE (
+            (
+              (upa."startedAt" AT TIME ZONE 'UTC')
+              AT TIME ZONE 'America/New_York'
+            )::date
+            =
+            (
+              ((dc."date"::timestamp AT TIME ZONE 'UTC')
+              AT TIME ZONE 'America/New_York')
+            )::date
+          )
+        )
+    ),
+    anchor AS (
+      SELECT
+        CASE
+          WHEN EXISTS (
+            SELECT 1 FROM qualifying q WHERE q."challengeDate" = ${todayEstAsUtcMidnight}::date
+          ) THEN ${todayEstAsUtcMidnight}::date
+          WHEN EXISTS (
+            SELECT 1 FROM qualifying q WHERE q."challengeDate" = (${todayEstAsUtcMidnight}::date - 1)
+          ) THEN (${todayEstAsUtcMidnight}::date - 1)
+          ELSE NULL::date
+        END AS "anchorDate"
+    ),
+    streak AS (
+      SELECT a."anchorDate" AS "challengeDate"
+      FROM anchor a
+      WHERE a."anchorDate" IS NOT NULL
+      UNION ALL
+      SELECT s."challengeDate" - 1
+      FROM streak s
+      JOIN qualifying q ON q."challengeDate" = s."challengeDate" - 1
+    )
+    SELECT COUNT(*)::integer AS "currentStreak"
+    FROM streak
+  `);
 
-  const attempts = await prisma.userPuzzleAttempt.findMany({
-    where: { userId, puzzleId: { in: puzzleIds } },
-    select: { puzzleId: true, startedAt: true },
-  });
-  const attemptByPuzzleId = new Map(attempts.map((a) => [a.puzzleId, a]));
-
-  const qualifying: Date[] = [];
-  for (const c of challenges) {
-    if (c.puzzles.length === 0) {
-      continue;
-    }
-    const expectedYmd = getAmericaNewYorkYmd(c.date);
-    let fullyAttemptedSameDay = true;
-    for (const p of c.puzzles) {
-      const att = attemptByPuzzleId.get(p.id);
-      if (!att || getAmericaNewYorkYmd(att.startedAt) !== expectedYmd) {
-        fullyAttemptedSameDay = false;
-        break;
-      }
-    }
-    if (fullyAttemptedSameDay) {
-      qualifying.push(c.date);
-    }
-  }
-
-  return qualifying;
+  return currentStreak;
 }
 
 function mapToDailyChallenge(
-  dailyChallenge: Prisma.DailyChallengeGetPayload<{ select: typeof DAILY_CHALLENGE_SELECT }>,
+  dailyChallenge: PrismaTypes.DailyChallengeGetPayload<{ select: typeof DAILY_CHALLENGE_SELECT }>,
 ): DailyChallenge {
   return {
     ...dailyChallenge,

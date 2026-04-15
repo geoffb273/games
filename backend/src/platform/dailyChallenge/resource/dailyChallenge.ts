@@ -4,3 +4,8 @@ export type DailyChallenge = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type DailyChallengeStreak = {
+  current: number;
+  max: number;
+};
