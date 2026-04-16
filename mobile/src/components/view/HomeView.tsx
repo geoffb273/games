@@ -38,7 +38,7 @@ export function HomeView() {
 
   if (isChallengesError && !isChallengesLoading) {
     return (
-      <View style={[styles.centered, { backgroundColor: theme.background }]}>
+      <View style={styles.centered}>
         <ErrorView
           message="Unable to load daily challenges"
           onRetry={refetchChallenges}

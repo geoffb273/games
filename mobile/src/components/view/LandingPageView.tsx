@@ -40,7 +40,7 @@ export function LandingPageView() {
   );
 }
 
-function BackgroundLayers() {
+export function BackgroundLayers() {
   const theme = useTheme();
 
   return (
