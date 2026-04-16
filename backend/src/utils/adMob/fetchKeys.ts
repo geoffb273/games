@@ -11,12 +11,16 @@ const VERIFIER_KEYS_URL = 'https://www.gstatic.com/admob/reward/verifier-keys.js
  */
 export async function fetchAdMobKeys({
   logger,
+  forceRefresh = false,
 }: {
   logger: Logger;
+  forceRefresh?: boolean;
 }): Promise<Record<number, Buffer>> {
-  const keyCache = await getAdMobKeysCache({ logger });
-  if (keyCache) {
-    return keyCache;
+  if (!forceRefresh) {
+    const keyCache = await getAdMobKeysCache({ logger });
+    if (keyCache) {
+      return keyCache;
+    }
   }
 
   const res = await fetch(VERIFIER_KEYS_URL);

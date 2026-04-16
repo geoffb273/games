@@ -1,4 +1,4 @@
-import { createPublicKey, createVerify } from 'crypto';
+import { createHash, createPublicKey, createVerify } from 'crypto';
 import { type Logger } from 'pino';
 
 import { AdMobSsvVerificationError } from '@/schema/errors';
@@ -83,13 +83,37 @@ function decodeSignatureToBuffer(signatureFromQuery: string): Buffer {
   }
 }
 
+function verifySignature({
+  publicKeyDer,
+  contentToVerify,
+  signatureBuffer,
+}: {
+  publicKeyDer: Buffer;
+  contentToVerify: string;
+  signatureBuffer: Buffer;
+}): boolean {
+  const publicKey = createPublicKey({
+    key: publicKeyDer,
+    format: 'der',
+    type: 'spki',
+  });
+  const verify = createVerify('SHA256');
+  verify.update(contentToVerify, 'utf8');
+  verify.end();
+  return verify.verify(publicKey, signatureBuffer);
+}
+
+function getLogFingerprint(value: string): string {
+  return createHash('sha256').update(value, 'utf8').digest('hex');
+}
+
 /**
  * Verifies an AdMob rewarded-ad SSV callback query string (no leading `?`), using Google's keys and ECDSA P-256 / SHA-256.
  * @param rawQuery - Query or path-style string containing `signature=` and `key_id=`
  */
 export async function verifyAdMobSsvQueryString({
   rawQuery,
-  logger,
+  logger: baseLogger,
 }: {
   rawQuery: string;
   logger: Logger;
@@ -99,27 +123,52 @@ export async function verifyAdMobSsvQueryString({
   }
 
   const { contentToVerify, signatureFromQuery, keyId } = parseSignatureAndKeyId(rawQuery);
+  const logger = baseLogger.child({
+    keyId,
+    rawQueryLength: rawQuery.length,
+    contentToVerifyLength: contentToVerify.length,
+    signatureLength: signatureFromQuery.length,
+    rawQueryFingerprint: getLogFingerprint(rawQuery),
+    contentToVerifyFingerprint: getLogFingerprint(contentToVerify),
+  });
+
+  logger.debug({}, 'AdMob SSV verification started');
 
   const keys = await fetchAdMobKeys({ logger });
   const publicKeyDer = keys[keyId];
   if (publicKeyDer == null) {
+    logger.warn({}, 'AdMob SSV verification failed: key_id not found');
     throw new AdMobSsvVerificationError(`Unknown key_id: ${keyId}`);
   }
 
-  const publicKey = createPublicKey({
-    key: publicKeyDer,
-    format: 'der',
-    type: 'spki',
-  });
-
   const signatureBuffer = decodeSignatureToBuffer(signatureFromQuery);
+  const ok = verifySignature({
+    publicKeyDer,
+    contentToVerify,
+    signatureBuffer,
+  });
+  if (ok) {
+    logger.debug({}, 'AdMob SSV verification succeeded');
+    return;
+  }
 
-  const verify = createVerify('SHA256');
-  verify.update(contentToVerify, 'utf8');
-  verify.end();
+  logger.warn({}, 'AdMob SSV verification failed on cached keys; retrying with fresh keys');
+  const freshKeys = await fetchAdMobKeys({ logger, forceRefresh: true });
+  const freshPublicKeyDer = freshKeys[keyId];
+  if (freshPublicKeyDer == null) {
+    logger.warn({}, 'AdMob SSV verification retry failed: key_id not found after refresh');
+    throw new AdMobSsvVerificationError(`Unknown key_id: ${keyId}`);
+  }
 
-  const ok = verify.verify(publicKey, signatureBuffer);
-  if (!ok) {
+  const okWithFreshKeys = verifySignature({
+    publicKeyDer: freshPublicKeyDer,
+    contentToVerify,
+    signatureBuffer,
+  });
+  if (!okWithFreshKeys) {
+    logger.warn({}, 'AdMob SSV verification failed after refresh');
     throw new AdMobSsvVerificationError('Invalid signature');
   }
+
+  logger.info({}, 'AdMob SSV verification succeeded after refreshing keys');
 }

@@ -6,6 +6,10 @@ import { prisma } from '@/client/prisma';
 import { type DailyChallenge } from '@/platform/dailyChallenge/resource/dailyChallenge';
 import { type User } from '@/platform/user/resource/user';
 
+type MockLogger = BaseLogger & {
+  child: ReturnType<typeof vi.fn>;
+};
+
 /**
  * Creates a deterministic Date value from a UUID.
  *
@@ -63,7 +67,7 @@ export async function createTestDailyChallenge({
 }
 
 export function createMockLogger(): Logger {
-  const logger: BaseLogger = {
+  const logger: MockLogger = {
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
@@ -73,9 +77,8 @@ export function createMockLogger(): Logger {
     level: 'info',
     msgPrefix: '',
     silent: vi.fn(),
+    child: vi.fn(),
   };
-  return {
-    ...logger,
-    child: vi.fn().mockReturnValue(logger),
-  } as unknown as Logger;
+  logger.child.mockReturnValue(logger);
+  return logger as unknown as Logger;
 }
