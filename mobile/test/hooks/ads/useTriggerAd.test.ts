@@ -7,13 +7,15 @@ import { useAdConsentContext } from '@/context/AdConsentContext';
 import { useAuthFetchContext } from '@/context/AuthFetchContext';
 import { useTriggerAd } from '@/hooks/ads/useTriggerAd';
 
+jest.mock('@/constants/config', () => ({
+  AD_MOB_AD_ID: 'test-rewarded',
+}));
 jest.mock('@/context/AdConsentContext');
 jest.mock('@/context/AuthFetchContext', () => ({
   useAuthFetchContext: jest.fn(),
 }));
 
 jest.mock('react-native-google-mobile-ads', () => ({
-  TestIds: { REWARDED: 'test-rewarded' },
   useRewardedAd: jest.fn(),
 }));
 
