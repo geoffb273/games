@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRewardedAd } from 'react-native-google-mobile-ads';
+
+import { randomUUID } from 'expo-crypto';
 
 import { AD_MOB_AD_ID } from '@/constants/config';
 import { useAdConsentContext } from '@/context/AdConsentContext';
@@ -18,6 +20,8 @@ type UseTriggerAdResult = {
   isShowing: boolean;
   /** Shows the ad if the user has given consent, otherwise shows the consent form and tries to load the ad again. */
   onPressShowAd: () => Promise<void>;
+  uniqueKey: string;
+  generateNewUniqueKey: () => void;
 };
 
 /**
@@ -27,6 +31,7 @@ export function useTriggerAd({
   puzzleId,
   onFullscreenPresentedChange,
 }: UseTriggerAdParams): UseTriggerAdResult {
+  const [uniqueKey, setUniqueKey] = useState(randomUUID());
   const { user } = useAuthFetchContext({ required: true });
   const {
     isAllowedToRequestAds,
@@ -41,6 +46,7 @@ export function useTriggerAd({
       customData: encodeURIComponent(
         JSON.stringify({
           puzzleId,
+          uniqueKey,
         }),
       ),
     },
@@ -73,10 +79,16 @@ export function useTriggerAd({
     show();
   }, [isLoaded, isAllowedToRequestAds, show, showConsentForm, load]);
 
+  const generateNewUniqueKey = useCallback(() => {
+    setUniqueKey(randomUUID());
+  }, []);
+
   return {
     isDisabled: isConsentLoading || (isAllowedToRequestAds && !isLoaded),
     isEarnedReward,
     isShowing,
     onPressShowAd,
+    uniqueKey,
+    generateNewUniqueKey,
   };
 }
