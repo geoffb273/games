@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { LinearGradient } from 'expo-linear-gradient';
@@ -45,7 +45,7 @@ export function DailyChallengesList({
       <DailyChallenge
         challenge={challenge}
         isSelected={challenge.id === activeChallengeId}
-        onPress={() => onSelectChallenge(challenge.id)}
+        onPress={onSelectChallenge}
       />
     ),
     [activeChallengeId, onSelectChallenge],
@@ -86,10 +86,14 @@ export function DailyChallengesList({
 type DailyChallengeProps = {
   challenge: DailyChallengeType;
   isSelected: boolean;
-  onPress: () => void;
+  onPress: (id: string) => void;
 };
 
-function DailyChallenge({ challenge, isSelected, onPress }: DailyChallengeProps) {
+const DailyChallenge = memo(function DailyChallenge({
+  challenge,
+  isSelected,
+  onPress,
+}: DailyChallengeProps) {
   const theme = useTheme();
 
   // Prefetch puzzles for the daily challenge
@@ -97,7 +101,7 @@ function DailyChallenge({ challenge, isSelected, onPress }: DailyChallengeProps)
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => onPress(challenge.id)}
       style={[
         styles.challengeChip,
         {
@@ -112,7 +116,7 @@ function DailyChallenge({ challenge, isSelected, onPress }: DailyChallengeProps)
       </Text>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   wrapper: {
