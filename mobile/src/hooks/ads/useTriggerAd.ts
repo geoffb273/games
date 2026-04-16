@@ -38,9 +38,11 @@ export function useTriggerAd({
     requestNonPersonalizedAdsOnly: true,
     serverSideVerificationOptions: {
       userId: user.id,
-      customData: JSON.stringify({
-        puzzleId,
-      }),
+      customData: encodeURIComponent(
+        JSON.stringify({
+          puzzleId,
+        }),
+      ),
     },
   });
 
