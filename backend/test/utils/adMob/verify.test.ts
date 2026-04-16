@@ -46,6 +46,32 @@ describe('verifyAdMobSsvQueryString', () => {
     expect(fetchAdMobKeys).toHaveBeenCalledTimes(1);
   });
 
+  it('retries with fresh keys when first verification fails and then succeeds', async () => {
+    const { publicKey: stalePublicKey } = generateKeyPairSync('ec', {
+      namedCurve: 'prime256v1',
+      publicKeyEncoding: { type: 'spki', format: 'der' },
+      privateKeyEncoding: { type: 'pkcs8', format: 'der' },
+    });
+    const { privateKey: freshPrivateKey, publicKey: freshPublicKey } = generateKeyPairSync('ec', {
+      namedCurve: 'prime256v1',
+      publicKeyEncoding: { type: 'spki', format: 'der' },
+      privateKeyEncoding: { type: 'pkcs8', format: 'der' },
+    });
+
+    vi.mocked(fetchAdMobKeys)
+      .mockResolvedValueOnce({ [TEST_KEY_ID]: stalePublicKey })
+      .mockResolvedValueOnce({ [TEST_KEY_ID]: freshPublicKey });
+
+    const content =
+      'ad_network=1&ad_unit=2&reward_amount=1&reward_item=x&timestamp=1&transaction_id=abc';
+    const query = buildSignedQuery(content, freshPrivateKey, TEST_KEY_ID);
+
+    await expect(verifyAdMobSsvQueryString({ rawQuery: query, logger })).resolves.toBeUndefined();
+    expect(fetchAdMobKeys).toHaveBeenCalledTimes(2);
+    expect(fetchAdMobKeys).toHaveBeenNthCalledWith(1, { logger });
+    expect(fetchAdMobKeys).toHaveBeenNthCalledWith(2, { logger, forceRefresh: true });
+  });
+
   it('rejects invalid signature', async () => {
     const { publicKey: mockPublicKey } = generateKeyPairSync('ec', {
       namedCurve: 'prime256v1',
@@ -69,6 +95,9 @@ describe('verifyAdMobSsvQueryString', () => {
     await expect(verifyAdMobSsvQueryString({ rawQuery: query, logger })).rejects.toBeInstanceOf(
       AdMobSsvVerificationError,
     );
+    expect(fetchAdMobKeys).toHaveBeenCalledTimes(2);
+    expect(fetchAdMobKeys).toHaveBeenNthCalledWith(1, { logger });
+    expect(fetchAdMobKeys).toHaveBeenNthCalledWith(2, { logger, forceRefresh: true });
   });
 
   it('rejects when signature parameter is missing', async () => {
