@@ -20,6 +20,16 @@ const adMobCustomDataSchema = z.object({
 
 export const adMobWebhookRouter: ExpressRouter = Router();
 
+function parseAdMobCustomData(customData: string): unknown {
+  try {
+    return JSON.parse(customData);
+  } catch {
+    // Mobile now URI-encodes custom_data before sending to AdMob.
+    const decoded = decodeURIComponent(customData);
+    return JSON.parse(decoded);
+  }
+}
+
 adMobWebhookRouter.get('/ad-mob-verification', async (req, res) => {
   const q = req.originalUrl.indexOf('?');
   const rawQuery = q === -1 ? '' : req.originalUrl.slice(q + 1);
@@ -83,7 +93,7 @@ function getRewardVerificationInput({
   let uniqueKey: string | undefined;
   if (customData != null) {
     try {
-      const customDataJson: unknown = JSON.parse(customData);
+      const customDataJson = parseAdMobCustomData(customData);
       const parsedCustomData = adMobCustomDataSchema.parse(customDataJson);
       puzzleId = parsedCustomData.puzzleId;
       uniqueKey = parsedCustomData.uniqueKey;
