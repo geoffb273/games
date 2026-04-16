@@ -1,8 +1,11 @@
+import { randomUUID } from 'expo-crypto';
 import { render, screen, userEvent, waitFor } from '@testing-library/react-native';
 
 import { PuzzleType } from '@/api/puzzle/puzzle';
 import { Text as MockText } from '@/components/common/Text';
 import { HintButton } from '@/components/game/HintButton';
+
+const UNIQUE_KEY = randomUUID();
 
 jest.mock('@/context/PlaytimeClockContext', () => {
   return {
@@ -65,6 +68,8 @@ function setupMocks(overrides?: {
   });
 
   mockUseTriggerAd.mockReturnValue({
+    uniqueKey: UNIQUE_KEY,
+    generateNewUniqueKey: jest.fn(),
     isDisabled: overrides?.isDisabled ?? false,
     isEarnedReward: overrides?.isEarnedReward,
     isShowing: false,
