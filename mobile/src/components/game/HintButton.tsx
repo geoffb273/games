@@ -32,14 +32,16 @@ export function HintButton<T extends PuzzleType>({ onHint, ...input }: HintButto
       resume();
     }
   });
-  const { isDisabled, isEarnedReward, onPressShowAd } = useTriggerAd({
-    puzzleId: input.puzzleId,
-    onFullscreenPresentedChange,
-  });
+  const { isDisabled, isEarnedReward, onPressShowAd, generateNewUniqueKey, uniqueKey } =
+    useTriggerAd({
+      puzzleId: input.puzzleId,
+      onFullscreenPresentedChange,
+    });
 
   const onHintPress = useStableCallback(async () => {
-    const hint = await requestPuzzleHint(input);
+    const hint = await requestPuzzleHint({ ...input, uniqueKey });
     onHint(hint as Extract<PuzzleHint, { puzzleType: T }>);
+    generateNewUniqueKey();
   });
 
   useEffect(() => {

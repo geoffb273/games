@@ -82,7 +82,7 @@ gql`
 `;
 
 export type UseRequestPuzzleHintResult = {
-  requestPuzzleHint: (input: RequestPuzzleHintInput) => Promise<PuzzleHint>;
+  requestPuzzleHint: (input: RequestPuzzleHintInput & { uniqueKey: string }) => Promise<PuzzleHint>;
   isLoading: boolean;
   isError: boolean;
 };
