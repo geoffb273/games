@@ -21,6 +21,10 @@ function formatDate(date: Date): string {
   });
 }
 
+function isChallengeFullyComplete(challenge: DailyChallengeType): boolean {
+  return challenge.puzzleCount > 0 && challenge.completedPuzzleCount >= challenge.puzzleCount;
+}
+
 type DailyChallengesListProps = {
   dailyChallenges: DailyChallengeType[];
   activeChallengeId: string | null;
@@ -95,9 +99,22 @@ const DailyChallenge = memo(function DailyChallenge({
   onPress,
 }: DailyChallengeProps) {
   const theme = useTheme();
+  const fullyComplete = isChallengeFullyComplete(challenge);
 
   // Prefetch puzzles for the daily challenge
   usePuzzlesQuery({ dailyChallengeId: challenge.id });
+
+  const backgroundColor = fullyComplete
+    ? theme.successSurface
+    : isSelected
+      ? theme.highlightWash
+      : theme.background;
+
+  const borderColor = isSelected
+    ? theme.accentInk
+    : fullyComplete
+      ? theme.success
+      : theme.borderSubtle;
 
   return (
     <Pressable
@@ -105,15 +122,21 @@ const DailyChallenge = memo(function DailyChallenge({
       style={[
         styles.challengeChip,
         {
-          backgroundColor: isSelected ? theme.highlightWash : theme.background,
-          borderColor: isSelected ? theme.accentInk : theme.borderSubtle,
+          backgroundColor,
+          borderColor,
         },
       ]}
     >
-      <Text type="body">{formatDate(challenge.date)}</Text>
-      <Text type="caption" color="textSecondary">
-        {`${challenge.completedPuzzleCount}/${challenge.puzzleCount} complete`}
-      </Text>
+      <View style={styles.challengeChipRow}>
+        <View style={styles.challengeChipText}>
+          <Text type="body">{formatDate(challenge.date)}</Text>
+          <Text type="caption" color={fullyComplete ? 'success' : 'textSecondary'}>
+            {fullyComplete
+              ? 'Complete'
+              : `${challenge.completedPuzzleCount}/${challenge.puzzleCount} complete`}
+          </Text>
+        </View>
+      </View>
     </Pressable>
   );
 });
@@ -147,6 +170,14 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     borderRadius: Radii.sm,
     borderWidth: 1,
+    alignItems: 'center',
+  },
+  challengeChipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  challengeChipText: {
     alignItems: 'center',
   },
 });
