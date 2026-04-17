@@ -77,7 +77,7 @@ export function DailyChallengesList({
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ListHeaderComponent={
-          lockedChallenge ? <DailyChallenge challenge={lockedChallenge} type="locked" /> : null
+          lockedChallenge && <DailyChallenge challenge={lockedChallenge} type="locked" />
         }
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.container}
@@ -124,6 +124,7 @@ const DailyChallenge = memo(function DailyChallenge({
 }: DailyChallengeProps) {
   const theme = useTheme();
   const isNormal = type === 'normal';
+  const isLocked = type === 'locked';
 
   // Prefetch puzzles for the daily challenge
   usePuzzlesQuery({ dailyChallengeId: challenge.id, enabled: isNormal });
@@ -138,7 +139,7 @@ const DailyChallenge = memo(function DailyChallenge({
           backgroundColor: isNormal && isSelected ? theme.highlightWash : theme.background,
           borderColor: isNormal && isSelected ? theme.accentInk : theme.borderSubtle,
         },
-        !isNormal && styles.lockedChip,
+        isLocked && styles.lockedChip,
       ]}
     >
       <Text type="body">{formatDate(challenge.date)}</Text>
@@ -147,9 +148,7 @@ const DailyChallenge = memo(function DailyChallenge({
           {`${challenge.completedPuzzleCount}/${challenge.puzzleCount} complete`}
         </Text>
       )}
-      {type === 'locked' && (
-        <MaterialCommunityIcons name="lock" size={14} color={theme.textSecondary} />
-      )}
+      {isLocked && <MaterialCommunityIcons name="lock" size={14} color={theme.textSecondary} />}
     </Pressable>
   );
 });
