@@ -1,7 +1,8 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { type DailyChallenge as DailyChallengeType } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { usePuzzlesQuery } from '@/api/puzzle/puzzlesQuery';
@@ -39,11 +40,26 @@ export function DailyChallengesList({
   onEndReached,
 }: DailyChallengesListProps) {
   const theme = useTheme();
+  const lockedChallenge = useMemo<DailyChallengeType | null>(() => {
+    const latestChallenge = dailyChallenges[0];
+    if (!latestChallenge) return null;
+
+    const nextDate = new Date(latestChallenge.date);
+    nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+
+    return {
+      id: 'locked-next',
+      date: nextDate,
+      completedPuzzleCount: 0,
+      puzzleCount: 0,
+    };
+  }, [dailyChallenges]);
 
   const renderItem = useCallback(
     ({ item: challenge }: { item: DailyChallengeType }) => (
       <DailyChallenge
         challenge={challenge}
+        type="normal"
         isSelected={challenge.id === activeChallengeId}
         onPress={onSelectChallenge}
       />
@@ -60,6 +76,9 @@ export function DailyChallengesList({
         data={dailyChallenges}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        ListHeaderComponent={
+          lockedChallenge ? <DailyChallenge challenge={lockedChallenge} type="locked" /> : null
+        }
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.container}
         onEndReached={hasNextPage ? onEndReached : undefined}
@@ -83,37 +102,54 @@ export function DailyChallengesList({
   );
 }
 
-type DailyChallengeProps = {
+type BaseDailyChallengeProps = {
   challenge: DailyChallengeType;
-  isSelected: boolean;
-  onPress: (id: string) => void;
 };
+
+type DailyChallengeProps = BaseDailyChallengeProps &
+  (
+    | {
+        isSelected: boolean;
+        onPress: (id: string) => void;
+        type: 'normal';
+      }
+    | { isSelected?: never; onPress?: never; type: 'locked' }
+  );
 
 const DailyChallenge = memo(function DailyChallenge({
   challenge,
   isSelected,
   onPress,
+  type,
 }: DailyChallengeProps) {
   const theme = useTheme();
+  const isNormal = type === 'normal';
 
   // Prefetch puzzles for the daily challenge
-  usePuzzlesQuery({ dailyChallengeId: challenge.id });
+  usePuzzlesQuery({ dailyChallengeId: challenge.id, enabled: isNormal });
 
   return (
     <Pressable
-      onPress={() => onPress(challenge.id)}
+      disabled={!isNormal}
+      onPress={() => isNormal && onPress(challenge.id)}
       style={[
         styles.challengeChip,
         {
-          backgroundColor: isSelected ? theme.highlightWash : theme.background,
-          borderColor: isSelected ? theme.accentInk : theme.borderSubtle,
+          backgroundColor: isNormal && isSelected ? theme.highlightWash : theme.background,
+          borderColor: isNormal && isSelected ? theme.accentInk : theme.borderSubtle,
         },
+        !isNormal && styles.lockedChip,
       ]}
     >
       <Text type="body">{formatDate(challenge.date)}</Text>
-      <Text type="caption" color="textSecondary">
-        {`${challenge.completedPuzzleCount}/${challenge.puzzleCount} complete`}
-      </Text>
+      {isNormal && (
+        <Text type="caption" color="textSecondary">
+          {`${challenge.completedPuzzleCount}/${challenge.puzzleCount} complete`}
+        </Text>
+      )}
+      {type === 'locked' && (
+        <MaterialCommunityIcons name="lock" size={14} color={theme.textSecondary} />
+      )}
     </Pressable>
   );
 });
@@ -148,5 +184,9 @@ const styles = StyleSheet.create({
     borderRadius: Radii.sm,
     borderWidth: 1,
     alignItems: 'center',
+  },
+  lockedChip: {
+    gap: Spacing.one,
+    opacity: 0.7,
   },
 });
