@@ -127,6 +127,8 @@ export const HashiIsland = memo(function HashiIsland({
     transform: [{ translateX: shakeProgress.value }, { scale: scaleProgress.value }],
   }));
 
+  const textSize = cellSize <= 24 ? 'xs' : cellSize < 32 ? 'sm' : 'md';
+
   return (
     <Animated.View
       style={[
@@ -147,7 +149,7 @@ export const HashiIsland = memo(function HashiIsland({
         disabled={isDisabled || isCompletionWaveActive}
         style={styles.islandPressable}
       >
-        <Text type="emphasized_body" color={isAtMax ? 'background' : 'text'}>
+        <Text size={textSize} fontWeight="semibold" color={isAtMax ? 'background' : 'text'}>
           {requiredBridges}
         </Text>
       </Pressable>
