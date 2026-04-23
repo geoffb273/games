@@ -69,9 +69,9 @@ export function FlowCell({
 
     scale.value = withSequence(
       withTiming(1, { duration: (row + col) * SUCCESS_COMPLETION_WAVE_DELAY_MS }),
-      withTiming(1.1, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.firstPulse }),
+      withTiming(1.2, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.firstPulse }),
       withTiming(0.95, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.settle }),
-      withTiming(1.15, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.bounce }),
+      withTiming(1.3, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.bounce }),
       withTiming(1, { duration: SUCCESS_COMPLETION_WAVE_DURATIONS_MS.finalSettle }, notifyComplete),
     );
   }, [isCompletionWaveActive, row, col, scale, isLastInWave, stableOnWaveComplete]);
