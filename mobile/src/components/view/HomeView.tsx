@@ -4,11 +4,10 @@ import { StyleSheet, View } from 'react-native';
 import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { usePuzzlesQuery } from '@/api/puzzle/puzzlesQuery';
 import { ErrorView } from '@/components/common/ErrorView';
-import { Text } from '@/components/common/Text';
-import { DailyChallengesList } from '@/components/DailyChallengesList';
+import { HomeHeader } from '@/components/home/HomeHeader';
 import { FlatListLayout } from '@/components/layout/FlatListLayout';
 import { PuzzleCard, PuzzleListEmptyState } from '@/components/PuzzleCard';
-import { Radii, Spacing } from '@/constants/token';
+import { Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 
 export function HomeView() {
@@ -51,28 +50,13 @@ export function HomeView() {
   return (
     <FlatListLayout
       header={
-        <View style={styles.headerContainer}>
-          <View style={styles.header}>
-            <View
-              style={[
-                styles.headerTitleBadge,
-                {
-                  backgroundColor: theme.highlightWash,
-                  borderColor: theme.borderSubtle,
-                },
-              ]}
-            >
-              <Text type="h2">Game Brain</Text>
-            </View>
-          </View>
-          <DailyChallengesList
-            dailyChallenges={dailyChallenges}
-            activeChallengeId={activeChallengeId}
-            onSelectChallenge={handleSelectChallenge}
-            hasNextPage={hasNextPage}
-            onEndReached={fetchMore}
-          />
-        </View>
+        <HomeHeader
+          dailyChallenges={dailyChallenges}
+          activeChallengeId={activeChallengeId}
+          onSelectChallenge={handleSelectChallenge}
+          hasNextPage={hasNextPage}
+          onEndReached={fetchMore}
+        />
       }
       data={puzzles ?? []}
       renderItem={({ item }) => <PuzzleCard puzzle={item} />}
@@ -91,19 +75,6 @@ export function HomeView() {
 }
 
 const styles = StyleSheet.create({
-  headerContainer: {
-    gap: Spacing.two,
-  },
-  header: {
-    gap: Spacing.half,
-    paddingBottom: Spacing.two,
-  },
-  headerTitleBadge: {
-    borderRadius: Radii.lg,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    borderWidth: 1,
-  },
   puzzleList: {
     paddingHorizontal: Spacing.three,
     rowGap: Spacing.one,

@@ -156,16 +156,9 @@ export async function getDailyChallengeMaxStreakForUser({
         AND COUNT(*) = COUNT(upa."id")
         AND COUNT(*) = COUNT(*) FILTER (
           WHERE (
-            (
-              (upa."startedAt" AT TIME ZONE 'UTC')
-              AT TIME ZONE 'America/New_York'
-            )::date
-            =
-            (
-              ((dc."date"::timestamp AT TIME ZONE 'UTC')
-              AT TIME ZONE 'America/New_York')
-            )::date
-          )
+            (upa."startedAt" AT TIME ZONE 'UTC')
+            AT TIME ZONE 'America/New_York'
+          )::date = dc."date"
         )
     ),
     grouped AS (
@@ -206,16 +199,9 @@ export async function getDailyChallengeCurrentStreakForUser({
         AND COUNT(*) = COUNT(upa."id")
         AND COUNT(*) = COUNT(*) FILTER (
           WHERE (
-            (
-              (upa."startedAt" AT TIME ZONE 'UTC')
-              AT TIME ZONE 'America/New_York'
-            )::date
-            =
-            (
-              ((dc."date"::timestamp AT TIME ZONE 'UTC')
-              AT TIME ZONE 'America/New_York')
-            )::date
-          )
+            (upa."startedAt" AT TIME ZONE 'UTC')
+            AT TIME ZONE 'America/New_York'
+          )::date = dc."date"
         )
     ),
     anchor AS (

@@ -28,6 +28,12 @@ function addUtcDays(date: Date, days: number): Date {
   return result;
 }
 
+function atNoonUtc(date: Date): Date {
+  const result = new Date(date);
+  result.setUTCHours(12, 0, 0, 0);
+  return result;
+}
+
 async function createAttemptedDailyChallengeForUser({
   userId,
   date,
@@ -60,7 +66,7 @@ async function createAttemptedDailyChallengeForUser({
       data: {
         userId,
         puzzleId: hanjiPuzzle.id,
-        startedAt: new Date(date),
+        startedAt: atNoonUtc(date),
         completedAt: addUtcDays(date, 1),
         durationMs: 1000,
       },
@@ -69,7 +75,7 @@ async function createAttemptedDailyChallengeForUser({
       data: {
         userId,
         puzzleId: flowPuzzle.id,
-        startedAt: qualifies ? new Date(date) : addUtcDays(date, 2),
+        startedAt: qualifies ? atNoonUtc(date) : addUtcDays(date, 2),
         completedAt: addUtcDays(date, 1),
         durationMs: 1000,
       },
@@ -105,7 +111,7 @@ async function createPartiallyAttemptedDailyChallengeForUser({
     data: {
       userId,
       puzzleId: attemptedPuzzle.id,
-      startedAt: new Date(date),
+      startedAt: atNoonUtc(date),
       completedAt: addUtcDays(date, 1),
       durationMs: 1000,
     },
@@ -239,6 +245,59 @@ describe('getDailyChallengeStreakForUser', () => {
     const currentStreak = await getDailyChallengeCurrentStreakForUser({ userId: user.id });
 
     expect(currentStreak).toBe(0);
+  });
+
+  it('counts today when attempts started the same NY day at a non-midnight UTC time', async () => {
+    // Regression: before the fix, dc.date was converted UTC->NY which shifted it
+    // back one day and caused same-day completions to not qualify, returning 0.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2050-01-10T20:00:00.000Z'));
+    const user = await createTestUser();
+    const today = getTodayInAmericaNewYorkAsUtcMidnight();
+
+    const dailyChallenge = await createTestDailyChallenge({ date: today });
+    const [hanjiPuzzle, flowPuzzle] = await Promise.all([
+      prisma.puzzle.create({
+        data: {
+          dailyChallengeId: dailyChallenge.id,
+          type: 'HANJI',
+          data: MINIMAL_HANJI_DATA,
+        },
+      }),
+      prisma.puzzle.create({
+        data: {
+          dailyChallengeId: dailyChallenge.id,
+          type: 'FLOW',
+          data: MINIMAL_FLOW_DATA,
+        },
+      }),
+    ]);
+
+    const startedAt = new Date('2050-01-10T20:00:00.000Z');
+    await Promise.all([
+      prisma.userPuzzleAttempt.create({
+        data: {
+          userId: user.id,
+          puzzleId: hanjiPuzzle.id,
+          startedAt,
+          completedAt: startedAt,
+          durationMs: 1000,
+        },
+      }),
+      prisma.userPuzzleAttempt.create({
+        data: {
+          userId: user.id,
+          puzzleId: flowPuzzle.id,
+          startedAt,
+          completedAt: startedAt,
+          durationMs: 1000,
+        },
+      }),
+    ]);
+
+    const currentStreak = await getDailyChallengeCurrentStreakForUser({ userId: user.id });
+
+    expect(currentStreak).toBe(1);
   });
 
   it('does not count partially completed daily challenges toward streaks', async () => {
