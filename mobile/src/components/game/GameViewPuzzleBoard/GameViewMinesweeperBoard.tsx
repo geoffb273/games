@@ -27,7 +27,7 @@ export function GameViewMinesweeperBoard({
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzle.id });
-  const { refetch } = useDailyChallengesQuery();
+  const { optimisticallyUpdateDailyChallenge } = useDailyChallengesQuery({ cacheOnly: true });
 
   const cellSize = useMemo(() => {
     const availW = screenWidth - Spacing.four * 2;
@@ -55,7 +55,12 @@ export function GameViewMinesweeperBoard({
         startedAt,
         ...(completedAt != null && durationMs != null && { completedAt, durationMs }),
         minesweeperSolution,
-      }).then(refetch);
+      }).then(() => {
+        optimisticallyUpdateDailyChallenge({
+          id: puzzle.dailyChallengeId,
+          update: (prev) => ({ ...prev, completedPuzzleCount: prev.completedPuzzleCount + 1 }),
+        });
+      });
     },
   );
 
