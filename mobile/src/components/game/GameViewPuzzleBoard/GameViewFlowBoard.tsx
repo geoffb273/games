@@ -23,7 +23,7 @@ export function GameViewFlowBoard({ puzzle, onAnimationComplete }: GameViewFlowB
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzle.id });
-  const { refetch } = useDailyChallengesQuery();
+  const { optimisticallyUpdateDailyChallenge } = useDailyChallengesQuery({ cacheOnly: true });
 
   const { cellSize } = useMemo(() => {
     const availW = screenWidth - Spacing.four * 2;
@@ -59,7 +59,12 @@ export function GameViewFlowBoard({ puzzle, onAnimationComplete }: GameViewFlowB
         completedAt,
         durationMs,
         flowSolution,
-      }).then(refetch);
+      }).then(() => {
+        optimisticallyUpdateDailyChallenge({
+          id: puzzle.dailyChallengeId,
+          update: (prev) => ({ ...prev, completedPuzzleCount: prev.completedPuzzleCount + 1 }),
+        });
+      });
     },
   );
 

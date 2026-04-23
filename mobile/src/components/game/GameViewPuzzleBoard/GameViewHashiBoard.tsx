@@ -24,7 +24,7 @@ export function GameViewHashiBoard({ puzzle, onAnimationComplete }: GameViewHash
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzle.id });
-  const { refetch } = useDailyChallengesQuery();
+  const { optimisticallyUpdateDailyChallenge } = useDailyChallengesQuery({ cacheOnly: true });
 
   const { cellSize, boardWidth, boardHeight } = useMemo(() => {
     const availW = screenWidth - Spacing.four * 2 - CELL_GAP;
@@ -59,7 +59,12 @@ export function GameViewHashiBoard({ puzzle, onAnimationComplete }: GameViewHash
       completedAt,
       durationMs,
       hashiSolution,
-    }).then(refetch);
+    }).then(() => {
+      optimisticallyUpdateDailyChallenge({
+        id: puzzle.dailyChallengeId,
+        update: (prev) => ({ ...prev, completedPuzzleCount: prev.completedPuzzleCount + 1 }),
+      });
+    });
   });
 
   return (

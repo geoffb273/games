@@ -24,7 +24,7 @@ export function GameViewHanjiBoard({ puzzle, onAnimationComplete }: GameViewHanj
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzle.id });
-  const { refetch } = useDailyChallengesQuery();
+  const { optimisticallyUpdateDailyChallenge } = useDailyChallengesQuery({ cacheOnly: true });
 
   const { cellSize, rowClueWidth, colClueHeight, boardWidth } = useMemo(() => {
     const maxRowClueLen = Math.max(0, ...puzzle.rowClues.map((r) => r.length));
@@ -75,7 +75,12 @@ export function GameViewHanjiBoard({ puzzle, onAnimationComplete }: GameViewHanj
         completedAt,
         durationMs,
         hanjiSolution,
-      }).then(refetch);
+      }).then(() => {
+        optimisticallyUpdateDailyChallenge({
+          id: puzzle.dailyChallengeId,
+          update: (prev) => ({ ...prev, completedPuzzleCount: prev.completedPuzzleCount + 1 }),
+        });
+      });
     },
   );
 
