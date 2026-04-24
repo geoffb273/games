@@ -12,10 +12,6 @@ on:
       - "mobile/**"
       - "shared/**"
 
-defaults:
-  run:
-    working-directory: mobile
-
 jobs:
   lint_typecheck:
     name: Lint & Typecheck
@@ -25,25 +21,23 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: mobile/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --filter game-brain-mobile...
 
       - name: Generate GraphQL types
-        run: pnpm generate
+        run: pnpm --filter game-brain-mobile generate
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm --filter game-brain-mobile lint
 
       - name: Typecheck
-        run: pnpm tsc
+        run: pnpm --filter game-brain-mobile tsc
 
   test:
     name: Test
@@ -53,19 +47,17 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: mobile/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --filter game-brain-mobile...
 
       - name: Generate GraphQL types
-        run: pnpm generate
+        run: pnpm --filter game-brain-mobile generate
 
       - name: Test
-        run: pnpm test:ci
+        run: pnpm --filter game-brain-mobile test:ci

@@ -1,5 +1,5 @@
 {
-  "name": "game-brain",
+  "name": "game-brain-deployment",
   "main": "index.ts",
   "scripts": {
     "build:lambdas": "node build-lambdas.mjs"
@@ -14,5 +14,7 @@
     "@pulumi/aws": "^7.0.0",
     "@pulumi/awsx": "^3.0.0",
     "@pulumi/pulumi": "^3.113.0"
-  }
+  },
+  "private": true,
+  "packageManager": "pnpm@10.30.3"
 }
