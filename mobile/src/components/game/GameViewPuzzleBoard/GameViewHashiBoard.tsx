@@ -5,6 +5,7 @@ import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQue
 import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { useSolvePuzzle } from '@/api/puzzle/solvePuzzleMutation';
+import { useUserStreakQuery } from '@/api/user/userStreakQuery';
 import {
   AVAILABLE_HEIGHT_RATIO,
   CELL_GAP,
@@ -25,6 +26,7 @@ export function GameViewHashiBoard({ puzzle, onAnimationComplete }: GameViewHash
   const { solvePuzzle } = useSolvePuzzle();
   const { updateOptimisticallyPuzzleAttempt } = usePuzzleQuery({ id: puzzle.id });
   const { optimisticallyUpdateDailyChallenge } = useDailyChallengesQuery({ cacheOnly: true });
+  const { refetch } = useUserStreakQuery({ cacheOnly: true });
 
   const { cellSize, boardWidth, boardHeight } = useMemo(() => {
     const availW = screenWidth - Spacing.four * 2 - CELL_GAP;
@@ -52,19 +54,36 @@ export function GameViewHashiBoard({ puzzle, onAnimationComplete }: GameViewHash
       durationMs,
     });
 
-    await solvePuzzle({
-      puzzleId: puzzle.id,
-      puzzleType: PuzzleType.Hashi,
-      startedAt,
-      completedAt,
-      durationMs,
-      hashiSolution,
-    }).then(() => {
-      optimisticallyUpdateDailyChallenge({
-        id: puzzle.dailyChallengeId,
-        update: (prev) => ({ ...prev, completedPuzzleCount: prev.completedPuzzleCount + 1 }),
-      });
+    const updatedDailyChallenge = optimisticallyUpdateDailyChallenge({
+      id: puzzle.dailyChallengeId,
+      update: (prev) => ({ ...prev, completedPuzzleCount: prev.completedPuzzleCount + 1 }),
     });
+
+    try {
+      await solvePuzzle({
+        puzzleId: puzzle.id,
+        puzzleType: PuzzleType.Hashi,
+        startedAt,
+        completedAt,
+        durationMs,
+        hashiSolution,
+      });
+    } catch (error) {
+      if (updatedDailyChallenge != null) {
+        optimisticallyUpdateDailyChallenge({
+          id: puzzle.dailyChallengeId,
+          update: (prev) => ({ ...prev, completedPuzzleCount: prev.completedPuzzleCount - 1 }),
+        });
+      }
+      throw error;
+    }
+
+    if (updatedDailyChallenge != null) {
+      const { puzzleCount, completedPuzzleCount } = updatedDailyChallenge;
+      if (completedPuzzleCount === puzzleCount) {
+        void refetch();
+      }
+    }
   });
 
   return (

@@ -59,7 +59,7 @@ type UseDailyChallengesQueryResult = {
   optimisticallyUpdateDailyChallenge: (args: {
     id: string;
     update: (prev: DailyChallengeNode) => DailyChallengeNode;
-  }) => void;
+  }) => DailyChallenge | null;
 };
 
 export function useDailyChallengesQuery({
@@ -110,20 +110,26 @@ export function useDailyChallengesQuery({
   });
 
   const optimisticallyUpdateDailyChallenge = useStableCallback(
-    ({ id, update }: { id: string; update: (prev: DailyChallengeNode) => DailyChallengeNode }) => {
+    ({
+      id,
+      update,
+    }: {
+      id: string;
+      update: (prev: DailyChallengeNode) => DailyChallengeNode;
+    }): DailyChallenge | null => {
       // Each DailyChallenge is normalized in the cache by id, so writing the fragment directly
       // updates every active query (including all paginated pages of `dailyChallenges`) that
       // references this entity. This avoids the limitation of `updateQuery`, whose callback only
       // sees the current window of data for the specific variables passed to `useQuery`.
       const cacheId = client.cache.identify({ __typename: 'DailyChallenge', id });
-      if (cacheId == null) return;
+      if (cacheId == null) return null;
 
       const prev = client.cache.readFragment<DailyChallengeNode>({
         id: cacheId,
         fragment: DailyChallengeFragmentFragmentDoc,
         fragmentName: 'DailyChallengeFragment',
       });
-      if (prev == null) return;
+      if (prev == null) return null;
 
       const next = update(prev);
       client.cache.writeFragment<DailyChallengeNode>({
@@ -131,6 +137,8 @@ export function useDailyChallengesQuery({
         fragment: DailyChallengeFragmentFragmentDoc,
         data: { __typename: 'DailyChallenge', ...next },
       });
+
+      return next;
     },
   );
 
