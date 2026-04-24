@@ -1,14 +1,14 @@
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
-
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 
 import { type DailyChallenge } from '@/api/dailyChallenge/dailyChallengesQuery';
-import { useUserStreakQuery } from '@/api/user/userStreakQuery';
 import { Text } from '@/components/common/Text';
 import { DailyChallengesList } from '@/components/DailyChallengesList';
 import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
+
+import { INITIAL_ANIMATION_DURATION } from './constants';
+import { UserStreak } from './UserStreak';
 
 type HomeHeaderProps = {
   dailyChallenges: DailyChallenge[];
@@ -17,8 +17,6 @@ type HomeHeaderProps = {
   hasNextPage: boolean;
   onEndReached: () => void;
 };
-
-const ANIMATION_DURATION = 300;
 
 export function HomeHeader({
   dailyChallenges,
@@ -34,7 +32,7 @@ export function HomeHeader({
       <View style={styles.header}>
         <View style={styles.headerTitleContainer}>
           <Animated.View
-            layout={LinearTransition.duration(ANIMATION_DURATION)}
+            layout={LinearTransition.duration(INITIAL_ANIMATION_DURATION)}
             style={[
               styles.headerTitleBadge,
               {
@@ -59,35 +57,6 @@ export function HomeHeader({
   );
 }
 
-function UserStreak() {
-  const theme = useTheme();
-  const { streak, isLoading } = useUserStreakQuery();
-
-  const currentStreak = streak?.current ?? 0;
-
-  if (isLoading || currentStreak === 0) {
-    return null;
-  }
-
-  return (
-    <Animated.View
-      entering={FadeIn.duration(ANIMATION_DURATION).delay(ANIMATION_DURATION)}
-      style={[
-        styles.streakBadge,
-        {
-          backgroundColor: theme.warningSurface,
-          borderColor: theme.borderSubtle,
-        },
-      ]}
-    >
-      <MaterialCommunityIcons name="fire" size={18} color={theme.warning} />
-      <Text type="emphasized_body" _colorOverride={theme.warning}>
-        {currentStreak}
-      </Text>
-    </Animated.View>
-  );
-}
-
 const styles = StyleSheet.create({
   headerContainer: {
     gap: Spacing.two,
@@ -108,15 +77,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
-  },
-  streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.one,
-    borderRadius: Radii.lg,
-    borderWidth: 1,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    height: '100%',
   },
 });

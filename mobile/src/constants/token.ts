@@ -54,3 +54,9 @@ export const Fonts = {
   /** Kaushan Script – display/logo (loaded via expo-font in app.json) */
   display: 'KaushanScript_400Regular',
 };
+
+export const ZIndex = {
+  above: 1,
+  below: -1,
+  stickyHeader: 100,
+} as const;
