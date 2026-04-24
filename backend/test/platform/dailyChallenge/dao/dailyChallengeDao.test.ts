@@ -300,7 +300,7 @@ describe('getDailyChallengeStreakForUser', () => {
     expect(currentStreak).toBe(1);
   });
 
-  it('does not count partially completed daily challenges toward streaks', async () => {
+  it('counts partially completed daily challenges toward streaks', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2050-05-10T12:00:00.000Z'));
     const user = await createTestUser();
@@ -324,7 +324,38 @@ describe('getDailyChallengeStreakForUser', () => {
     const currentStreak = await getDailyChallengeCurrentStreakForUser({ userId: user.id });
     const maxStreak = await getDailyChallengeMaxStreakForUser({ userId: user.id });
 
-    expect(currentStreak).toBe(1);
-    expect(maxStreak).toBe(1);
+    expect(currentStreak).toBe(3);
+    expect(maxStreak).toBe(3);
+  });
+
+  it('does not count daily challenges with zero same-day attempts toward streaks', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2050-06-10T12:00:00.000Z'));
+    const user = await createTestUser();
+    const today = getTodayInAmericaNewYorkAsUtcMidnight();
+
+    const dailyChallenge = await createTestDailyChallenge({ date: addUtcDays(today, -1) });
+    const puzzle = await prisma.puzzle.create({
+      data: {
+        dailyChallengeId: dailyChallenge.id,
+        type: 'HANJI',
+        data: MINIMAL_HANJI_DATA,
+      },
+    });
+    await prisma.userPuzzleAttempt.create({
+      data: {
+        userId: user.id,
+        puzzleId: puzzle.id,
+        startedAt: addUtcDays(today, 1),
+        completedAt: addUtcDays(today, 1),
+        durationMs: 1000,
+      },
+    });
+
+    const currentStreak = await getDailyChallengeCurrentStreakForUser({ userId: user.id });
+    const maxStreak = await getDailyChallengeMaxStreakForUser({ userId: user.id });
+
+    expect(currentStreak).toBe(0);
+    expect(maxStreak).toBe(0);
   });
 });

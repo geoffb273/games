@@ -145,20 +145,18 @@ export async function getDailyChallengeMaxStreakForUser({
     WITH RECURSIVE qualifying AS (
       SELECT dc."date" AS "challengeDate"
       FROM "DailyChallenge" dc
-      JOIN "Puzzle" p ON p."dailyChallengeId" = dc."id"
-      LEFT JOIN "UserPuzzleAttempt" upa
-        ON upa."puzzleId" = p."id"
-       AND upa."userId" = ${userId}::uuid
       WHERE dc."date" <= ${todayEstAsUtcMidnight}::date
-      GROUP BY dc."id", dc."date"
-      HAVING
-        COUNT(*) > 0
-        AND COUNT(*) = COUNT(upa."id")
-        AND COUNT(*) = COUNT(*) FILTER (
-          WHERE (
-            (upa."startedAt" AT TIME ZONE 'UTC')
-            AT TIME ZONE 'America/New_York'
-          )::date = dc."date"
+        AND EXISTS (
+          SELECT 1
+          FROM "Puzzle" p
+          JOIN "UserPuzzleAttempt" upa
+            ON upa."puzzleId" = p."id"
+           AND upa."userId" = ${userId}::uuid
+          WHERE p."dailyChallengeId" = dc."id"
+            AND (
+              (upa."startedAt" AT TIME ZONE 'UTC')
+              AT TIME ZONE 'America/New_York'
+            )::date = dc."date"
         )
     ),
     grouped AS (
@@ -188,20 +186,18 @@ export async function getDailyChallengeCurrentStreakForUser({
     WITH RECURSIVE qualifying AS (
       SELECT dc."date" AS "challengeDate"
       FROM "DailyChallenge" dc
-      JOIN "Puzzle" p ON p."dailyChallengeId" = dc."id"
-      LEFT JOIN "UserPuzzleAttempt" upa
-        ON upa."puzzleId" = p."id"
-       AND upa."userId" = ${userId}::uuid
       WHERE dc."date" <= ${todayEstAsUtcMidnight}::date
-      GROUP BY dc."id", dc."date"
-      HAVING
-        COUNT(*) > 0
-        AND COUNT(*) = COUNT(upa."id")
-        AND COUNT(*) = COUNT(*) FILTER (
-          WHERE (
-            (upa."startedAt" AT TIME ZONE 'UTC')
-            AT TIME ZONE 'America/New_York'
-          )::date = dc."date"
+        AND EXISTS (
+          SELECT 1
+          FROM "Puzzle" p
+          JOIN "UserPuzzleAttempt" upa
+            ON upa."puzzleId" = p."id"
+           AND upa."userId" = ${userId}::uuid
+          WHERE p."dailyChallengeId" = dc."id"
+            AND (
+              (upa."startedAt" AT TIME ZONE 'UTC')
+              AT TIME ZONE 'America/New_York'
+            )::date = dc."date"
         )
     ),
     anchor AS (
