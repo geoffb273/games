@@ -1,4 +1,12 @@
 {
+	"name": "game-brain-repo",
+	"private": true,
+	"packageManager": "pnpm@10.30.3",
+	"scripts": {
+		"backend": "pnpm --filter backend",
+		"mobile": "pnpm --filter game-brain-mobile",
+		"deployment": "pnpm --filter game-brain-deployment"
+	},
 	"devDependencies": {
 		"@eslint/js": "^9.22.0",
 		"eslint": "^9.22.0",

@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-          cache-dependency-path: backend/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v6
@@ -57,13 +57,14 @@ jobs:
       - name: Build and push Docker image (multi-arch)
         uses: docker/build-push-action@v7
         with:
-          context: ./backend
+          context: .
+          file: ./backend/Dockerfile
           push: true
           tags: ${{ steps.aws-account.outputs.ecr_uri }}
           platforms: linux/amd64,linux/arm64
 
       - name: Install deployment dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --filter game-brain-deployment...
         working-directory: backend/deployment
 
       - name: Build lambda artifacts
@@ -82,11 +83,11 @@ jobs:
 
       - name: Force ECS deployment (run latest image)
         run: |
-          cd backend/deployment
           pnpm exec pulumi stack select ${{ env.PULUMI_STACK }}
           CLUSTER=$(pnpm exec pulumi stack output ecsClusterName)
           SERVICE=$(pnpm exec pulumi stack output ecsServiceName)
           aws ecs update-service --cluster "$CLUSTER" --service "$SERVICE" --force-new-deployment --region ${{ env.AWS_REGION }}
+        working-directory: backend/deployment
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 

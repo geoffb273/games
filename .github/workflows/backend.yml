@@ -12,10 +12,6 @@ on:
       - 'backend/**'
       - 'shared/**'
 
-defaults:
-  run:
-    working-directory: backend
-
 jobs:
   lint_typecheck:
     name: Lint & Typecheck
@@ -55,12 +51,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: backend/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --filter backend...
 
       - name: Generate prisma client
-        run: pnpm generate
+        run: pnpm --filter backend generate
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
           DIRECT_URL: ${{ env.DIRECT_URL }}
@@ -73,10 +69,10 @@ jobs:
           REDIS_PORT: ${{ env.REDIS_PORT }}
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm --filter backend lint
 
       - name: Typecheck
-        run: pnpm tsc
+        run: pnpm --filter backend tsc
 
   test:
     name: Test
@@ -125,12 +121,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: backend/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --filter backend...
 
       - name: Generate prisma client
-        run: pnpm generate
+        run: pnpm --filter backend generate
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
           DIRECT_URL: ${{ env.DIRECT_URL }}
@@ -143,7 +139,7 @@ jobs:
           REDIS_PORT: ${{ env.REDIS_PORT }}
 
       - name: Test
-        run: pnpm test
+        run: pnpm --filter backend test
 
   schema:
     name: Check Schema Sync
@@ -183,12 +179,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: backend/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --filter backend...
 
       - name: Generate prisma client
-        run: pnpm generate
+        run: pnpm --filter backend generate
         env:
           DATABASE_URL: ${{ env.DATABASE_URL }}
           DIRECT_URL: ${{ env.DIRECT_URL }}
@@ -201,4 +197,4 @@ jobs:
           REDIS_PORT: ${{ env.REDIS_PORT }}
 
       - name: Check schema is in sync
-        run: pnpm check:schema
+        run: pnpm --filter backend check:schema

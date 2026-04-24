@@ -1,6 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -37,7 +38,9 @@
     "newrelic": "^13.17.0",
     "pg": "^8.19.0",
     "pino": "^10.3.1",
+    "prisma": "^7.4.2",
     "redis": "^5.11.0",
+    "tsx": "^4.19.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -51,8 +54,6 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "prisma": "^7.4.2",
-    "tsx": "^4.19.3",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.56.1",
     "vitest": "^4.0.18"
