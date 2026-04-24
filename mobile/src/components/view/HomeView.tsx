@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQuery';
 import { usePuzzlesQuery } from '@/api/puzzle/puzzlesQuery';
 import { ErrorView } from '@/components/common/ErrorView';
-import { HomeHeader } from '@/components/home/HomeHeader';
+import { HomeHeader } from '@/components/home/HomeHeader/HomeHeader';
 import { FlatListLayout } from '@/components/layout/FlatListLayout';
 import { PuzzleCard, PuzzleListEmptyState } from '@/components/PuzzleCard';
 import { Spacing } from '@/constants/token';

@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { type Edge, SafeAreaView } from 'react-native-safe-area-context';
 
+import { ZIndex } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 
 /**
@@ -41,6 +42,7 @@ export function FlatListLayout<T extends { id: string | number }>({
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
         ListHeaderComponent={header}
+        ListHeaderComponentStyle={header ? styles.listHeader : undefined}
         ListFooterComponent={footer}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
@@ -56,6 +58,9 @@ export function FlatListLayout<T extends { id: string | number }>({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  listHeader: {
+    zIndex: ZIndex.stickyHeader,
   },
   safeArea: {
     flex: 1,
