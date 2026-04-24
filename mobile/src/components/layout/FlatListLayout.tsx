@@ -47,6 +47,7 @@ export function FlatListLayout<T extends { id: string | number }>({
         style={styles.container}
         contentContainerStyle={contentContainerStyle}
         ListEmptyComponent={ListEmptyComponent}
+        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
