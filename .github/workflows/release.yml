@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 1.1.5). Leave empty to use the version from mobile/app.config.ts."
+        required: false
+        type: string
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          VERSION="${INPUT_VERSION:-}"
+          if [ -z "$VERSION" ]; then
+            VERSION=$(grep -E "^[[:space:]]*version:" mobile/app.config.ts \
+              | head -n1 \
+              | sed -E "s/.*version:[[:space:]]*['\"]([^'\"]+)['\"].*/\1/")
+          fi
+          VERSION="${VERSION#v}"
+          if [ -z "$VERSION" ]; then
+            echo "Could not resolve a version from input or mobile/app.config.ts" >&2
+            exit 1
+          fi
+          TAG="v$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "title=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION (tag: $TAG)"
+
+      - name: Ensure tag does not already exist
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists." >&2
+            exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "Tag $TAG already exists in the repository." >&2
+            exit 1
+          fi
+
+      - name: Find previous release tag
+        id: previous
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          PREVIOUS_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // ""')
+          echo "previous_tag=$PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "Previous release tag: $PREVIOUS_TAG"
+          else
+            echo "No previous release found; generating notes from full history."
+          fi
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          TITLE: ${{ steps.version.outputs.title }}
+          PREVIOUS_TAG: ${{ steps.previous.outputs.previous_tag }}
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          ARGS=(release create "$TAG"
+            --title "$TITLE"
+            --target "$TARGET_SHA"
+            --generate-notes)
+          if [ -n "$PREVIOUS_TAG" ]; then
+            ARGS+=(--notes-start-tag "$PREVIOUS_TAG")
+          fi
+          gh "${ARGS[@]}"
