@@ -4,9 +4,8 @@ import { StyleSheet, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 
 import { Button } from '@/components/common/Button';
+import { useCaptureAndShare } from '@/hooks/useCaptureAndShare';
 import { useTheme } from '@/hooks/useTheme';
-
-import { useCaptureAndShare } from './useCaptureAndShare';
 
 type ShareResultButtonProps = {
   /** The fully-rendered share card to capture as an image. */
