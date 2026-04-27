@@ -85,6 +85,29 @@ export async function listDailyChallenges({
 }
 
 /**
+ * Batch-loads daily challenges by id.
+ *
+ * @returns a map of dailyChallengeId -> daily challenge (missing keys imply not found)
+ */
+export async function getDailyChallengesByIds({
+  dailyChallengeIds,
+}: {
+  dailyChallengeIds: readonly string[];
+}): Promise<Map<string, DailyChallenge>> {
+  const dailyChallenges = await prisma.dailyChallenge.findMany({
+    where: { id: { in: [...dailyChallengeIds] } },
+    select: DAILY_CHALLENGE_SELECT,
+  });
+
+  return new Map(
+    dailyChallenges.map((dailyChallenge) => {
+      const mappedDailyChallenge = mapToDailyChallenge(dailyChallenge);
+      return [mappedDailyChallenge.id, mappedDailyChallenge];
+    }),
+  );
+}
+
+/**
  * Batch-loads the number of puzzles per daily challenge.
  *
  * @returns a map of dailyChallengeId -> puzzle count (missing keys imply 0)

@@ -1,7 +1,9 @@
 import DataLoader from 'dataloader';
 
+import { type DailyChallenge } from '@/platform/dailyChallenge/resource/dailyChallenge';
 import {
   getCompletedPuzzleCountsByDailyChallengeIds,
+  getDailyChallengesByIds,
   getPuzzleCountsByDailyChallengeIds,
 } from '@/platform/dailyChallenge/service/dailyChallengeService';
 
@@ -29,8 +31,16 @@ export function DailyChallengeDataLoader({
     },
   );
 
+  const dailyChallengeById = new DataLoader<string, DailyChallenge | null>(
+    async (dailyChallengeIds) => {
+      const map = await getDailyChallengesByIds({ dailyChallengeIds });
+      return dailyChallengeIds.map((id) => map.get(id) ?? null);
+    },
+  );
+
   return {
     dailyChallengePuzzleCount,
     dailyChallengeCompletedPuzzleCount,
+    dailyChallengeById,
   };
 }
