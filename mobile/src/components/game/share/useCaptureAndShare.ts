@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
-import { type View } from 'react-native';
+import type { View } from 'react-native';
+import { captureRef } from 'react-native-view-shot';
 
 import * as Sharing from 'expo-sharing';
-import { captureRef } from 'react-native-view-shot';
 
 type UseCaptureAndShareResult = {
   /** Attach to the View whose contents should be captured into an image. */

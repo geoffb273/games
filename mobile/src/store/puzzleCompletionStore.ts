@@ -1,7 +1,5 @@
 import { proxy, useSnapshot } from 'valtio';
 
-import { PuzzleType } from '@/api/puzzle/puzzle';
-
 type HashiBridgeSolutionEntry = {
   bridges: number;
   from: { row: number; col: number };
@@ -9,7 +7,7 @@ type HashiBridgeSolutionEntry = {
 };
 
 export type HashiCompletionData = {
-  type: PuzzleType.Hashi;
+  type: 'HASHI';
   bridges: HashiBridgeSolutionEntry[];
 };
 

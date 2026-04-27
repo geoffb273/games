@@ -3,9 +3,9 @@ import { StyleSheet, View } from 'react-native';
 
 import { type HashiPuzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
-import { type HashiCompletionData } from '@/store/puzzleCompletionStore';
-import { Radii, Spacing } from '@/constants/token';
 import { ThemeColor } from '@/constants/theme';
+import { Radii, Spacing } from '@/constants/token';
+import { type HashiCompletionData } from '@/store/puzzleCompletionStore';
 import { findConnections } from '@/utils/hashi/connections';
 import { formatDuration } from '@/utils/timeUtils';
 
@@ -37,12 +37,8 @@ export function HashiShareCard({ puzzle, completion, durationMs }: HashiShareCar
   const connections = useMemo(() => findConnections(puzzle.islands), [puzzle.islands]);
 
   const { cellSize, boardWidth, boardHeight } = useMemo(() => {
-    const fromW = Math.floor(
-      (BOARD_TARGET_SIZE - CELL_GAP * (puzzle.width - 1)) / puzzle.width,
-    );
-    const fromH = Math.floor(
-      (BOARD_TARGET_SIZE - CELL_GAP * (puzzle.height - 1)) / puzzle.height,
-    );
+    const fromW = Math.floor((BOARD_TARGET_SIZE - CELL_GAP * (puzzle.width - 1)) / puzzle.width);
+    const fromH = Math.floor((BOARD_TARGET_SIZE - CELL_GAP * (puzzle.height - 1)) / puzzle.height);
     const cSize = Math.max(24, Math.min(fromW, fromH));
     const gridWidth = puzzle.width * cSize + CELL_GAP * (puzzle.width - 1);
     const gridHeight = puzzle.height * cSize + CELL_GAP * (puzzle.height - 1);
@@ -177,11 +173,7 @@ export function HashiShareCard({ puzzle, completion, durationMs }: HashiShareCar
                 },
               ]}
             >
-              <Text
-                size={islandTextSize}
-                fontWeight="semibold"
-                _colorOverride={palette.background}
-              >
+              <Text size={islandTextSize} fontWeight="semibold" _colorOverride={palette.background}>
                 {island.requiredBridges}
               </Text>
             </View>
