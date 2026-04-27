@@ -16,12 +16,13 @@ type EdgeState = 'empty' | 'line';
 
 type EdgeGridState = EdgeState[][];
 
+type EdgeOrientation = 'horizontal' | 'vertical';
+
 type GameState = {
   horizontal: EdgeGridState;
   vertical: EdgeGridState;
+  hintedEdges: string[];
 };
-
-type EdgeOrientation = 'horizontal' | 'vertical';
 
 type GameAction =
   | {
@@ -36,7 +37,7 @@ type GameAction =
       height: number;
     }
   | {
-      type: 'SET_EDGE';
+      type: 'APPLY_HINT';
       orientation: EdgeOrientation;
       row: number;
       col: number;
@@ -48,10 +49,11 @@ function createEmptyGrid(rows: number, cols: number): EdgeGridState {
   return Array.from({ length: rows }, () => Array.from({ length: cols }, (): EdgeState => 'empty'));
 }
 
-function cloneGameState(state: GameState): GameState {
+function cloneState(state: GameState): GameState {
   return {
-    horizontal: [...state.horizontal],
-    vertical: [...state.vertical],
+    horizontal: state.horizontal.map((row) => [...row]),
+    vertical: state.vertical.map((row) => [...row]),
+    hintedEdges: [...state.hintedEdges],
   };
 }
 
@@ -59,6 +61,7 @@ function createInitialState(width: number, height: number): GameState {
   return {
     horizontal: createEmptyGrid(height + 1, width),
     vertical: createEmptyGrid(height, width + 1),
+    hintedEdges: [],
   };
 }
 
@@ -66,6 +69,10 @@ const EDGE_CYCLE: Record<EdgeState, EdgeState> = {
   empty: 'line',
   line: 'empty',
 };
+
+function edgeKey(orientation: EdgeOrientation, row: number, col: number): string {
+  return `${orientation}|${row},${col}`;
+}
 
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
@@ -79,24 +86,29 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         ri === row ? r.map((c, ci) => (ci === col ? EDGE_CYCLE[c] : c)) : r,
       );
       return {
+        ...state,
         horizontal: orientation === 'horizontal' ? nextGrid : state.horizontal,
         vertical: orientation === 'vertical' ? nextGrid : state.vertical,
       };
     }
-    case 'SET_EDGE': {
+    case 'APPLY_HINT': {
       const { orientation, row, col, filled } = action;
       const source = orientation === 'horizontal' ? state.horizontal : state.vertical;
       if (source[row]?.[col] == null) {
         return state;
       }
+      const target: EdgeState = filled ? 'line' : 'empty';
       const nextGrid = source.map((r, ri) =>
-        ri === row
-          ? r.map((c, ci) => (ci === col ? (filled ? EDGE_CYCLE.empty : EDGE_CYCLE.line) : c))
-          : r,
+        ri === row ? r.map((c, ci) => (ci === col ? target : c)) : r,
       );
+      const key = edgeKey(orientation, row, col);
+      const hintedEdges = state.hintedEdges.includes(key)
+        ? state.hintedEdges
+        : [...state.hintedEdges, key];
       return {
         horizontal: orientation === 'horizontal' ? nextGrid : state.horizontal,
         vertical: orientation === 'vertical' ? nextGrid : state.vertical,
+        hintedEdges,
       };
     }
     case 'REPLACE': {
@@ -116,6 +128,8 @@ function toBooleanGrid(grid: EdgeGridState): boolean[][] {
 export type SlitherlinkGame = {
   horizontal: EdgeGridState;
   vertical: EdgeGridState;
+  isHorizontalEdgeHinted: (row: number, col: number) => boolean;
+  isVerticalEdgeHinted: (row: number, col: number) => boolean;
   isComplete: boolean;
   onHorizontalEdgePress: (row: number, col: number) => void;
   onVerticalEdgePress: (row: number, col: number) => void;
@@ -138,7 +152,10 @@ export type SlitherlinkOnSolveInput = {
 
 const edgeSchema = z.union([z.literal('empty'), z.literal('line')]);
 
-type SlitherlinkPersisted = GameState & {
+type SlitherlinkPersisted = {
+  horizontal: EdgeGridState;
+  vertical: EdgeGridState;
+  hintedEdges?: string[];
   elapsedMs: number;
 };
 
@@ -179,6 +196,7 @@ export function useSlitherlinkGame({
       z.object({
         horizontal: horizontalSchema,
         vertical: verticalSchema,
+        hintedEdges: z.array(z.string()).optional(),
         elapsedMs: z.number().nonnegative(),
       }),
     [horizontalSchema, verticalSchema],
@@ -195,12 +213,17 @@ export function useSlitherlinkGame({
     gameReducer,
     { width, height, persisted: persistedState },
     ({ width: w, height: h, persisted }) =>
-      persisted != null
-        ? { horizontal: persisted.horizontal, vertical: persisted.vertical }
-        : createInitialState(w, h),
+      persisted == null
+        ? createInitialState(w, h)
+        : {
+            horizontal: persisted.horizontal,
+            vertical: persisted.vertical,
+            hintedEdges: persisted.hintedEdges ?? [],
+          },
   );
 
-  const { isEmpty, pushStateSnapshot, popStateSnapshot } = useStateTracker<GameState>();
+  const { isEmpty, pushStateSnapshot, popStateSnapshot, clearSnapshots } =
+    useStateTracker<GameState>();
 
   const submittedRef = useRef(false);
   const hydratedPuzzleIdRef = useRef<string | null>(null);
@@ -214,7 +237,12 @@ export function useSlitherlinkGame({
   }, [persistedState, puzzleId, replaceAccumulatedMs]);
 
   const saveWithTime = (next: GameState) => {
-    saveState({ ...next, elapsedMs: getElapsedMs() });
+    saveState({
+      horizontal: next.horizontal,
+      vertical: next.vertical,
+      hintedEdges: next.hintedEdges,
+      elapsedMs: getElapsedMs(),
+    });
   };
 
   const horizontalLines = useMemo(() => toBooleanGrid(state.horizontal), [state.horizontal]);
@@ -250,18 +278,30 @@ export function useSlitherlinkGame({
       });
   }, [clearState, getSolveTiming, horizontalLines, isComplete, stableOnSolve, verticalLines]);
 
+  const isHinted = (orientation: EdgeOrientation, row: number, col: number): boolean =>
+    state.hintedEdges.includes(edgeKey(orientation, row, col));
+
+  const isHorizontalEdgeHinted = useStableCallback((row: number, col: number): boolean =>
+    isHinted('horizontal', row, col),
+  );
+  const isVerticalEdgeHinted = useStableCallback((row: number, col: number): boolean =>
+    isHinted('vertical', row, col),
+  );
+
   const onHorizontalEdgePress = useStableCallback((row: number, col: number) => {
+    if (isHinted('horizontal', row, col)) return;
     triggerHapticLight();
     const next = gameReducer(state, { type: 'TOGGLE_EDGE', orientation: 'horizontal', row, col });
-    pushStateSnapshot(cloneGameState(state));
+    pushStateSnapshot(cloneState(state));
     saveWithTime(next);
     dispatch({ type: 'TOGGLE_EDGE', orientation: 'horizontal', row, col });
   });
 
   const onVerticalEdgePress = useStableCallback((row: number, col: number) => {
+    if (isHinted('vertical', row, col)) return;
     triggerHapticLight();
     const next = gameReducer(state, { type: 'TOGGLE_EDGE', orientation: 'vertical', row, col });
-    pushStateSnapshot(cloneGameState(state));
+    pushStateSnapshot(cloneState(state));
     saveWithTime(next);
     dispatch({ type: 'TOGGLE_EDGE', orientation: 'vertical', row, col });
   });
@@ -275,20 +315,21 @@ export function useSlitherlinkGame({
 
       triggerHapticLight();
       const next = gameReducer(state, {
-        type: 'SET_EDGE',
+        type: 'APPLY_HINT',
         orientation,
         row,
         col,
         filled,
       });
+      clearSnapshots();
       saveWithTime(next);
-      dispatch({ type: 'SET_EDGE', orientation, row, col, filled });
+      dispatch({ type: 'APPLY_HINT', orientation, row, col, filled });
     },
   );
 
   const onClearPress = useStableCallback(() => {
     const next = gameReducer(state, { type: 'RESET', width, height });
-    pushStateSnapshot(cloneGameState(state));
+    pushStateSnapshot(cloneState(state));
     saveWithTime(next);
     dispatch({ type: 'RESET', width, height });
   });
@@ -311,6 +352,8 @@ export function useSlitherlinkGame({
   return {
     horizontal: state.horizontal,
     vertical: state.vertical,
+    isHorizontalEdgeHinted,
+    isVerticalEdgeHinted,
     isComplete,
     onHorizontalEdgePress,
     onVerticalEdgePress,

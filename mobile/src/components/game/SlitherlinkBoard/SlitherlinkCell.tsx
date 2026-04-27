@@ -28,6 +28,10 @@ type SlitherlinkCellProps = {
   left: EdgeState;
   bottom: EdgeState;
   right: EdgeState;
+  isTopHinted?: boolean;
+  isLeftHinted?: boolean;
+  isBottomHinted?: boolean;
+  isRightHinted?: boolean;
   onPressTop: () => void;
   onPressLeft: () => void;
   onPressBottom: () => void;
@@ -55,6 +59,10 @@ export function SlitherlinkCell({
   left,
   bottom,
   right,
+  isTopHinted = false,
+  isLeftHinted = false,
+  isBottomHinted = false,
+  isRightHinted = false,
   onPressTop,
   onPressLeft,
   onPressBottom,
@@ -132,6 +140,7 @@ export function SlitherlinkCell({
       {/* Top edge row */}
       <HorizontalEdgeStrip
         state={top}
+        isHinted={isTopHinted}
         onPress={onPressTop}
         testID="slitherlink-cell-edge-top"
         isDisabled={isDisabled}
@@ -141,6 +150,7 @@ export function SlitherlinkCell({
       <View style={styles.middleRow}>
         <VerticalEdgeStrip
           state={left}
+          isHinted={isLeftHinted}
           onPress={onPressLeft}
           testID="slitherlink-cell-edge-left"
           isDisabled={isDisabled}
@@ -162,6 +172,7 @@ export function SlitherlinkCell({
         {showRightEdge && (
           <VerticalEdgeStrip
             state={right}
+            isHinted={isRightHinted}
             onPress={onPressRight}
             testID="slitherlink-cell-edge-right"
             isDisabled={isDisabled}
@@ -173,6 +184,7 @@ export function SlitherlinkCell({
       {showBottomEdge && (
         <HorizontalEdgeStrip
           state={bottom}
+          isHinted={isBottomHinted}
           onPress={onPressBottom}
           testID="slitherlink-cell-edge-bottom"
           isDisabled={isDisabled}
@@ -184,11 +196,13 @@ export function SlitherlinkCell({
 
 function HorizontalEdgeStrip({
   state,
+  isHinted,
   onPress,
   testID,
   isDisabled,
 }: {
   state: EdgeState;
+  isHinted: boolean;
   onPress: () => void;
   testID?: string;
   isDisabled?: boolean;
@@ -201,12 +215,13 @@ function HorizontalEdgeStrip({
   }, [progress, state]);
 
   const transparentColor = getColorWithOpacity(theme.text, 0);
+  const lineColor = isHinted ? theme.warning : theme.text;
 
   const backgroundColor = useAnimatedStyle(() => {
     return {
-      backgroundColor: interpolateColor(progress.value, [0, 1], [transparentColor, theme.text]),
+      backgroundColor: interpolateColor(progress.value, [0, 1], [transparentColor, lineColor]),
     };
-  });
+  }, [lineColor, progress, transparentColor]);
 
   return (
     <Pressable
@@ -223,11 +238,13 @@ function HorizontalEdgeStrip({
 
 function VerticalEdgeStrip({
   state,
+  isHinted,
   onPress,
   testID,
   isDisabled,
 }: {
   state: EdgeState;
+  isHinted: boolean;
   onPress: () => void;
   testID?: string;
   isDisabled?: boolean;
@@ -241,12 +258,13 @@ function VerticalEdgeStrip({
   }, [progress, state]);
 
   const transparentColor = getColorWithOpacity(theme.text, 0);
+  const lineColor = isHinted ? theme.accentInk : theme.text;
 
   const backgroundColor = useAnimatedStyle(() => {
     return {
-      backgroundColor: interpolateColor(progress.value, [0, 1], [transparentColor, theme.text]),
+      backgroundColor: interpolateColor(progress.value, [0, 1], [transparentColor, lineColor]),
     };
-  });
+  }, [lineColor, progress, transparentColor]);
 
   return (
     <Pressable

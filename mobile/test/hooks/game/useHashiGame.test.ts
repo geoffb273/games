@@ -122,8 +122,43 @@ describe('useHashiGame', () => {
     });
 
     expect(result.current.bridgeCounts[0]).toBe(2);
+    expect(result.current.isHinted(0)).toBe(true);
     expect(result.current.isComplete).toBe(false);
     expect(onSolve).not.toHaveBeenCalled();
+  });
+
+  it('locks the hinted connection so taps cannot change the bridge count', async () => {
+    jest.mocked(findConnections).mockReturnValue(mockConnections as any);
+    jest.mocked(wouldNewBridgeCrossExisting).mockReturnValue(false);
+
+    const puzzle = createPuzzle();
+    const onSolve = jest.fn().mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useHashiGame({ puzzle, onSolve }));
+
+    const hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Hashi }> = {
+      puzzleType: PuzzleType.Hashi,
+      from: { row: 0, col: 0 },
+      to: { row: 0, col: 1 },
+      bridges: 2,
+    } satisfies PuzzleHint;
+
+    await act(async () => {
+      result.current.onHint(hint);
+    });
+
+    expect(result.current.bridgeCounts[0]).toBe(2);
+
+    await act(async () => {
+      result.current.onConnectionTap(0);
+    });
+    expect(result.current.bridgeCounts[0]).toBe(2);
+
+    await act(async () => {
+      result.current.onIslandPress({ row: 0, col: 0 });
+      result.current.onIslandPress({ row: 0, col: 1 });
+    });
+    expect(result.current.bridgeCounts[0]).toBe(2);
   });
 
   it('isValidBridge returns true when no crossing would occur', () => {

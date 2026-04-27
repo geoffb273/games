@@ -13,6 +13,8 @@ import Animated, {
   ZoomIn,
 } from 'react-native-reanimated';
 
+import { FontAwesome } from '@expo/vector-icons';
+
 import { Text } from '@/components/common/Text';
 import {
   SUCCESS_COMPLETION_WAVE_DELAY_MS,
@@ -33,6 +35,7 @@ type CellProps = {
   size: number;
   isRevealed: boolean;
   isFlagged: boolean;
+  isHintedFlag?: boolean;
   value: number | null;
   isTriggeredMine: boolean;
   onTap: (row: number, col: number) => void;
@@ -52,6 +55,7 @@ export const MinesweeperCell = memo(function MinesweeperCell({
   size,
   isRevealed,
   isFlagged,
+  isHintedFlag = false,
   value,
   isTriggeredMine,
   onTap,
@@ -221,9 +225,18 @@ export const MinesweeperCell = memo(function MinesweeperCell({
           isFlagged && (
             <Animated.View entering={ZoomIn.duration(200)}>
               <Animated.View style={innerAnimatedStyle}>
-                <Text color="error" size="lg">
-                  ▲
-                </Text>
+                {isHintedFlag ? (
+                  <FontAwesome
+                    name="lock"
+                    size={18}
+                    color={MinesweeperColors.flag}
+                    testID="minesweeper-hinted-flag-icon"
+                  />
+                ) : (
+                  <Text color="error" size="lg">
+                    ▲
+                  </Text>
+                )}
               </Animated.View>
             </Animated.View>
           )

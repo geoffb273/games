@@ -10,6 +10,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { FontAwesome } from '@expo/vector-icons';
+
 import { Text } from '@/components/common/Text';
 import {
   SUCCESS_COMPLETION_WAVE_DELAY_MS,
@@ -25,6 +27,7 @@ type HanjiCellProps = {
   col: number;
   size: number;
   state: HanjiCellState;
+  isHinted?: boolean;
   onTap: (row: number, col: number) => void;
   onLongPress: (row: number, col: number) => void;
   isDisabled?: boolean;
@@ -40,6 +43,7 @@ export const HanjiCell = memo(function HanjiCell({
   col,
   size,
   state,
+  isHinted = false,
   onTap,
   onLongPress,
   isDisabled = false,
@@ -114,8 +118,12 @@ export const HanjiCell = memo(function HanjiCell({
     transform: [{ scale: scale.value }],
   }));
 
-  const bg =
-    state === 'filled'
+  const isHintedFilled = isHinted && state === 'filled';
+  const hintIconSize = Math.max(8, Math.min(12, Math.floor(size * 0.28)));
+  const hintIconColor = state === 'filled' ? theme.background : theme.textSecondary;
+  const bg = isHintedFilled
+    ? theme.textSecondary
+    : state === 'filled'
       ? theme.text
       : state === 'marked'
         ? theme.backgroundSelected
@@ -131,16 +139,23 @@ export const HanjiCell = memo(function HanjiCell({
             height: size,
             borderRadius: size > 36 ? 6 : 4,
             backgroundColor: bg,
+            borderWidth: isHinted ? 1 : 0,
+            borderColor: isHinted ? theme.textSecondary : 'transparent',
           },
           state === 'empty' && styles.cellRaised,
           animatedStyle,
         ]}
       >
-        {state === 'marked' ? (
+        {state === 'marked' && (
           <Text type="caption" color="textSecondary">
             ✕
           </Text>
-        ) : null}
+        )}
+        {isHinted && (
+          <Animated.View style={styles.hintIcon}>
+            <FontAwesome name="lock" size={hintIconSize} color={hintIconColor} />
+          </Animated.View>
+        )}
       </Animated.View>
     </GestureDetector>
   );
@@ -150,6 +165,7 @@ const styles = StyleSheet.create({
   cell: {
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
   cellRaised: {
     shadowColor: COLOR.black,
@@ -157,5 +173,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 1,
     elevation: 2,
+  },
+  hintIcon: {
+    position: 'absolute',
+    right: 2,
+    top: 1,
   },
 });

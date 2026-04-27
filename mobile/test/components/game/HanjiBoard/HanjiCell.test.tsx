@@ -3,6 +3,7 @@ import { fireGestureHandler, getByGestureTestId } from 'react-native-gesture-han
 
 import { render, screen, waitFor } from '@testing-library/react-native';
 
+import { Text as MockText } from '@/components/common/Text';
 import { HanjiCell } from '@/components/game/HanjiBoard/HanjiCell';
 
 const mockTheme = {
@@ -14,6 +15,12 @@ const mockTheme = {
 jest.mock('@/hooks/useTheme', () => ({
   useTheme: () => mockTheme,
 }));
+
+jest.mock('@expo/vector-icons', () => {
+  return {
+    FontAwesome: ({ name, ...props }: { name: string }) => <MockText {...props}>{name}</MockText>,
+  };
+});
 
 const defaultProps = {
   size: 40,

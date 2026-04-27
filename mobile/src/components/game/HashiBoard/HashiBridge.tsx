@@ -16,6 +16,7 @@ type HashiBridgeProps = {
   x2: number;
   y2: number;
   count: 0 | 1 | 2;
+  isHinted?: boolean;
   disabled?: boolean;
   onPress: () => void;
 };
@@ -26,6 +27,7 @@ export const HashiBridge = memo(function HashiBridge({
   x2,
   y2,
   count,
+  isHinted = false,
   disabled = false,
   onPress,
 }: HashiBridgeProps) {
@@ -35,6 +37,7 @@ export const HashiBridge = memo(function HashiBridge({
   const length = Math.sqrt(dx * dx + dy * dy);
   const angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
   const lineCenterY = TOUCH_SLOP - BRIDGE_THICKNESS / 2;
+  const bridgeColor = isHinted ? theme.warning : theme.text;
 
   const stableOnPress = useStableCallback(onPress);
 
@@ -46,17 +49,17 @@ export const HashiBridge = memo(function HashiBridge({
   const tapGesture = useMemo(() => {
     return Gesture.Tap()
       .withTestId('hashi-bridge-tap')
-      .enabled(!disabled)
+      .enabled(!disabled && !isHinted)
       .onEnd(() => {
         'worklet';
         runOnJS(stableOnPress)();
       });
-  }, [disabled, stableOnPress]);
+  }, [disabled, isHinted, stableOnPress]);
 
   const panGesture = useMemo(() => {
     return Gesture.Pan()
       .withTestId('hashi-bridge-swipe')
-      .enabled(!disabled)
+      .enabled(!disabled && !isHinted)
       .minDistance(TOUCH_SLOP)
       .onEnd((e) => {
         'worklet';
@@ -64,7 +67,7 @@ export const HashiBridge = memo(function HashiBridge({
         if (Math.abs(projected) < SWIPE_MIN_COMPONENT) return;
         runOnJS(stableOnPress)();
       });
-  }, [SWIPE_MIN_COMPONENT, disabled, stableOnPress, unitDx, unitDy]);
+  }, [SWIPE_MIN_COMPONENT, disabled, isHinted, stableOnPress, unitDx, unitDy]);
 
   const composedGesture = useMemo(
     () => Gesture.Exclusive(panGesture, tapGesture),
@@ -90,6 +93,7 @@ export const HashiBridge = memo(function HashiBridge({
       >
         {count >= 1 && (
           <Animated.View
+            testID="hashi-bridge-line-1"
             entering={FadeIn.duration(180)}
             exiting={FadeOut.duration(120)}
             layout={LinearTransition.duration(180)}
@@ -101,13 +105,14 @@ export const HashiBridge = memo(function HashiBridge({
                 top: lineCenterY - (count === 2 ? BRIDGE_OFFSET : 0),
                 width: length,
                 height: BRIDGE_THICKNESS,
-                backgroundColor: theme.text,
+                backgroundColor: bridgeColor,
               },
             ]}
           />
         )}
         {count >= 2 && (
           <Animated.View
+            testID="hashi-bridge-line-2"
             entering={FadeIn.duration(180)}
             exiting={FadeOut.duration(120)}
             style={[
@@ -118,7 +123,7 @@ export const HashiBridge = memo(function HashiBridge({
                 top: lineCenterY + BRIDGE_OFFSET,
                 width: length,
                 height: BRIDGE_THICKNESS,
-                backgroundColor: theme.text,
+                backgroundColor: bridgeColor,
               },
             ]}
           />

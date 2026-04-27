@@ -44,6 +44,7 @@ export function HashiBoard({
   const {
     connections,
     bridgeCounts,
+    isHinted,
     isValidBridge,
     onConnectionTap,
     onClearPress,
@@ -110,6 +111,7 @@ export function HashiBoard({
             x2={islandPositions[conn.b].x}
             y2={islandPositions[conn.b].y}
             count={bridgeCounts[ci] as 0 | 1 | 2}
+            isHinted={isHinted(ci)}
             disabled={
               isCompletionWaveActive || isDisabled || (bridgeCounts[ci] < 2 && !isValidBridge(ci))
             }

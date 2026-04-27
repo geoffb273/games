@@ -37,6 +37,8 @@ export function SlitherlinkBoard({
   const {
     horizontal,
     vertical,
+    isHorizontalEdgeHinted,
+    isVerticalEdgeHinted,
     onHorizontalEdgePress,
     onVerticalEdgePress,
     onClearPress,
@@ -74,6 +76,10 @@ export function SlitherlinkBoard({
               const bottomState = horizontal[r + 1]?.[c] ?? 'empty';
               const leftState = vertical[r]?.[c] ?? 'empty';
               const rightState = vertical[r]?.[c + 1] ?? 'empty';
+              const isTopHinted = isHorizontalEdgeHinted(r, c);
+              const isBottomHinted = isHorizontalEdgeHinted(r + 1, c);
+              const isLeftHinted = isVerticalEdgeHinted(r, c);
+              const isRightHinted = isVerticalEdgeHinted(r, c + 1);
               const isLastInWave = r === puzzle.height - 1 && c === puzzle.width - 1;
 
               return (
@@ -85,6 +91,10 @@ export function SlitherlinkBoard({
                   left={leftState}
                   bottom={bottomState}
                   right={rightState}
+                  isTopHinted={isTopHinted}
+                  isLeftHinted={isLeftHinted}
+                  isBottomHinted={isBottomHinted}
+                  isRightHinted={isRightHinted}
                   onPressTop={() => onHorizontalEdgePress(r, c)}
                   onPressLeft={() => onVerticalEdgePress(r, c)}
                   onPressBottom={() => onHorizontalEdgePress(r + 1, c)}

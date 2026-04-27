@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 /**
  * A hook to track the state of a game and allow for undo/redo.
@@ -9,20 +9,26 @@ export function useStateTracker<T>() {
   const stateTrackerRef = useRef<T[]>([]);
   const [isEmpty, setIsEmpty] = useState(true);
 
-  const pushStateSnapshot = (state: T) => {
+  const pushStateSnapshot = useCallback((state: T) => {
     stateTrackerRef.current.push(state);
     setIsEmpty(false);
-  };
+  }, []);
 
-  const popStateSnapshot = () => {
+  const popStateSnapshot = useCallback(() => {
     const state = stateTrackerRef.current.pop();
     setIsEmpty(stateTrackerRef.current.length === 0);
     return state;
-  };
+  }, []);
+
+  const clearSnapshots = useCallback(() => {
+    stateTrackerRef.current = [];
+    setIsEmpty(true);
+  }, []);
 
   return {
     isEmpty,
     pushStateSnapshot,
     popStateSnapshot,
+    clearSnapshots,
   };
 }
