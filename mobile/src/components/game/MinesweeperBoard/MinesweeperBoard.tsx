@@ -34,6 +34,7 @@ export function MinesweeperBoard({
   const theme = useTheme();
   const {
     revealedMap,
+    isHinted,
     cells,
     remaining,
     triggeredMineCell,
@@ -97,6 +98,7 @@ export function MinesweeperBoard({
               const revealedValue = revealedMap.get(key);
               const isRevealed = revealedValue !== undefined;
               const isFlagged = !isRevealed && cells[row][col] === 'flagged';
+              const isHintedFlag = isFlagged && isHinted(row, col);
 
               return (
                 <MinesweeperCell
@@ -106,6 +108,7 @@ export function MinesweeperBoard({
                   size={cellSize}
                   isRevealed={isRevealed}
                   isFlagged={isFlagged}
+                  isHintedFlag={isHintedFlag}
                   value={revealedValue ?? null}
                   isTriggeredMine={triggeredMineCell?.row === row && triggeredMineCell?.col === col}
                   onTap={onCellTap}

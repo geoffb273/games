@@ -29,11 +29,13 @@ type GameState = {
   flagCount: number;
   userRevealedCells: { row: number; col: number; value: number }[];
   gameOver: boolean;
+  hintedCells: string[];
 };
 
 type GameAction =
   | { type: 'TOGGLE_FLAG'; row: number; col: number }
   | { type: 'REVEAL_CELLS'; cells: { row: number; col: number; value: number }[] }
+  | { type: 'APPLY_FLAG_HINT'; row: number; col: number }
   | { type: 'GAME_OVER' };
 
 function createInitialState({ height, width }: { height: number; width: number }): GameState {
@@ -44,6 +46,7 @@ function createInitialState({ height, width }: { height: number; width: number }
     flagCount: 0,
     userRevealedCells: [],
     gameOver: false,
+    hintedCells: [],
   };
 }
 
@@ -72,6 +75,22 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       }
       return { ...state, userRevealedCells: merged };
     }
+    case 'APPLY_FLAG_HINT': {
+      const { row, col } = action;
+      const key = `${row},${col}`;
+      const current = state.cells[row][col];
+      const isAlreadyFlagged = current === 'flagged';
+      const cells = isAlreadyFlagged
+        ? state.cells
+        : state.cells.map((r, ri) =>
+            ri === row ? r.map((c, ci) => (ci === col ? 'flagged' : c)) : r,
+          );
+      const flagCount = isAlreadyFlagged ? state.flagCount : state.flagCount + 1;
+      const hintedCells = state.hintedCells.includes(key)
+        ? state.hintedCells
+        : [...state.hintedCells, key];
+      return { ...state, cells, flagCount, hintedCells };
+    }
     case 'GAME_OVER':
       return { ...state, gameOver: true };
     default:
@@ -81,6 +100,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 
 export type MinesweeperGame = {
   revealedMap: Map<string, number>;
+  isHinted: (row: number, col: number) => boolean;
   cells: CellStatus[][];
   remaining: number;
   triggeredMineCell: { row: number; col: number } | null;
@@ -94,8 +114,12 @@ export type MinesweeperGame = {
   isLoss: boolean;
 };
 
+type PersistedGameState = Omit<GameState, 'hintedCells'> & {
+  hintedCells?: string[];
+};
+
 type MinesweeperPersisted = {
-  state: GameState;
+  state: PersistedGameState;
   mode: InteractionMode;
   elapsedMs: number;
 };
@@ -146,6 +170,7 @@ export function useMinesweeperGame({
         flagCount: z.number().int().min(0),
         userRevealedCells: z.array(revealedCellSchema),
         gameOver: z.boolean(),
+        hintedCells: z.array(z.string()).optional(),
       }),
     [height, width],
   );
@@ -170,7 +195,10 @@ export function useMinesweeperGame({
   const [state, dispatch] = useReducer(
     gameReducer,
     persistedState?.state ?? { height, width },
-    (initial) => ('cells' in initial ? initial : createInitialState(initial)),
+    (initial) =>
+      'cells' in initial
+        ? { ...initial, hintedCells: initial.hintedCells ?? [] }
+        : createInitialState(initial),
   );
   const [triggeredMineCell, setTriggeredMineCell] = useState<{ row: number; col: number } | null>(
     null,
@@ -197,6 +225,10 @@ export function useMinesweeperGame({
     }
     return map;
   }, [puzzle.revealedCells, state.userRevealedCells]);
+  const isHinted = useCallback(
+    (row: number, col: number): boolean => state.hintedCells.includes(`${row},${col}`),
+    [state.hintedCells],
+  );
 
   const remaining = puzzle.mineCount - state.flagCount;
 
@@ -246,21 +278,28 @@ export function useMinesweeperGame({
     }
   });
 
-  const onFlagTap = useStableCallback(({ row, col }: { row: number; col: number }) => {
-    if (state.gameOver) return;
-    triggerHapticLight();
-    const next = gameReducer(state, { type: 'TOGGLE_FLAG', row, col });
-    saveWithTime(next, mode);
-    dispatch({ type: 'TOGGLE_FLAG', row, col });
-  });
+  const onFlagTap = useStableCallback(
+    ({ row, col, isHint }: { row: number; col: number; isHint: boolean }) => {
+      if (state.gameOver) return;
+      triggerHapticLight();
+      const next = gameReducer(state, {
+        type: isHint ? 'APPLY_FLAG_HINT' : 'TOGGLE_FLAG',
+        row,
+        col,
+      });
+      saveWithTime(next, mode);
+      dispatch({ type: isHint ? 'APPLY_FLAG_HINT' : 'TOGGLE_FLAG', row, col });
+    },
+  );
 
   const onCellTap = useStableCallback((row: number, col: number) => {
     if (state.gameOver) return;
     const key = `${row},${col}`;
     if (revealedMap.has(key)) return;
+    if (state.hintedCells.includes(key)) return;
     const isFlagged = state.cells[row][col] === 'flagged';
     if (mode === 'flag') {
-      onFlagTap({ row, col });
+      onFlagTap({ row, col, isHint: false });
     } else if (!isFlagged) {
       onRevealTap({ row, col });
     }
@@ -268,8 +307,10 @@ export function useMinesweeperGame({
 
   const onCellLongPress = useStableCallback((row: number, col: number) => {
     if (state.gameOver) return;
-    if (revealedMap.has(`${row},${col}`)) return;
-    onFlagTap({ row, col });
+    const key = `${row},${col}`;
+    if (revealedMap.has(key)) return;
+    if (state.hintedCells.includes(key)) return;
+    onFlagTap({ row, col, isHint: false });
   });
 
   const toggleMode = useCallback(() => {
@@ -287,8 +328,9 @@ export function useMinesweeperGame({
 
       const key = `${row},${col}`;
       if (revealedMap.has(key)) return;
+      if (state.hintedCells.includes(key)) return;
       if (isMine) {
-        onFlagTap({ row, col });
+        onFlagTap({ row, col, isHint: true });
       } else {
         onRevealTap({ row, col });
       }
@@ -299,6 +341,7 @@ export function useMinesweeperGame({
 
   return {
     revealedMap,
+    isHinted,
     cells: state.cells,
     remaining,
     triggeredMineCell,

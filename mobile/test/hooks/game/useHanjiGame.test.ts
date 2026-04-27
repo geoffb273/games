@@ -130,6 +130,66 @@ describe('useHanjiGame', () => {
     expect(onSolve).not.toHaveBeenCalled();
   });
 
+  it('locks the hinted cell so taps and long presses cannot change it', async () => {
+    const puzzle = createPuzzle(2, 2);
+    const onSolve = jest.fn().mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useHanjiGame({ puzzle, onSolve }));
+
+    const hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Hanji }> = {
+      puzzleType: PuzzleType.Hanji,
+      row: 0,
+      col: 0,
+      value: 1,
+    } satisfies PuzzleHint;
+
+    await act(async () => {
+      result.current.onHint(hint);
+    });
+
+    expect(result.current.cells[0][0]).toBe('filled');
+
+    await act(async () => {
+      result.current.onCellTap(0, 0);
+    });
+    expect(result.current.cells[0][0]).toBe('filled');
+
+    await act(async () => {
+      result.current.onCellLongPress(0, 0);
+    });
+    expect(result.current.cells[0][0]).toBe('filled');
+
+    await act(async () => {
+      result.current.onCellTap(1, 1);
+    });
+    expect(result.current.cells[1][1]).toBe('filled');
+  });
+
+  it('disables undo immediately after a hint', async () => {
+    const puzzle = createPuzzle(2, 2);
+    const onSolve = jest.fn().mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useHanjiGame({ puzzle, onSolve }));
+
+    await act(async () => {
+      result.current.onCellTap(1, 1);
+    });
+    expect(result.current.isUndoEnabled).toBe(true);
+
+    const hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Hanji }> = {
+      puzzleType: PuzzleType.Hanji,
+      row: 0,
+      col: 0,
+      value: 1,
+    } satisfies PuzzleHint;
+
+    await act(async () => {
+      result.current.onHint(hint);
+    });
+
+    expect(result.current.isUndoEnabled).toBe(false);
+  });
+
   it('calls onSolve when the puzzle is solved and returns isComplete', async () => {
     const puzzle = createPuzzle(2, 2);
     const onSolve = jest.fn().mockResolvedValue(undefined);

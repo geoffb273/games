@@ -3,6 +3,7 @@ import { fireGestureHandler, getByGestureTestId } from 'react-native-gesture-han
 
 import { render, screen, waitFor } from '@testing-library/react-native';
 
+import { Text as MockText } from '@/components/common/Text';
 import { MinesweeperCell } from '@/components/game/MinesweeperBoard/MinesweeperCell';
 
 const mockTheme = {
@@ -14,6 +15,10 @@ const mockTheme = {
 
 jest.mock('@/hooks/useTheme', () => ({
   useTheme: () => mockTheme,
+}));
+
+jest.mock('@expo/vector-icons', () => ({
+  FontAwesome: ({ name }: { name: string }) => <MockText>{name}</MockText>,
 }));
 
 const defaultProps = {
@@ -31,6 +36,7 @@ const defaultProps = {
 describe('MinesweeperCell', () => {
   it('renders unrevealed unflagged cell with no content', () => {
     render(<MinesweeperCell {...defaultProps} />);
+    expect(screen.queryByText('lock')).not.toBeOnTheScreen();
     expect(screen.queryByText('▲')).not.toBeOnTheScreen();
     expect(screen.queryByText('1')).not.toBeOnTheScreen();
   });
@@ -58,6 +64,13 @@ describe('MinesweeperCell', () => {
   it('renders flagged cell with flag symbol', () => {
     render(<MinesweeperCell {...defaultProps} isFlagged />);
     expect(screen.getByText('▲')).toBeOnTheScreen();
+    expect(screen.queryByText('lock')).not.toBeOnTheScreen();
+  });
+
+  it('renders hinted flagged cell with lock symbol', () => {
+    render(<MinesweeperCell {...defaultProps} isFlagged isHintedFlag />);
+    expect(screen.getByText('lock')).toBeOnTheScreen();
+    expect(screen.queryByText('▲')).not.toBeOnTheScreen();
   });
 
   it('calls onTap with row and col when tap gesture fires', async () => {

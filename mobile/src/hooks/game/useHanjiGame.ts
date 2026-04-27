@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef } from 'react';
 
 import { z } from 'zod';
 
@@ -12,27 +12,50 @@ import { triggerHapticHard, triggerHapticLight, triggerHapticMedium } from '@/ut
 
 import { useStateTracker } from './useStateTracker';
 
-type GameState = HanjiCellState[][];
+type HanjiCells = HanjiCellState[][];
+
+type GameState = {
+  cells: HanjiCells;
+  hintedCells: string[];
+};
 
 type GameAction =
   | { type: 'SET_CELL'; row: number; col: number; state: HanjiCellState }
-  | { type: 'REPLACE'; cells: GameState }
+  | { type: 'APPLY_HINT'; row: number; col: number; state: HanjiCellState }
+  | { type: 'REPLACE'; state: GameState }
   | { type: 'RESET'; width: number; height: number };
 
-function createInitialState(width: number, height: number): GameState {
+function createInitialCells(width: number, height: number): HanjiCells {
   return Array.from({ length: height }, () =>
     Array.from({ length: width }, (): HanjiCellState => 'empty'),
   );
+}
+
+function createInitialState(width: number, height: number): GameState {
+  return { cells: createInitialCells(width, height), hintedCells: [] };
+}
+
+function setCellAt(cells: HanjiCells, row: number, col: number, value: HanjiCellState): HanjiCells {
+  return cells.map((r, ri) => (ri === row ? r.map((c, ci) => (ci === col ? value : c)) : r));
 }
 
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'SET_CELL': {
       const { row, col, state: next } = action;
-      return state.map((r, ri) => (ri === row ? r.map((c, ci) => (ci === col ? next : c)) : r));
+      return { ...state, cells: setCellAt(state.cells, row, col, next) };
+    }
+    case 'APPLY_HINT': {
+      const { row, col, state: next } = action;
+      const key = `${row},${col}`;
+      const cells = setCellAt(state.cells, row, col, next);
+      const hintedCells = state.hintedCells.includes(key)
+        ? state.hintedCells
+        : [...state.hintedCells, key];
+      return { cells, hintedCells };
     }
     case 'REPLACE':
-      return action.cells;
+      return action.state;
     case 'RESET':
       return createInitialState(action.width, action.height);
     default:
@@ -40,13 +63,21 @@ function gameReducer(state: GameState, action: GameAction): GameState {
   }
 }
 
-function cloneCells(cells: GameState): GameState {
-  return cells.map((row) => [...row]);
+function cloneState(state: GameState): GameState {
+  return {
+    cells: state.cells.map((row) => [...row]),
+    hintedCells: [...state.hintedCells],
+  };
 }
 
-function areCellsEqual(a: GameState, b: GameState): boolean {
-  if (a.length !== b.length) return false;
-  return a.every((row, rowIdx) => row.every((cell, colIdx) => cell === b[rowIdx]?.[colIdx]));
+function areStatesEqual(a: GameState, b: GameState): boolean {
+  if (a.cells.length !== b.cells.length) return false;
+  if (a.hintedCells.length !== b.hintedCells.length) return false;
+  const cellsEqual = a.cells.every((row, rowIdx) =>
+    row.every((cell, colIdx) => cell === b.cells[rowIdx]?.[colIdx]),
+  );
+  if (!cellsEqual) return false;
+  return a.hintedCells.every((key, idx) => key === b.hintedCells[idx]);
 }
 
 const CYCLE: Record<HanjiCellState, HanjiCellState> = {
@@ -56,7 +87,8 @@ const CYCLE: Record<HanjiCellState, HanjiCellState> = {
 };
 
 export type HanjiGame = {
-  cells: GameState;
+  cells: HanjiCells;
+  isHinted: (row: number, col: number) => boolean;
   isComplete: boolean;
   isUndoEnabled: boolean;
   onCellTap: (row: number, col: number) => void;
@@ -68,11 +100,12 @@ export type HanjiGame = {
 };
 
 type HanjiPersisted = {
-  cells: GameState;
+  cells: HanjiCells;
+  hintedCells?: string[];
   elapsedMs: number;
 };
 
-function cellsToHanjiSolution(cells: GameState): number[][] {
+function cellsToHanjiSolution(cells: HanjiCells): number[][] {
   return cells.map((row) => row.map((c) => (c === 'filled' ? 1 : 0)));
 }
 
@@ -93,7 +126,8 @@ export function useHanjiGame({
   const stableOnSolve = useStableCallback(onSolve);
   const { getElapsedMs, getSolveTiming, replaceAccumulatedMs } = usePlaytimeClockContext();
   const { width, height, rowClues, colClues, id: puzzleId } = puzzle;
-  const { isEmpty, pushStateSnapshot, popStateSnapshot } = useStateTracker<GameState>();
+  const { isEmpty, pushStateSnapshot, popStateSnapshot, clearSnapshots } =
+    useStateTracker<GameState>();
 
   const cellSchema = z.union([z.literal('empty'), z.literal('filled'), z.literal('marked')]);
   const cellsSchema = useMemo(
@@ -110,6 +144,7 @@ export function useHanjiGame({
     () =>
       z.object({
         cells: cellsSchema,
+        hintedCells: z.array(z.string()).optional(),
         elapsedMs: z.number().nonnegative(),
       }),
     [cellsSchema],
@@ -122,10 +157,13 @@ export function useHanjiGame({
     schema: persistedSchema,
   });
 
-  const [cells, dispatch] = useReducer(
+  const [state, dispatch] = useReducer(
     gameReducer,
-    { width, height, persisted: persistedState?.cells },
-    ({ width: w, height: h, persisted }) => persisted ?? createInitialState(w, h),
+    { width, height, persisted: persistedState },
+    ({ width: w, height: h, persisted }) =>
+      persisted == null
+        ? createInitialState(w, h)
+        : { cells: persisted.cells, hintedCells: persisted.hintedCells ?? [] },
   );
   const submittedRef = useRef(false);
   const hydratedPuzzleIdRef = useRef<string | null>(null);
@@ -139,13 +177,22 @@ export function useHanjiGame({
   }, [persistedState, puzzleId, replaceAccumulatedMs]);
 
   const isComplete = useMemo(
-    () => isPuzzleComplete(cells, rowClues, colClues, width, height),
-    [cells, rowClues, colClues, width, height],
+    () => isPuzzleComplete(state.cells, rowClues, colClues, width, height),
+    [state.cells, rowClues, colClues, width, height],
   );
 
   const saveWithTime = (next: GameState) => {
-    saveState({ cells: next, elapsedMs: getElapsedMs() });
+    saveState({
+      cells: next.cells,
+      hintedCells: next.hintedCells,
+      elapsedMs: getElapsedMs(),
+    });
   };
+
+  const isHinted = useCallback(
+    (row: number, col: number): boolean => state.hintedCells.includes(`${row},${col}`),
+    [state.hintedCells],
+  );
 
   // Trigger endgame when the puzzle is completed
   useEffect(() => {
@@ -156,7 +203,7 @@ export function useHanjiGame({
     const { durationMs, startedAt } = getSolveTiming(completedAt);
 
     stableOnSolve({
-      hanjiSolution: cellsToHanjiSolution(cells),
+      hanjiSolution: cellsToHanjiSolution(state.cells),
       durationMs,
       completedAt,
       startedAt,
@@ -167,25 +214,27 @@ export function useHanjiGame({
       .finally(() => {
         clearState();
       });
-  }, [cells, clearState, getSolveTiming, isComplete, stableOnSolve]);
+  }, [state.cells, clearState, getSolveTiming, isComplete, stableOnSolve]);
 
   const onCellTap = useStableCallback((row: number, col: number) => {
-    const current = cells[row][col];
+    if (isHinted(row, col)) return;
+    const current = state.cells[row][col];
     triggerHapticLight();
-    const nextState = gameReducer(cells, { type: 'SET_CELL', row, col, state: CYCLE[current] });
-    pushStateSnapshot(cloneCells(cells));
-    saveWithTime(nextState);
+    const next = gameReducer(state, { type: 'SET_CELL', row, col, state: CYCLE[current] });
+    pushStateSnapshot(cloneState(state));
+    saveWithTime(next);
     dispatch({ type: 'SET_CELL', row, col, state: CYCLE[current] });
   });
 
   const onCellLongPress = useStableCallback((row: number, col: number) => {
-    const current = cells[row][col];
+    if (isHinted(row, col)) return;
+    const current = state.cells[row][col];
     const next: HanjiCellState =
       current === 'empty' ? 'marked' : current === 'marked' ? 'empty' : current;
     if (next !== current) {
       triggerHapticMedium();
-      const nextState = gameReducer(cells, { type: 'SET_CELL', row, col, state: next });
-      pushStateSnapshot(cloneCells(cells));
+      const nextState = gameReducer(state, { type: 'SET_CELL', row, col, state: next });
+      pushStateSnapshot(cloneState(state));
       saveWithTime(nextState);
       dispatch({ type: 'SET_CELL', row, col, state: next });
     }
@@ -195,14 +244,16 @@ export function useHanjiGame({
     (hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Hanji }>) => {
       const { row, col, value } = hint;
       const desired: HanjiCellState = value === 1 ? 'filled' : 'empty';
-      const current = cells[row]?.[col];
-      if (current == null || current === desired) return;
+      const current = state.cells[row]?.[col];
+      if (current == null) return;
 
-      triggerHapticMedium();
-      const nextState = gameReducer(cells, { type: 'SET_CELL', row, col, state: desired });
-      pushStateSnapshot(cloneCells(cells));
+      if (current !== desired) {
+        triggerHapticMedium();
+      }
+      const nextState = gameReducer(state, { type: 'APPLY_HINT', row, col, state: desired });
+      clearSnapshots();
       saveWithTime(nextState);
-      dispatch({ type: 'SET_CELL', row, col, state: desired });
+      dispatch({ type: 'APPLY_HINT', row, col, state: desired });
     },
   );
 
@@ -210,21 +261,22 @@ export function useHanjiGame({
     const previous = popStateSnapshot();
     if (previous == null) return;
     saveWithTime(previous);
-    dispatch({ type: 'REPLACE', cells: previous });
+    dispatch({ type: 'REPLACE', state: previous });
   });
 
   const onClearPress = useStableCallback(() => {
-    const nextState = gameReducer(cells, { type: 'RESET', width, height });
-    if (areCellsEqual(cells, nextState)) return;
-    pushStateSnapshot(cloneCells(cells));
+    const nextState = gameReducer(state, { type: 'RESET', width, height });
+    if (areStatesEqual(state, nextState)) return;
+    pushStateSnapshot(cloneState(state));
     saveWithTime(nextState);
     dispatch({ type: 'RESET', width, height });
   });
 
-  const currentState = useMemo(() => cellsToHanjiSolution(cells), [cells]);
+  const currentState = useMemo(() => cellsToHanjiSolution(state.cells), [state.cells]);
 
   return {
-    cells,
+    cells: state.cells,
+    isHinted,
     isComplete,
     isUndoEnabled: !isEmpty,
     onCellTap,

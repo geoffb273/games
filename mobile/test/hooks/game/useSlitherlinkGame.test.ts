@@ -123,6 +123,37 @@ describe('useSlitherlinkGame', () => {
     expect(result.current.isComplete).toBe(false);
   });
 
+  it('locks the hinted edge so further presses cannot toggle it', async () => {
+    const puzzle = createPuzzle(2, 2);
+    const onSolve = jest.fn().mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useSlitherlinkGame({ puzzle, onSolve }));
+
+    const hint: Extract<PuzzleHint, { puzzleType: PuzzleType.Slitherlink }> = {
+      puzzleType: PuzzleType.Slitherlink,
+      row: 0,
+      col: 0,
+      edgeType: 'HORIZONTAL',
+      filled: true,
+    } satisfies PuzzleHint;
+
+    await act(async () => {
+      result.current.onHint(hint);
+    });
+
+    expect(result.current.horizontal[0][0]).toBe('line');
+
+    await act(async () => {
+      result.current.onHorizontalEdgePress(0, 0);
+    });
+    expect(result.current.horizontal[0][0]).toBe('line');
+
+    await act(async () => {
+      result.current.onVerticalEdgePress(0, 0);
+    });
+    expect(result.current.vertical[0][0]).toBe('line');
+  });
+
   it('calls onSolve when the puzzle is solved and returns the isComplete', async () => {
     const puzzle = createPuzzle(2, 2);
     const onSolve = jest.fn().mockResolvedValue(undefined);

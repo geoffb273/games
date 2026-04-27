@@ -49,6 +49,7 @@ export function HanjiBoard({
   const theme = useTheme();
   const {
     cells,
+    isHinted,
     onCellTap,
     onCellLongPress,
     onUndoPress,
@@ -159,6 +160,7 @@ export function HanjiBoard({
                   col={colIdx}
                   size={cellSize}
                   state={cells[rowIdx][colIdx]}
+                  isHinted={isHinted(rowIdx, colIdx)}
                   onTap={onCellTap}
                   onLongPress={onCellLongPress}
                   isDisabled={isDisabled || isComplete}

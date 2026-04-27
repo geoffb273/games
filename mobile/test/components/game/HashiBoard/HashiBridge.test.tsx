@@ -7,6 +7,7 @@ import { HashiBridge } from '@/components/game/HashiBoard/HashiBridge';
 
 const mockTheme = {
   text: '#333',
+  warning: '#f7c948',
 };
 
 jest.mock('@/hooks/useTheme', () => ({

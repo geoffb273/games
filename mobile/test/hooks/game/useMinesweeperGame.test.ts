@@ -140,6 +140,41 @@ describe('useMinesweeperGame', () => {
     expect(onSolve).toHaveBeenCalled();
   });
 
+  it('locks hinted cells so taps and long presses cannot change them', async () => {
+    const puzzle = createPuzzle();
+    const onSolve = jest.fn().mockResolvedValue(undefined);
+
+    jest.mocked(getCellsToReveal).mockReturnValue({
+      hitMine: false,
+      cells: [{ row: 1, col: 0, value: 0 }],
+    });
+
+    const { result } = renderHook(() => useMinesweeperGame({ puzzle, onSolve }));
+
+    const mineHint: Extract<PuzzleHint, { puzzleType: PuzzleType.Minesweeper }> = {
+      puzzleType: PuzzleType.Minesweeper,
+      row: 0,
+      col: 1,
+      isMine: true,
+    } satisfies PuzzleHint;
+
+    await act(async () => {
+      result.current.onHint(mineHint);
+    });
+    expect(result.current.cells[0][1]).toBe('flagged');
+    expect(result.current.isHinted(0, 1)).toBe(true);
+
+    await act(async () => {
+      result.current.onCellTap(0, 1);
+    });
+    expect(result.current.cells[0][1]).toBe('flagged');
+
+    await act(async () => {
+      result.current.onCellLongPress(0, 1);
+    });
+    expect(result.current.cells[0][1]).toBe('flagged');
+  });
+
   it('applies a mine hint by flagging and a safe hint by revealing', async () => {
     const puzzle = createPuzzle();
     const onSolve = jest.fn().mockResolvedValue(undefined);

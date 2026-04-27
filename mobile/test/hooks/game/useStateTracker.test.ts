@@ -52,4 +52,25 @@ describe('useStateTracker', () => {
     expect(popped).toBeUndefined();
     expect(result.current.isEmpty).toBe(true);
   });
+
+  it('empties the tracker when clearSnapshots is called', () => {
+    const { result } = renderHook(() => useStateTracker<string>());
+
+    act(() => {
+      result.current.pushStateSnapshot('first');
+      result.current.pushStateSnapshot('second');
+    });
+    expect(result.current.isEmpty).toBe(false);
+
+    act(() => {
+      result.current.clearSnapshots();
+    });
+    expect(result.current.isEmpty).toBe(true);
+
+    let popped: string | undefined;
+    act(() => {
+      popped = result.current.popStateSnapshot();
+    });
+    expect(popped).toBeUndefined();
+  });
 });

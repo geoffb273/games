@@ -14,34 +14,50 @@ import { isHashiComplete } from '@/utils/hashi/validation';
 
 import { useStateTracker } from './useStateTracker';
 
-type GameState = number[];
+type BridgeCounts = number[];
+
+type GameState = {
+  bridgeCounts: BridgeCounts;
+  hintedConnections: number[];
+};
 
 type GameAction =
   | { type: 'CYCLE_CONNECTION'; connectionIndex: number }
   | { type: 'RESET'; connectionCount: number }
-  | { type: 'SET_CONNECTION'; connectionIndex: number; bridges: number }
+  | { type: 'APPLY_HINT'; connectionIndex: number; bridges: number }
   | { type: 'REPLACE'; state: GameState };
 
-function createInitialState(connectionCount: number): GameState {
+function createInitialBridgeCounts(connectionCount: number): BridgeCounts {
   return Array.from({ length: connectionCount }, () => 0);
 }
 
-function cloneGameState(state: GameState): GameState {
-  return [...state];
+function createInitialState(connectionCount: number): GameState {
+  return { bridgeCounts: createInitialBridgeCounts(connectionCount), hintedConnections: [] };
+}
+
+function cloneState(state: GameState): GameState {
+  return { bridgeCounts: [...state.bridgeCounts], hintedConnections: [...state.hintedConnections] };
 }
 
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'CYCLE_CONNECTION': {
       const { connectionIndex } = action;
-      const current = state[connectionIndex];
+      const current = state.bridgeCounts[connectionIndex];
       const next = current >= 2 ? 0 : current + 1;
-      return state.map((v, i) => (i === connectionIndex ? next : v));
+      return {
+        ...state,
+        bridgeCounts: state.bridgeCounts.map((v, i) => (i === connectionIndex ? next : v)),
+      };
     }
-    case 'SET_CONNECTION': {
+    case 'APPLY_HINT': {
       const { connectionIndex, bridges } = action;
       const clamped = Math.max(0, Math.min(2, bridges));
-      return state.map((v, i) => (i === connectionIndex ? clamped : v));
+      const bridgeCounts = state.bridgeCounts.map((v, i) => (i === connectionIndex ? clamped : v));
+      const hintedConnections = state.hintedConnections.includes(connectionIndex)
+        ? state.hintedConnections
+        : [...state.hintedConnections, connectionIndex];
+      return { bridgeCounts, hintedConnections };
     }
     case 'REPLACE': {
       return action.state;
@@ -56,6 +72,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
 export type HashiGame = {
   connections: ReturnType<typeof findConnections>;
   bridgeCounts: number[];
+  isHinted: (connectionIndex: number) => boolean;
   isComplete: boolean;
   /** Returns true if adding a bridge on the given connection would not cross any existing bridges. */
   isValidBridge: (connectionIndex: number) => boolean;
@@ -80,7 +97,8 @@ export type HashiOnSolve = (params: {
 }) => Promise<void>;
 
 type HashiPersisted = {
-  bridgeCounts: GameState;
+  bridgeCounts: BridgeCounts;
+  hintedConnections?: number[];
   elapsedMs: number;
 };
 
@@ -97,7 +115,7 @@ function buildHashiSolution(
         to: { row: islands[conn.b].row, col: islands[conn.b].col },
       };
     })
-    .filter((state) => state.bridges > 0);
+    .filter((entry) => entry.bridges > 0);
 }
 
 function buildHashiCurrentState(
@@ -111,7 +129,7 @@ function buildHashiCurrentState(
       from: { row: islands[conn.a].row, col: islands[conn.a].col },
       to: { row: islands[conn.b].row, col: islands[conn.b].col },
     }))
-    .filter((state) => state.bridges > 0);
+    .filter((entry) => entry.bridges > 0);
 }
 
 export function useHashiGame({
@@ -138,12 +156,14 @@ export function useHashiGame({
     () =>
       z.object({
         bridgeCounts: bridgeCountsSchema,
+        hintedConnections: z.array(z.number().int().nonnegative()).optional(),
         elapsedMs: z.number().nonnegative(),
       }),
     [bridgeCountsSchema],
   );
 
-  const { isEmpty, pushStateSnapshot, popStateSnapshot } = useStateTracker<GameState>();
+  const { isEmpty, pushStateSnapshot, popStateSnapshot, clearSnapshots } =
+    useStateTracker<GameState>();
 
   const { persistedState, saveState, clearState } = usePersistedGameState<HashiPersisted>({
     puzzleId,
@@ -152,10 +172,16 @@ export function useHashiGame({
     schema: persistedSchema,
   });
 
-  const [bridgeCounts, dispatch] = useReducer(
+  const [state, dispatch] = useReducer(
     gameReducer,
-    { count: connections.length, persisted: persistedState?.bridgeCounts },
-    ({ count, persisted }) => persisted ?? createInitialState(count),
+    { count: connections.length, persisted: persistedState },
+    ({ count, persisted }) =>
+      persisted == null
+        ? createInitialState(count)
+        : {
+            bridgeCounts: persisted.bridgeCounts,
+            hintedConnections: persisted.hintedConnections ?? [],
+          },
   );
   const submittedRef = useRef(false);
   const hydratedPuzzleIdRef = useRef<string | null>(null);
@@ -169,12 +195,16 @@ export function useHashiGame({
   }, [persistedState, puzzleId, replaceAccumulatedMs]);
 
   const isComplete = useMemo(
-    () => isHashiComplete(islands, connections, bridgeCounts),
-    [islands, connections, bridgeCounts],
+    () => isHashiComplete(islands, connections, state.bridgeCounts),
+    [islands, connections, state.bridgeCounts],
   );
 
   const saveWithTime = (next: GameState) => {
-    saveState({ bridgeCounts: next, elapsedMs: getElapsedMs() });
+    saveState({
+      bridgeCounts: next.bridgeCounts,
+      hintedConnections: next.hintedConnections,
+      elapsedMs: getElapsedMs(),
+    });
   };
 
   useEffect(() => {
@@ -186,7 +216,7 @@ export function useHashiGame({
     const { durationMs, startedAt } = getSolveTiming(completedAt);
 
     stableOnSolve({
-      hashiSolution: buildHashiSolution(connections, bridgeCounts, islands),
+      hashiSolution: buildHashiSolution(connections, state.bridgeCounts, islands),
       durationMs,
       completedAt,
       startedAt,
@@ -197,18 +227,27 @@ export function useHashiGame({
       .finally(() => {
         clearState();
       });
-  }, [bridgeCounts, clearState, connections, getSolveTiming, islands, isComplete, stableOnSolve]);
+  }, [
+    state.bridgeCounts,
+    clearState,
+    connections,
+    getSolveTiming,
+    islands,
+    isComplete,
+    stableOnSolve,
+  ]);
 
   const isValidBridge = useCallback(
     (connectionIndex: number): boolean =>
-      !wouldNewBridgeCrossExisting(connectionIndex, connections, bridgeCounts, islands),
-    [connections, bridgeCounts, islands],
+      !wouldNewBridgeCrossExisting(connectionIndex, connections, state.bridgeCounts, islands),
+    [connections, state.bridgeCounts, islands],
   );
 
   const onConnectionTap = useStableCallback((connectionIndex: number) => {
+    if (state.hintedConnections.includes(connectionIndex)) return;
     triggerHapticLight();
-    const next = gameReducer(bridgeCounts, { type: 'CYCLE_CONNECTION', connectionIndex });
-    pushStateSnapshot(cloneGameState(bridgeCounts));
+    const next = gameReducer(state, { type: 'CYCLE_CONNECTION', connectionIndex });
+    pushStateSnapshot(cloneState(state));
     saveWithTime(next);
     dispatch({ type: 'CYCLE_CONNECTION', connectionIndex });
   });
@@ -231,14 +270,14 @@ export function useHashiGame({
 
       if (connectionIndex < 0) return;
 
-      const next = gameReducer(bridgeCounts, {
-        type: 'SET_CONNECTION',
+      const next = gameReducer(state, {
+        type: 'APPLY_HINT',
         connectionIndex,
         bridges: hint.bridges,
       });
-      pushStateSnapshot(cloneGameState(bridgeCounts));
+      clearSnapshots();
       saveWithTime(next);
-      dispatch({ type: 'SET_CONNECTION', connectionIndex, bridges: hint.bridges });
+      dispatch({ type: 'APPLY_HINT', connectionIndex, bridges: hint.bridges });
     },
   );
 
@@ -264,33 +303,37 @@ export function useHashiGame({
   });
 
   const onClearPress = useStableCallback(() => {
-    const nextState = gameReducer(bridgeCounts, {
+    const nextState = gameReducer(state, {
       type: 'RESET',
       connectionCount: connections.length,
     });
+    pushStateSnapshot(cloneState(state));
     saveWithTime(nextState);
-    pushStateSnapshot(cloneGameState(bridgeCounts));
     dispatch({ type: 'RESET', connectionCount: connections.length });
     lastIslandTapRef.current = null;
   });
 
   const onUndoPress = useStableCallback(() => {
     const previous = popStateSnapshot();
-
     if (previous == null) return;
-    const next = gameReducer(previous, { type: 'REPLACE', state: previous });
-    saveWithTime(next);
+    saveWithTime(previous);
     dispatch({ type: 'REPLACE', state: previous });
   });
 
   const currentState = useMemo(
-    () => buildHashiCurrentState(connections, bridgeCounts, islands),
-    [connections, bridgeCounts, islands],
+    () => buildHashiCurrentState(connections, state.bridgeCounts, islands),
+    [connections, state.bridgeCounts, islands],
+  );
+
+  const isHinted = useCallback(
+    (connectionIndex: number): boolean => state.hintedConnections.includes(connectionIndex),
+    [state.hintedConnections],
   );
 
   return {
     connections,
-    bridgeCounts,
+    bridgeCounts: state.bridgeCounts,
+    isHinted,
     isComplete,
     isValidBridge,
     onConnectionTap,
