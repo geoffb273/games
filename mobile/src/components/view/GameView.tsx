@@ -65,7 +65,7 @@ export function GameView({ id }: { id: string }) {
       <VerticallyCenteredLayout>
         <View style={styles.completedContainer}>
           <PuzzleCompletedView
-            puzzleType={puzzle.type}
+            puzzle={puzzle}
             solved={puzzle.attempt.completedAt != null}
             durationMs={puzzle.attempt.durationMs}
             nextPuzzle={nextPuzzle}

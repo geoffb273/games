@@ -3,9 +3,12 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
+import { getPuzzleShareCard } from '@/components/game/share/getPuzzleShareCard';
+import { ShareResultButton } from '@/components/game/share/ShareResultButton';
 import { PuzzleCard } from '@/components/PuzzleCard';
 import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
+import { usePuzzleCompletionData } from '@/store/puzzleCompletionStore';
 import { formatDuration } from '@/utils/timeUtils';
 
 const PUZZLE_TYPE_LABELS: Record<Puzzle['type'], string> = {
@@ -17,22 +20,25 @@ const PUZZLE_TYPE_LABELS: Record<Puzzle['type'], string> = {
 };
 
 type PuzzleCompletedViewProps = {
-  puzzleType: Puzzle['type'];
+  puzzle: Puzzle;
   solved: boolean;
   durationMs?: number | null;
   nextPuzzle: Puzzle | null;
 };
 
 export function PuzzleCompletedView({
-  puzzleType,
+  puzzle,
   solved,
   durationMs,
   nextPuzzle,
 }: PuzzleCompletedViewProps) {
   const theme = useTheme();
-  const typeLabel = PUZZLE_TYPE_LABELS[puzzleType];
+  const typeLabel = PUZZLE_TYPE_LABELS[puzzle.type];
+  const completion = usePuzzleCompletionData(puzzle.id);
 
   const formattedDuration = formatDuration(durationMs);
+
+  const shareCard = solved ? getPuzzleShareCard({ puzzle, completion, durationMs }) : null;
 
   return (
     <Animated.View
@@ -68,6 +74,13 @@ export function PuzzleCompletedView({
       <Text type="caption" color={solved ? 'success' : 'warning'} textAlign="center">
         {solved ? 'Marked as solved' : 'Marked as attempted'}
       </Text>
+
+      {shareCard != null && (
+        <View style={styles.shareContainer}>
+          <ShareResultButton shareCard={shareCard} dialogTitle={`${puzzle.name} solved`} />
+        </View>
+      )}
+
       {nextPuzzle != null && (
         <Animated.View style={styles.playNextButtonContainer}>
           <PuzzleCard puzzle={nextPuzzle} variant="small" />
@@ -95,6 +108,11 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 1,
     marginVertical: Spacing.one,
+  },
+  shareContainer: {
+    marginTop: Spacing.two,
+    alignSelf: 'stretch',
+    alignItems: 'center',
   },
   playNextButtonContainer: {
     position: 'absolute',
