@@ -79,8 +79,8 @@ export function GameViewFlowBoard({ puzzle, onAnimationComplete }: GameViewFlowB
       }
 
       if (updatedDailyChallenge != null) {
-        const { puzzleCount, completedPuzzleCount } = updatedDailyChallenge;
-        if (completedPuzzleCount === puzzleCount) {
+        const { completedPuzzleCount } = updatedDailyChallenge;
+        if (completedPuzzleCount === 1) {
           void refetch();
         }
       }
