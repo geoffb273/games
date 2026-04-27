@@ -41,6 +41,7 @@ type FlowPair {
 
 type FlowPuzzle implements Puzzle {
   attempt: PuzzleAttempt
+  dailyChallenge: PuzzleDailyChallengeResult!
   dailyChallengeId: ID!
   description: String
   height: Int!
@@ -60,6 +61,7 @@ type HanjiHint {
 type HanjiPuzzle implements Puzzle {
   attempt: PuzzleAttempt
   colClues: [[Int!]!]!
+  dailyChallenge: PuzzleDailyChallengeResult!
   dailyChallengeId: ID!
   description: String
   height: Int!
@@ -100,6 +102,7 @@ type HashiIsland {
 
 type HashiPuzzle implements Puzzle {
   attempt: PuzzleAttempt
+  dailyChallenge: PuzzleDailyChallengeResult!
   dailyChallengeId: ID!
   description: String
   height: Int!
@@ -131,6 +134,7 @@ type MinesweeperHint {
 
 type MinesweeperPuzzle implements Puzzle {
   attempt: PuzzleAttempt
+  dailyChallenge: PuzzleDailyChallengeResult!
   dailyChallengeId: ID!
   description: String
   height: Int!
@@ -283,6 +287,7 @@ type PageInfo {
 
 interface Puzzle {
   attempt: PuzzleAttempt
+  dailyChallenge: PuzzleDailyChallengeResult!
   dailyChallengeId: ID!
   description: String
   id: ID!
@@ -300,6 +305,12 @@ type PuzzleAttempt {
   """
   percentage: Float!
   startedAt: DateTime!
+}
+
+union PuzzleDailyChallengeResult = NotFoundError | PuzzleDailyChallengeSuccess
+
+type PuzzleDailyChallengeSuccess {
+  data: DailyChallenge!
 }
 
 union PuzzleHint = HanjiHint | HashiHint | MinesweeperHint | SlitherlinkHint
@@ -400,6 +411,7 @@ type SlitherlinkHint {
 type SlitherlinkPuzzle implements Puzzle {
   attempt: PuzzleAttempt
   clues: [[Int]!]!
+  dailyChallenge: PuzzleDailyChallengeResult!
   dailyChallengeId: ID!
   description: String
   height: Int!

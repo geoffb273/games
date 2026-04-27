@@ -6,6 +6,7 @@ import { type CursorArgs } from '@/utils/paginationUtils';
 import {
   createDailyChallenge as createDailyChallengeDao,
   getCompletedPuzzleCountsByDailyChallengeIds as getCompletedPuzzleCountsByDailyChallengeIdsDao,
+  getDailyChallengesByIds as getDailyChallengesByIdsDao,
   getLatestDailyChallenge as getLatestDailyChallengeDao,
   getPuzzleCountsByDailyChallengeIds as getPuzzleCountsByDailyChallengeIdsDao,
   listDailyChallenges as listDailyChallengesDao,
@@ -40,6 +41,14 @@ export async function listDailyChallenges(
   params: CursorArgs<{ date: Date }>,
 ): Promise<DailyChallenge[]> {
   return listDailyChallengesDao(params);
+}
+
+export async function getDailyChallengesByIds({
+  dailyChallengeIds,
+}: {
+  dailyChallengeIds: readonly string[];
+}): Promise<Map<string, DailyChallenge>> {
+  return getDailyChallengesByIdsDao({ dailyChallengeIds });
 }
 
 export async function getPuzzleCountsByDailyChallengeIds({

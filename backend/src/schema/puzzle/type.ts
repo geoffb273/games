@@ -11,7 +11,8 @@ import { type UserPuzzleAttempt } from '@/platform/puzzle/resource/userPuzzleAtt
 import { computeSolutionCells } from '@/utils/puzzle/minesweeper';
 
 import { builder } from '../builder';
-import { UnknownError } from '../errors';
+import { DailyChallengeRef } from '../dailyChallenge/type';
+import { NotFoundError, UnknownError } from '../errors';
 
 export const PuzzleAttemptRef = builder.objectRef<UserPuzzleAttempt>('PuzzleAttempt').implement({
   fields: (t) => ({
@@ -46,6 +47,20 @@ export const PuzzleRef = builder.interfaceRef<Puzzle>('Puzzle').implement({
     name: t.exposeString('name', { nullable: false }),
     description: t.exposeString('description', { nullable: true }),
     dailyChallengeId: t.exposeID('dailyChallengeId', { nullable: false }),
+    dailyChallenge: t.field({
+      type: DailyChallengeRef,
+      nullable: false,
+      errors: {
+        types: [NotFoundError],
+      },
+      resolve: async (puzzle, _args, { dataloaders: { dailyChallengeById } }) => {
+        const dailyChallenge = await dailyChallengeById.load(puzzle.dailyChallengeId);
+        if (dailyChallenge == null) {
+          throw new NotFoundError('Daily challenge not found');
+        }
+        return dailyChallenge;
+      },
+    }),
     attempt: t.field({
       type: PuzzleAttemptRef,
       nullable: true,
