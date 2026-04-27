@@ -3,12 +3,11 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
-import { getPuzzleShareCard } from '@/components/game/share/getPuzzleShareCard';
+import { SharePuzzleCard } from '@/components/game/share/SharePuzzleCard';
 import { ShareResultButton } from '@/components/game/share/ShareResultButton';
 import { PuzzleCard } from '@/components/PuzzleCard';
 import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
-import { usePuzzleCompletionData } from '@/store/puzzleCompletionStore';
 import { formatDuration } from '@/utils/timeUtils';
 
 const PUZZLE_TYPE_LABELS: Record<Puzzle['type'], string> = {
@@ -34,11 +33,8 @@ export function PuzzleCompletedView({
 }: PuzzleCompletedViewProps) {
   const theme = useTheme();
   const typeLabel = PUZZLE_TYPE_LABELS[puzzle.type];
-  const completion = usePuzzleCompletionData(puzzle.id);
 
   const formattedDuration = formatDuration(durationMs);
-
-  const shareCard = solved ? getPuzzleShareCard({ puzzle, completion, durationMs }) : null;
 
   return (
     <Animated.View
@@ -75,9 +71,11 @@ export function PuzzleCompletedView({
         {solved ? 'Marked as solved' : 'Marked as attempted'}
       </Text>
 
-      {shareCard != null && (
+      {solved && (
         <View style={styles.shareContainer}>
-          <ShareResultButton shareCard={shareCard} dialogTitle={`${puzzle.name} solved`} />
+          <ShareResultButton>
+            <SharePuzzleCard puzzle={puzzle} durationMs={durationMs} />
+          </ShareResultButton>
         </View>
       )}
 

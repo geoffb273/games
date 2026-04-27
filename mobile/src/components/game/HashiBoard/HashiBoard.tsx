@@ -12,6 +12,7 @@ import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { type HashiOnSolve, useHashiGame } from '@/hooks/game/useHashiGame';
 import { useTheme } from '@/hooks/useTheme';
+import { type HashiConnection } from '@/utils/hashi/connections';
 
 import { HashiBridge } from './HashiBridge';
 import { HashiIsland } from './HashiIsland';
@@ -30,6 +31,129 @@ type HashiBoardProps = {
   isDisabled?: boolean;
   onAnimationComplete?: () => void;
 };
+
+type HashiBoardSurfaceBaseProps = {
+  puzzle: HashiPuzzle;
+  cellSize: number;
+  boardWidth: number;
+  boardHeight: number;
+  connections: HashiConnection[];
+};
+
+type StaticHashiBoardSurfaceProps = HashiBoardSurfaceBaseProps & {
+  variant: 'static';
+  bridgeCounts?: never;
+  isDisabled?: never;
+  isCompletionWaveActive?: never;
+  isHinted?: never;
+  isValidBridge?: never;
+  onConnectionTap?: never;
+  onIslandPress?: never;
+  onAnimationComplete?: never;
+};
+
+type PlayableHashiBoardSurfaceProps = HashiBoardSurfaceBaseProps & {
+  variant: 'playable';
+  bridgeCounts: number[];
+  isDisabled: boolean;
+  isCompletionWaveActive: boolean;
+  isHinted: (connectionIndex: number) => boolean;
+  isValidBridge: (connectionIndex: number) => boolean;
+  onConnectionTap: (connectionIndex: number) => void;
+  onIslandPress: ({ row, col }: { row: number; col: number }) => void;
+  onAnimationComplete?: () => void;
+};
+
+type HashiBoardSurfaceProps = StaticHashiBoardSurfaceProps | PlayableHashiBoardSurfaceProps;
+
+export function HashiBoardSurface({
+  variant,
+  puzzle,
+  cellSize,
+  boardWidth,
+  boardHeight,
+  connections,
+  bridgeCounts: playableBridgeCounts,
+  isDisabled,
+  isCompletionWaveActive,
+  isHinted,
+  isValidBridge,
+  onConnectionTap,
+  onIslandPress,
+  onAnimationComplete,
+}: HashiBoardSurfaceProps) {
+  const isPlayable = variant === 'playable';
+  const bridgeCounts = playableBridgeCounts ?? Array.from({ length: connections.length }, () => 0);
+
+  const islandPositions = useMemo(() => {
+    return puzzle.islands.map((island) => ({
+      x: island.col * (cellSize + CELL_GAP) + cellSize / 2,
+      y: island.row * (cellSize + CELL_GAP) + cellSize / 2,
+    }));
+  }, [puzzle.islands, cellSize]);
+
+  const currentBridgesPerIsland = useMemo((): number[] => {
+    return connections.reduce<number[]>((counts, conn, ci) => {
+      const n = bridgeCounts[ci] ?? 0;
+      counts[conn.a] += n;
+      counts[conn.b] += n;
+      return counts;
+    }, new Array(puzzle.islands.length).fill(0));
+  }, [puzzle.islands.length, connections, bridgeCounts]);
+
+  const lastIslandIndex = useMemo(() => {
+    if (puzzle.islands.length === 0) return -1;
+
+    return puzzle.islands.reduce((currentMaxIndex, island, index, islands) => {
+      const currentMaxIsland = islands[currentMaxIndex];
+      const currentMaxPosition = currentMaxIsland.row + currentMaxIsland.col;
+      const islandPosition = island.row + island.col;
+
+      return islandPosition > currentMaxPosition ? index : currentMaxIndex;
+    }, 0);
+  }, [puzzle.islands]);
+
+  return (
+    <View style={[styles.boardWrap, { width: boardWidth, height: boardHeight }]}>
+      {/* Bridge lines (drawn first, under islands) */}
+      {connections.map((conn, ci) => (
+        <HashiBridge
+          key={ci}
+          x1={islandPositions[conn.a].x}
+          y1={islandPositions[conn.a].y}
+          x2={islandPositions[conn.b].x}
+          y2={islandPositions[conn.b].y}
+          count={bridgeCounts[ci] as 0 | 1 | 2}
+          isHinted={isHinted?.(ci) ?? false}
+          disabled={
+            !isPlayable ||
+            isCompletionWaveActive ||
+            isDisabled ||
+            (bridgeCounts[ci] < 2 && !isValidBridge(ci))
+          }
+          onPress={() => onConnectionTap?.(ci)}
+        />
+      ))}
+
+      {/* Islands on top */}
+      {puzzle.islands.map((island, i) => (
+        <HashiIsland
+          key={i}
+          isDisabled={!isPlayable || isDisabled}
+          requiredBridges={island.requiredBridges}
+          currentBridges={currentBridgesPerIsland[i] ?? 0}
+          x={islandPositions[i].x}
+          y={islandPositions[i].y}
+          cellSize={cellSize}
+          isCompletionWaveActive={isCompletionWaveActive ?? false}
+          isLastInWave={i === lastIslandIndex}
+          onWaveComplete={onAnimationComplete}
+          onPress={() => onIslandPress?.({ row: island.row, col: island.col })}
+        />
+      ))}
+    </View>
+  );
+}
 
 export function HashiBoard({
   puzzle,
@@ -67,76 +191,27 @@ export function HashiBoard({
 
   useInitialOpenInstructionsEffect({ type: PuzzleType.Hashi, enabled: variant === 'play' });
 
-  const islandPositions = useMemo(() => {
-    return puzzle.islands.map((island) => ({
-      x: island.col * (cellSize + CELL_GAP) + cellSize / 2,
-      y: island.row * (cellSize + CELL_GAP) + cellSize / 2,
-    }));
-  }, [puzzle.islands, cellSize]);
-
-  const currentBridgesPerIsland = useMemo((): number[] => {
-    return connections.reduce<number[]>((counts, conn, ci) => {
-      const n = bridgeCounts[ci] ?? 0;
-      counts[conn.a] += n;
-      counts[conn.b] += n;
-      return counts;
-    }, new Array(puzzle.islands.length).fill(0));
-  }, [puzzle.islands.length, connections, bridgeCounts]);
-
-  const lastIslandIndex = useMemo(() => {
-    if (puzzle.islands.length === 0) return -1;
-
-    return puzzle.islands.reduce((currentMaxIndex, island, index, islands) => {
-      const currentMaxIsland = islands[currentMaxIndex];
-      const currentMaxPosition = currentMaxIsland.row + currentMaxIsland.col;
-      const islandPosition = island.row + island.col;
-
-      return islandPosition > currentMaxPosition ? index : currentMaxIndex;
-    }, 0);
-  }, [puzzle.islands]);
-
   return (
     <View style={styles.container}>
       <Text type="h3" textAlign="center">
         {puzzle.name}
       </Text>
-
-      <View style={[styles.boardWrap, { width: boardWidth, height: boardHeight }]}>
-        {/* Bridge lines (drawn first, under islands) */}
-        {connections.map((conn, ci) => (
-          <HashiBridge
-            key={ci}
-            x1={islandPositions[conn.a].x}
-            y1={islandPositions[conn.a].y}
-            x2={islandPositions[conn.b].x}
-            y2={islandPositions[conn.b].y}
-            count={bridgeCounts[ci] as 0 | 1 | 2}
-            isHinted={isHinted(ci)}
-            disabled={
-              isCompletionWaveActive || isDisabled || (bridgeCounts[ci] < 2 && !isValidBridge(ci))
-            }
-            onPress={() => onConnectionTap(ci)}
-          />
-        ))}
-
-        {/* Islands on top */}
-        {puzzle.islands.map((island, i) => (
-          <HashiIsland
-            key={i}
-            isDisabled={isDisabled}
-            requiredBridges={island.requiredBridges}
-            currentBridges={currentBridgesPerIsland[i] ?? 0}
-            x={islandPositions[i].x}
-            y={islandPositions[i].y}
-            cellSize={cellSize}
-            isCompletionWaveActive={isCompletionWaveActive}
-            isLastInWave={i === lastIslandIndex}
-            onWaveComplete={onAnimationComplete}
-            onPress={() => onIslandPress({ row: island.row, col: island.col })}
-          />
-        ))}
-      </View>
-
+      <HashiBoardSurface
+        variant="playable"
+        puzzle={puzzle}
+        cellSize={cellSize}
+        boardWidth={boardWidth}
+        boardHeight={boardHeight}
+        connections={connections}
+        bridgeCounts={bridgeCounts}
+        isHinted={isHinted}
+        isValidBridge={isValidBridge}
+        isDisabled={isDisabled}
+        isCompletionWaveActive={isCompletionWaveActive}
+        onConnectionTap={onConnectionTap}
+        onIslandPress={onIslandPress}
+        onAnimationComplete={onAnimationComplete}
+      />
       {variant === 'play' && (
         <View style={styles.actions}>
           <Button

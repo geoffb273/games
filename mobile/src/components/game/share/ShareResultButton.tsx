@@ -10,9 +10,7 @@ import { useCaptureAndShare } from './useCaptureAndShare';
 
 type ShareResultButtonProps = {
   /** The fully-rendered share card to capture as an image. */
-  shareCard: ReactElement;
-  /** Optional title for the platform share dialog (Android). */
-  dialogTitle?: string;
+  children: ReactElement;
 };
 
 /**
@@ -22,7 +20,7 @@ type ShareResultButtonProps = {
  * The hidden card is rendered off-screen but laid out and on-window so
  * `react-native-view-shot` can capture it without flashing visible content.
  */
-export function ShareResultButton({ shareCard, dialogTitle }: ShareResultButtonProps) {
+export function ShareResultButton({ children }: ShareResultButtonProps) {
   const theme = useTheme();
   const { captureRef, share, isSharing, isUnavailable } = useCaptureAndShare();
 
@@ -34,16 +32,15 @@ export function ShareResultButton({ shareCard, dialogTitle }: ShareResultButtonP
     <>
       <Button
         variant="secondary"
-        onPress={() => share({ dialogTitle })}
+        onPress={share}
         disabled={isSharing}
         leadingIcon={<FontAwesome name="share-square-o" size={20} color={theme.text} />}
       >
         {isSharing ? 'Preparing…' : 'Share Result'}
       </Button>
-
       <View pointerEvents="none" collapsable={false} style={styles.offscreen}>
         <View ref={captureRef} collapsable={false}>
-          {shareCard}
+          {children}
         </View>
       </View>
     </>

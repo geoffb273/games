@@ -15,7 +15,6 @@ import {
 import { Spacing } from '@/constants/token';
 import { type HashiOnSolve } from '@/hooks/game/useHashiGame';
 import { useStableCallback } from '@/hooks/useStableCallback';
-import { setPuzzleCompletionData } from '@/store/puzzleCompletionStore';
 
 type GameViewHashiBoardProps = {
   puzzle: HashiPuzzle;
@@ -49,10 +48,6 @@ export function GameViewHashiBoard({ puzzle, onAnimationComplete }: GameViewHash
 
   const onSolve = useStableCallback(async (params: Parameters<HashiOnSolve>[0]) => {
     const { durationMs, completedAt, startedAt, hashiSolution } = params;
-    setPuzzleCompletionData(puzzle.id, {
-      type: PuzzleType.Hashi,
-      bridges: hashiSolution,
-    });
     updateOptimisticallyPuzzleAttempt({
       startedAt,
       completedAt,
