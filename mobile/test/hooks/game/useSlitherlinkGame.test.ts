@@ -46,7 +46,10 @@ describe('useSlitherlinkGame', () => {
   function createPuzzle(width: number, height: number) {
     return {
       id: 'test-puzzle',
-      dailyChallengeId: 'test-daily-challenge',
+      dailyChallenge: {
+        id: 'test-daily-challenge',
+        date: new Date(),
+      },
       width,
       height,
       clues: Array.from({ length: height }, () => Array.from({ length: width }, () => null)),

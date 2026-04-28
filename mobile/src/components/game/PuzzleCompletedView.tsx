@@ -91,7 +91,7 @@ export function PuzzleCompletedView({
 const styles = StyleSheet.create({
   card: {
     alignItems: 'center',
-    paddingVertical: Spacing.five,
+    paddingVertical: Spacing.four,
     paddingHorizontal: Spacing.five,
     borderRadius: Radii.lg,
     borderWidth: 1,
@@ -109,8 +109,6 @@ const styles = StyleSheet.create({
   },
   shareContainer: {
     marginTop: Spacing.two,
-    alignSelf: 'stretch',
-    alignItems: 'center',
   },
   playNextButtonContainer: {
     position: 'absolute',

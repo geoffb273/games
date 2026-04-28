@@ -33,7 +33,11 @@ export function ShareHashiBoard({ puzzle, durationMs }: ShareHashiBoardProps) {
   const staticConnections = useMemo(() => findConnections(puzzle.islands), [puzzle.islands]);
 
   return (
-    <ShareAssetCard title={puzzle.name} durationMs={durationMs}>
+    <ShareAssetCard
+      title={puzzle.name}
+      dailyChallengeDate={puzzle.dailyChallenge.date}
+      durationMs={durationMs}
+    >
       <HashiBoardSurface
         variant="static"
         puzzle={puzzle}

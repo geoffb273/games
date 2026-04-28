@@ -9,17 +9,7 @@ import { Text } from '@/components/common/Text';
 import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 import { getColorWithOpacity } from '@/utils/colorUtils';
-
-function formatDate(date: Date): string {
-  const d = new Date(date);
-
-  return d.toLocaleDateString(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'America/New_York',
-  });
-}
+import { formatDailyChallengeDate } from '@/utils/timeUtils';
 
 type DailyChallengesListProps = {
   dailyChallenges: DailyChallengeType[];
@@ -110,7 +100,7 @@ const DailyChallenge = memo(function DailyChallenge({
         },
       ]}
     >
-      <Text type="body">{formatDate(challenge.date)}</Text>
+      <Text type="body">{formatDailyChallengeDate(challenge.date)}</Text>
       <Text type="caption" color="textSecondary">
         {`${challenge.completedPuzzleCount}/${challenge.puzzleCount} complete`}
       </Text>

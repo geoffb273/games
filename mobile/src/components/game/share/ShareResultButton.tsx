@@ -1,7 +1,7 @@
 import { type ReactElement } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome6 } from '@expo/vector-icons';
 
 import { Button } from '@/components/common/Button';
 import { useCaptureAndShare } from '@/hooks/useCaptureAndShare';
@@ -30,12 +30,14 @@ export function ShareResultButton({ children }: ShareResultButtonProps) {
   return (
     <>
       <Button
-        variant="secondary"
+        variant="ghost"
         onPress={share}
         disabled={isSharing}
-        leadingIcon={<FontAwesome name="share-square-o" size={20} color={theme.text} />}
+        leadingIcon={
+          <FontAwesome6 name="arrow-up-from-bracket" size={20} color={theme.text} solid />
+        }
       >
-        {isSharing ? 'Preparing…' : 'Share Result'}
+        Share Result
       </Button>
       <View pointerEvents="none" collapsable={false} style={styles.offscreen}>
         <View ref={captureRef} collapsable={false}>

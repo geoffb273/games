@@ -31,7 +31,7 @@ export function GameView({ id }: { id: string }) {
   } = usePuzzleBoardTransition({ puzzle, puzzleId: id });
 
   const isPuzzleMissing = !isLoading && puzzle == null;
-  const challengeId = puzzle?.dailyChallengeId;
+  const challengeId = puzzle?.dailyChallenge.id;
   const { puzzles: challengePuzzles } = usePuzzlesQuery({
     dailyChallengeId: challengeId,
     enabled: challengeId != null,

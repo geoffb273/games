@@ -34,3 +34,13 @@ export function formatDuration(durationMs: number | null | undefined): string | 
 
   return parts.join(' ');
 }
+
+/** Human-readable calendar date for daily challenge assets (Eastern, matches challenge day). */
+export function formatDailyChallengeDate(date: Date): string {
+  return new Date(date).toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'America/New_York',
+  });
+}
