@@ -48,7 +48,7 @@ export function GameViewSlitherlinkBoard({
     }: SlitherlinkOnSolveInput) => {
       updateOptimisticallyPuzzleAttempt({ startedAt, completedAt, durationMs });
       const updatedDailyChallenge = optimisticallyUpdateDailyChallenge({
-        id: puzzle.dailyChallengeId,
+        id: puzzle.dailyChallenge.id,
         update: (prev) => ({ ...prev, completedPuzzleCount: prev.completedPuzzleCount + 1 }),
       });
 
@@ -64,7 +64,7 @@ export function GameViewSlitherlinkBoard({
       } catch (error) {
         if (updatedDailyChallenge != null) {
           optimisticallyUpdateDailyChallenge({
-            id: puzzle.dailyChallengeId,
+            id: puzzle.dailyChallenge.id,
             update: (prev) => ({ ...prev, completedPuzzleCount: prev.completedPuzzleCount - 1 }),
           });
         }

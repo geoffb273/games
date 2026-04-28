@@ -70,7 +70,7 @@ export function GameViewHanjiBoard({ puzzle, onAnimationComplete }: GameViewHanj
         durationMs,
       });
       const updatedDailyChallenge = optimisticallyUpdateDailyChallenge({
-        id: puzzle.dailyChallengeId,
+        id: puzzle.dailyChallenge.id,
         update: (prev) => ({ ...prev, completedPuzzleCount: prev.completedPuzzleCount + 1 }),
       });
 
@@ -86,7 +86,7 @@ export function GameViewHanjiBoard({ puzzle, onAnimationComplete }: GameViewHanj
       } catch (error) {
         if (updatedDailyChallenge != null) {
           optimisticallyUpdateDailyChallenge({
-            id: puzzle.dailyChallengeId,
+            id: puzzle.dailyChallenge.id,
             update: (prev) => ({ ...prev, completedPuzzleCount: prev.completedPuzzleCount - 1 }),
           });
         }
