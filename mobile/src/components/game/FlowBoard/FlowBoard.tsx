@@ -62,6 +62,72 @@ function isAdjacent(a: { row: number; col: number }, b: { row: number; col: numb
 
 type FlowBoardVariant = 'play' | 'instructions';
 
+type FlowBoardSurfaceBaseProps = {
+  puzzle: FlowPuzzle;
+  cellSize: number;
+  grid: number[][];
+};
+
+type StaticFlowBoardSurfaceProps = FlowBoardSurfaceBaseProps & {
+  variant: 'static';
+  isCompletionWaveActive?: never;
+  onAnimationComplete?: never;
+};
+
+type PlayableFlowBoardSurfaceProps = FlowBoardSurfaceBaseProps & {
+  variant: 'playable';
+  isCompletionWaveActive: boolean;
+  onAnimationComplete?: () => void;
+};
+
+type FlowBoardSurfaceProps = StaticFlowBoardSurfaceProps | PlayableFlowBoardSurfaceProps;
+
+export function FlowBoardSurface({
+  variant,
+  puzzle,
+  cellSize,
+  grid,
+  isCompletionWaveActive,
+  onAnimationComplete,
+}: FlowBoardSurfaceProps) {
+  const isPlayable = variant === 'playable';
+
+  return (
+    <View style={styles.board}>
+      {Array.from({ length: puzzle.height }, (_unusedRow, r) => (
+        <View key={`row-${r}`} style={styles.row}>
+          {Array.from({ length: puzzle.width }, (_unusedCol, c) => {
+            const endpoint = getPairAtCell(puzzle.pairs, r, c);
+            const pairNumber = endpoint?.number ?? null;
+            const cellValue = grid[r]?.[c] ?? 0;
+            const pairIndex =
+              endpoint?.index ?? puzzle.pairs.findIndex((p) => p.number === cellValue);
+            const color =
+              cellValue > 0 || endpoint
+                ? getPairColor(pairIndex >= 0 ? pairIndex : cellValue - 1)
+                : FlowColors.emptyCell;
+            const isLastInWave = r === puzzle.height - 1 && c === puzzle.width - 1;
+            return (
+              <FlowCell
+                key={`cell-${r}-${c}`}
+                size={cellSize}
+                pairNumber={pairNumber}
+                cellValue={cellValue}
+                color={color}
+                row={r}
+                col={c}
+                isCompletionWaveActive={isPlayable ? isCompletionWaveActive : false}
+                isLastInWave={isLastInWave}
+                onWaveComplete={isPlayable ? onAnimationComplete : undefined}
+              />
+            );
+          })}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 type FlowBoardProps = {
   puzzle: FlowPuzzle;
   cellSize: number;
@@ -158,38 +224,14 @@ export function FlowBoard({
       </Text>
 
       <GestureDetector gesture={composed}>
-        <View style={styles.board}>
-          {Array.from({ length: puzzle.height }, (_unusedRow, r) => (
-            <View key={`row-${r}`} style={styles.row}>
-              {Array.from({ length: puzzle.width }, (_unusedCol, c) => {
-                const endpoint = getPairAtCell(puzzle.pairs, r, c);
-                const pairNumber = endpoint?.number ?? null;
-                const cellValue = grid[r]?.[c] ?? 0;
-                const pairIndex =
-                  endpoint?.index ?? puzzle.pairs.findIndex((p) => p.number === cellValue);
-                const color =
-                  cellValue > 0 || endpoint
-                    ? getPairColor(pairIndex >= 0 ? pairIndex : cellValue - 1)
-                    : FlowColors.emptyCell;
-                const isLastInWave = r === puzzle.height - 1 && c === puzzle.width - 1;
-                return (
-                  <FlowCell
-                    key={`cell-${r}-${c}`}
-                    size={cellSize}
-                    pairNumber={pairNumber}
-                    cellValue={cellValue}
-                    color={color}
-                    row={r}
-                    col={c}
-                    isCompletionWaveActive={isCompletionWaveActive}
-                    isLastInWave={isLastInWave}
-                    onWaveComplete={handleBoardWaveComplete}
-                  />
-                );
-              })}
-            </View>
-          ))}
-        </View>
+        <FlowBoardSurface
+          variant="playable"
+          puzzle={puzzle}
+          cellSize={cellSize}
+          grid={grid}
+          isCompletionWaveActive={isCompletionWaveActive}
+          onAnimationComplete={handleBoardWaveComplete}
+        />
       </GestureDetector>
       {variant === 'play' && isComplete && <GameCompleteText variant="success" />}
     </View>

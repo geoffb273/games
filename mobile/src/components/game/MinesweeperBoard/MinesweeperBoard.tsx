@@ -7,7 +7,11 @@ import { GameCompleteText } from '@/components/game/GameCompleteText';
 import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
-import { type MinesweeperOnSolveInput, useMinesweeperGame } from '@/hooks/game/useMinesweeperGame';
+import {
+  type MinesweeperGame,
+  type MinesweeperOnSolveInput,
+  useMinesweeperGame,
+} from '@/hooks/game/useMinesweeperGame';
 import { useTheme } from '@/hooks/useTheme';
 
 import { MinesweeperCell } from './MinesweeperCell';
@@ -23,6 +27,95 @@ type MinesweeperBoardProps = {
   variant?: 'play' | 'instructions';
   onAnimationComplete?: () => void;
 };
+
+type MinesweeperBoardSurfaceBaseProps = {
+  puzzle: MinesweeperPuzzle;
+  cellSize: number;
+  revealedMap: Map<string, number>;
+  cells: MinesweeperGame['cells'];
+  triggeredMineCell: { row: number; col: number } | null;
+};
+
+type StaticMinesweeperBoardSurfaceProps = MinesweeperBoardSurfaceBaseProps & {
+  variant: 'static';
+  isHinted?: never;
+  onCellTap?: never;
+  onCellLongPress?: never;
+  isDisabled?: never;
+  isCompletionAnimationActive?: never;
+  completionAnimationType?: never;
+  onAnimationComplete?: never;
+};
+
+type PlayableMinesweeperBoardSurfaceProps = MinesweeperBoardSurfaceBaseProps & {
+  variant: 'playable';
+  isHinted: (row: number, col: number) => boolean;
+  onCellTap: (row: number, col: number) => void;
+  onCellLongPress: (row: number, col: number) => void;
+  isDisabled: boolean;
+  isCompletionAnimationActive: boolean;
+  completionAnimationType: 'wave' | 'explosion';
+  onAnimationComplete?: () => void;
+};
+
+type MinesweeperBoardSurfaceProps =
+  | StaticMinesweeperBoardSurfaceProps
+  | PlayableMinesweeperBoardSurfaceProps;
+
+export function MinesweeperBoardSurface({
+  variant,
+  puzzle,
+  cellSize,
+  revealedMap,
+  cells,
+  triggeredMineCell,
+  isHinted,
+  onCellTap,
+  onCellLongPress,
+  isDisabled,
+  isCompletionAnimationActive,
+  completionAnimationType,
+  onAnimationComplete,
+}: MinesweeperBoardSurfaceProps) {
+  const isPlayable = variant === 'playable';
+
+  return (
+    <View style={[styles.board, { gap: CELL_GAP }]}>
+      {Array.from({ length: puzzle.height }, (_, row) => (
+        <View key={row} style={[styles.row, { gap: CELL_GAP }]}>
+          {Array.from({ length: puzzle.width }, (__, col) => {
+            const key = `${row},${col}`;
+            const revealedValue = revealedMap.get(key);
+            const isRevealed = revealedValue !== undefined;
+            const isFlagged = !isRevealed && cells[row][col] === 'flagged';
+            const isHintedFlag = isPlayable && isFlagged && isHinted(row, col);
+
+            return (
+              <MinesweeperCell
+                key={key}
+                row={row}
+                col={col}
+                size={cellSize}
+                isRevealed={isRevealed}
+                isFlagged={isFlagged}
+                isHintedFlag={isHintedFlag}
+                value={revealedValue ?? null}
+                isTriggeredMine={triggeredMineCell?.row === row && triggeredMineCell?.col === col}
+                onTap={(r, c) => onCellTap?.(r, c)}
+                onLongPress={(r, c) => onCellLongPress?.(r, c)}
+                completionAnimationType={completionAnimationType ?? 'wave'}
+                isCompletionAnimationActive={isCompletionAnimationActive ?? false}
+                isLastInWave={row === puzzle.height - 1 && col === puzzle.width - 1}
+                onWaveComplete={isPlayable ? onAnimationComplete : undefined}
+                isDisabled={!isPlayable || isDisabled}
+              />
+            );
+          })}
+        </View>
+      ))}
+    </View>
+  );
+}
 
 export function MinesweeperBoard({
   puzzle,
@@ -90,40 +183,21 @@ export function MinesweeperBoard({
         </Pressable>
       </View>
 
-      <View style={[styles.board, { gap: CELL_GAP }]}>
-        {Array.from({ length: puzzle.height }, (_, row) => (
-          <View key={row} style={[styles.row, { gap: CELL_GAP }]}>
-            {Array.from({ length: puzzle.width }, (__, col) => {
-              const key = `${row},${col}`;
-              const revealedValue = revealedMap.get(key);
-              const isRevealed = revealedValue !== undefined;
-              const isFlagged = !isRevealed && cells[row][col] === 'flagged';
-              const isHintedFlag = isFlagged && isHinted(row, col);
-
-              return (
-                <MinesweeperCell
-                  key={key}
-                  row={row}
-                  col={col}
-                  size={cellSize}
-                  isRevealed={isRevealed}
-                  isFlagged={isFlagged}
-                  isHintedFlag={isHintedFlag}
-                  value={revealedValue ?? null}
-                  isTriggeredMine={triggeredMineCell?.row === row && triggeredMineCell?.col === col}
-                  onTap={onCellTap}
-                  onLongPress={onCellLongPress}
-                  completionAnimationType={isLoss ? 'explosion' : 'wave'}
-                  isCompletionAnimationActive={isCompletionAnimationActive}
-                  isLastInWave={row === puzzle.height - 1 && col === puzzle.width - 1}
-                  onWaveComplete={onAnimationComplete}
-                  isDisabled={isCompletionAnimationActive || isWin || isLoss}
-                />
-              );
-            })}
-          </View>
-        ))}
-      </View>
+      <MinesweeperBoardSurface
+        variant="playable"
+        puzzle={puzzle}
+        cellSize={cellSize}
+        revealedMap={revealedMap}
+        cells={cells}
+        triggeredMineCell={triggeredMineCell}
+        isHinted={isHinted}
+        onCellTap={onCellTap}
+        onCellLongPress={onCellLongPress}
+        isDisabled={isCompletionAnimationActive || isWin || isLoss}
+        completionAnimationType={isLoss ? 'explosion' : 'wave'}
+        isCompletionAnimationActive={isCompletionAnimationActive}
+        onAnimationComplete={onAnimationComplete}
+      />
       {variant === 'play' && (
         <HintButton
           puzzleType={PuzzleType.Minesweeper}

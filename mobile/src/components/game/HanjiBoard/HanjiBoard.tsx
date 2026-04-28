@@ -12,6 +12,7 @@ import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { type HanjiOnSolve, useHanjiGame } from '@/hooks/game/useHanjiGame';
 import { useTheme } from '@/hooks/useTheme';
+import { type HanjiCellState } from '@/utils/hanji/lineValidation';
 
 import { HanjiCell } from './HanjiCell';
 
@@ -31,6 +32,151 @@ type HanjiBoardProps = {
   isDisabled?: boolean;
   onAnimationComplete?: () => void;
 };
+
+type HanjiBoardSurfaceBaseProps = {
+  puzzle: HanjiPuzzle;
+  cellSize: number;
+  rowClueWidth: number;
+  colClueHeight: number;
+  boardWidth: number;
+  cells: HanjiCellState[][];
+};
+
+type StaticHanjiBoardSurfaceProps = HanjiBoardSurfaceBaseProps & {
+  variant: 'static';
+  isHinted?: never;
+  isDisabled?: never;
+  isCompletionWaveActive?: never;
+  onCellTap?: never;
+  onCellLongPress?: never;
+  onAnimationComplete?: never;
+};
+
+type PlayableHanjiBoardSurfaceProps = HanjiBoardSurfaceBaseProps & {
+  variant: 'playable';
+  isHinted: (row: number, col: number) => boolean;
+  isDisabled: boolean;
+  isCompletionWaveActive: boolean;
+  onCellTap: (row: number, col: number) => void;
+  onCellLongPress: (row: number, col: number) => void;
+  onAnimationComplete?: () => void;
+};
+
+type HanjiBoardSurfaceProps = StaticHanjiBoardSurfaceProps | PlayableHanjiBoardSurfaceProps;
+
+export function HanjiBoardSurface({
+  variant,
+  puzzle,
+  cellSize,
+  rowClueWidth,
+  colClueHeight,
+  boardWidth,
+  cells,
+  isHinted,
+  isDisabled,
+  isCompletionWaveActive,
+  onCellTap,
+  onCellLongPress,
+  onAnimationComplete,
+}: HanjiBoardSurfaceProps) {
+  const isPlayable = variant === 'playable';
+  const theme = useTheme();
+
+  const lastFilledCell = useMemo(() => {
+    let cellPos: { row: number; col: number } | null = null;
+
+    for (let row = 0; row < puzzle.height; row++) {
+      for (let col = 0; col < puzzle.width; col++) {
+        if (cells[row][col] !== 'filled') continue;
+
+        if (cellPos == null) {
+          cellPos = { row, col };
+          continue;
+        }
+
+        const { row: lastRow, col: lastCol } = cellPos;
+
+        if (lastRow + lastCol < row + col) {
+          cellPos = { row, col };
+        }
+      }
+    }
+
+    return cellPos;
+  }, [cells, puzzle.height, puzzle.width]);
+
+  return (
+    <View style={[styles.boardWrap, { width: boardWidth }]}>
+      <View style={[styles.corner, { width: rowClueWidth, height: colClueHeight }]} />
+      <View style={[styles.colCluesRow, { gap: CELL_GAP }]}>
+        {Array.from({ length: puzzle.width }, (_, c) => (
+          <View
+            key={c}
+            style={[
+              styles.colClueCell,
+              {
+                width: cellSize,
+                minHeight: colClueHeight,
+                backgroundColor: theme.backgroundElement,
+              },
+            ]}
+          >
+            {puzzle.colClues[c].map((n, i) => (
+              <Text key={i} type="emphasized_body" color="textSecondary">
+                {n}
+              </Text>
+            ))}
+          </View>
+        ))}
+      </View>
+
+      <View style={[styles.rowCluesCol, { width: rowClueWidth, gap: CELL_GAP }]}>
+        {Array.from({ length: puzzle.height }, (_, r) => (
+          <View
+            key={r}
+            style={[
+              styles.rowClueCell,
+              {
+                height: cellSize,
+                backgroundColor: theme.backgroundElement,
+              },
+            ]}
+          >
+            <View style={styles.rowClueNums}>
+              {puzzle.rowClues[r].map((n, i) => (
+                <Text key={i} type="emphasized_body" color="textSecondary">
+                  {n}
+                </Text>
+              ))}
+            </View>
+          </View>
+        ))}
+      </View>
+      <View style={[styles.grid, { gap: CELL_GAP }]}>
+        {Array.from({ length: puzzle.height }, (_, rowIdx) => (
+          <View key={rowIdx} style={[styles.gridRow, { gap: CELL_GAP }]}>
+            {Array.from({ length: puzzle.width }, (__, colIdx) => (
+              <HanjiCell
+                key={`${rowIdx},${colIdx}`}
+                row={rowIdx}
+                col={colIdx}
+                size={cellSize}
+                state={cells[rowIdx][colIdx]}
+                isHinted={isPlayable && isHinted(rowIdx, colIdx)}
+                onTap={() => onCellTap?.(rowIdx, colIdx)}
+                onLongPress={() => onCellLongPress?.(rowIdx, colIdx)}
+                isDisabled={!isPlayable || isDisabled}
+                isCompletionWaveActive={isCompletionWaveActive ?? false}
+                isLastInWave={rowIdx === lastFilledCell?.row && colIdx === lastFilledCell?.col}
+                onWaveComplete={onAnimationComplete}
+              />
+            ))}
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
 
 export function HanjiBoard({
   puzzle,
@@ -63,36 +209,12 @@ export function HanjiBoard({
     onSolve,
   });
 
-  // Detect a fresh completion for this puzzle while in play variant, so we can play a one-off completion wave
   useEffect(() => {
     if (variant !== 'play' || !isComplete || hasTriggeredShimmerRef.current) return;
 
     hasTriggeredShimmerRef.current = true;
     setIsCompletionWaveActive(true);
   }, [isComplete, variant]);
-
-  const lastFilledCell = useMemo(() => {
-    let cellPos: { row: number; col: number } | null = null;
-
-    for (let row = 0; row < puzzle.height; row++) {
-      for (let col = 0; col < puzzle.width; col++) {
-        if (cells[row][col] !== 'filled') continue;
-
-        if (cellPos == null) {
-          cellPos = { row, col };
-          continue;
-        }
-
-        const { row: lastRow, col: lastCol } = cellPos;
-
-        if (lastRow + lastCol < row + col) {
-          cellPos = { row, col };
-        }
-      }
-    }
-
-    return cellPos;
-  }, [cells, puzzle.height, puzzle.width]);
 
   useInitialOpenInstructionsEffect({ type: PuzzleType.Hanji, enabled: variant === 'play' });
 
@@ -102,77 +224,21 @@ export function HanjiBoard({
         {puzzle.name}
       </Text>
 
-      <View style={[styles.boardWrap, { width: boardWidth }]}>
-        {/* Top row: corner spacer + column clues */}
-        <View style={[styles.corner, { width: rowClueWidth, height: colClueHeight }]} />
-        <View style={[styles.colCluesRow, { gap: CELL_GAP }]}>
-          {Array.from({ length: puzzle.width }, (_, c) => (
-            <View
-              key={c}
-              style={[
-                styles.colClueCell,
-                {
-                  width: cellSize,
-                  minHeight: colClueHeight,
-                  backgroundColor: theme.backgroundElement,
-                },
-              ]}
-            >
-              {puzzle.colClues[c].map((n, i) => (
-                <Text key={i} type="emphasized_body" color="textSecondary">
-                  {n}
-                </Text>
-              ))}
-            </View>
-          ))}
-        </View>
-
-        {/* Bottom row: row clues + grid */}
-        <View style={[styles.rowCluesCol, { width: rowClueWidth, gap: CELL_GAP }]}>
-          {Array.from({ length: puzzle.height }, (_, r) => (
-            <View
-              key={r}
-              style={[
-                styles.rowClueCell,
-                {
-                  height: cellSize,
-                  backgroundColor: theme.backgroundElement,
-                },
-              ]}
-            >
-              <View style={styles.rowClueNums}>
-                {puzzle.rowClues[r].map((n, i) => (
-                  <Text key={i} type="emphasized_body" color="textSecondary">
-                    {n}
-                  </Text>
-                ))}
-              </View>
-            </View>
-          ))}
-        </View>
-        <View style={[styles.grid, { gap: CELL_GAP }]}>
-          {Array.from({ length: puzzle.height }, (_, rowIdx) => (
-            <View key={rowIdx} style={[styles.gridRow, { gap: CELL_GAP }]}>
-              {Array.from({ length: puzzle.width }, (__, colIdx) => (
-                <HanjiCell
-                  key={`${rowIdx},${colIdx}`}
-                  row={rowIdx}
-                  col={colIdx}
-                  size={cellSize}
-                  state={cells[rowIdx][colIdx]}
-                  isHinted={isHinted(rowIdx, colIdx)}
-                  onTap={onCellTap}
-                  onLongPress={onCellLongPress}
-                  isDisabled={isDisabled || isComplete}
-                  isCompletionWaveActive={isCompletionWaveActive}
-                  isLastInWave={rowIdx === lastFilledCell?.row && colIdx === lastFilledCell?.col}
-                  onWaveComplete={onAnimationComplete}
-                />
-              ))}
-            </View>
-          ))}
-        </View>
-      </View>
+      <HanjiBoardSurface
+        variant="playable"
+        puzzle={puzzle}
+        cellSize={cellSize}
+        rowClueWidth={rowClueWidth}
+        colClueHeight={colClueHeight}
+        boardWidth={boardWidth}
+        cells={cells}
+        isHinted={isHinted}
+        onCellTap={onCellTap}
+        onCellLongPress={onCellLongPress}
+        isDisabled={isDisabled || isComplete}
+        isCompletionWaveActive={isCompletionWaveActive}
+        onAnimationComplete={onAnimationComplete}
+      />
       {variant === 'play' && (
         <View style={styles.actions}>
           <Button
