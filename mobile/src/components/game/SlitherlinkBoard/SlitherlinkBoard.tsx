@@ -19,6 +19,106 @@ export const CELL_GAP = 2;
 export const MAX_CELL_SIZE = 60;
 export const AVAILABLE_HEIGHT_RATIO = 0.6;
 
+type SlitherlinkEdgeState = 'empty' | 'line';
+
+type SlitherlinkBoardSurfaceBaseProps = {
+  puzzle: SlitherlinkPuzzle;
+  cellSize: number;
+  horizontal: SlitherlinkEdgeState[][];
+  vertical: SlitherlinkEdgeState[][];
+};
+
+type StaticSlitherlinkBoardSurfaceProps = SlitherlinkBoardSurfaceBaseProps & {
+  variant: 'static';
+  isHorizontalEdgeHinted?: never;
+  isVerticalEdgeHinted?: never;
+  onHorizontalEdgePress?: never;
+  onVerticalEdgePress?: never;
+  isDisabled?: never;
+  isCompletionWaveActive?: never;
+  onAnimationComplete?: never;
+};
+
+type PlayableSlitherlinkBoardSurfaceProps = SlitherlinkBoardSurfaceBaseProps & {
+  variant: 'playable';
+  isHorizontalEdgeHinted: (row: number, col: number) => boolean;
+  isVerticalEdgeHinted: (row: number, col: number) => boolean;
+  onHorizontalEdgePress: (row: number, col: number) => void;
+  onVerticalEdgePress: (row: number, col: number) => void;
+  isDisabled: boolean;
+  isCompletionWaveActive: boolean;
+  onAnimationComplete?: () => void;
+};
+
+type SlitherlinkBoardSurfaceProps =
+  | StaticSlitherlinkBoardSurfaceProps
+  | PlayableSlitherlinkBoardSurfaceProps;
+
+export function SlitherlinkBoardSurface({
+  puzzle,
+  cellSize,
+  horizontal,
+  vertical,
+  variant,
+  isCompletionWaveActive,
+  isDisabled,
+  isHorizontalEdgeHinted,
+  isVerticalEdgeHinted,
+  onAnimationComplete,
+  onHorizontalEdgePress,
+  onVerticalEdgePress,
+}: SlitherlinkBoardSurfaceProps) {
+  const isPlayable = variant === 'playable';
+
+  return (
+    <View style={styles.board}>
+      {Array.from({ length: puzzle.height }, (_unusedRow, r) => (
+        <View key={`row-${r}`} style={styles.row}>
+          {Array.from({ length: puzzle.width }, (_unusedCol, c) => {
+            const clue = puzzle.clues[r][c];
+            const topState = horizontal[r]?.[c] ?? 'empty';
+            const bottomState = horizontal[r + 1]?.[c] ?? 'empty';
+            const leftState = vertical[r]?.[c] ?? 'empty';
+            const rightState = vertical[r]?.[c + 1] ?? 'empty';
+            const isTopHinted = isPlayable && isHorizontalEdgeHinted(r, c);
+            const isBottomHinted = isPlayable && isHorizontalEdgeHinted(r + 1, c);
+            const isLeftHinted = isPlayable && isVerticalEdgeHinted(r, c);
+            const isRightHinted = isPlayable && isVerticalEdgeHinted(r, c + 1);
+            const isLastInWave = r === puzzle.height - 1 && c === puzzle.width - 1;
+
+            return (
+              <SlitherlinkCell
+                key={`cell-${r}-${c}`}
+                size={cellSize}
+                clue={clue}
+                top={topState}
+                left={leftState}
+                bottom={bottomState}
+                right={rightState}
+                isTopHinted={isTopHinted}
+                isLeftHinted={isLeftHinted}
+                isBottomHinted={isBottomHinted}
+                isRightHinted={isRightHinted}
+                onPressTop={() => onHorizontalEdgePress?.(r, c)}
+                onPressLeft={() => onVerticalEdgePress?.(r, c)}
+                onPressBottom={() => onHorizontalEdgePress?.(r + 1, c)}
+                onPressRight={() => onVerticalEdgePress?.(r, c + 1)}
+                showBottomEdge={r === puzzle.height - 1}
+                showRightEdge={c === puzzle.width - 1}
+                isDisabled={!isPlayable || isDisabled}
+                isCompletionWaveActive={isCompletionWaveActive ?? false}
+                waveDelayNumber={r + c}
+                isLastInWave={isLastInWave}
+                onWaveComplete={onAnimationComplete}
+              />
+            );
+          })}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 type SlitherlinkBoardProps = {
   puzzle: SlitherlinkPuzzle;
   cellSize: number;
@@ -67,51 +167,20 @@ export function SlitherlinkBoard({
         {puzzle.name}
       </Text>
 
-      <View style={styles.board}>
-        {Array.from({ length: puzzle.height }, (_unusedRow, r) => (
-          <View key={`row-${r}`} style={styles.row}>
-            {Array.from({ length: puzzle.width }, (_unusedCol, c) => {
-              const clue = puzzle.clues[r][c];
-              const topState = horizontal[r]?.[c] ?? 'empty';
-              const bottomState = horizontal[r + 1]?.[c] ?? 'empty';
-              const leftState = vertical[r]?.[c] ?? 'empty';
-              const rightState = vertical[r]?.[c + 1] ?? 'empty';
-              const isTopHinted = isHorizontalEdgeHinted(r, c);
-              const isBottomHinted = isHorizontalEdgeHinted(r + 1, c);
-              const isLeftHinted = isVerticalEdgeHinted(r, c);
-              const isRightHinted = isVerticalEdgeHinted(r, c + 1);
-              const isLastInWave = r === puzzle.height - 1 && c === puzzle.width - 1;
-
-              return (
-                <SlitherlinkCell
-                  key={`cell-${r}-${c}`}
-                  size={cellSize}
-                  clue={clue}
-                  top={topState}
-                  left={leftState}
-                  bottom={bottomState}
-                  right={rightState}
-                  isTopHinted={isTopHinted}
-                  isLeftHinted={isLeftHinted}
-                  isBottomHinted={isBottomHinted}
-                  isRightHinted={isRightHinted}
-                  onPressTop={() => onHorizontalEdgePress(r, c)}
-                  onPressLeft={() => onVerticalEdgePress(r, c)}
-                  onPressBottom={() => onHorizontalEdgePress(r + 1, c)}
-                  onPressRight={() => onVerticalEdgePress(r, c + 1)}
-                  showBottomEdge={r === puzzle.height - 1}
-                  showRightEdge={c === puzzle.width - 1}
-                  isDisabled={isCompletionWaveActive}
-                  isCompletionWaveActive={isCompletionWaveActive}
-                  waveDelayNumber={r + c}
-                  isLastInWave={isLastInWave}
-                  onWaveComplete={onAnimationComplete}
-                />
-              );
-            })}
-          </View>
-        ))}
-      </View>
+      <SlitherlinkBoardSurface
+        variant="playable"
+        puzzle={puzzle}
+        cellSize={cellSize}
+        horizontal={horizontal}
+        vertical={vertical}
+        isHorizontalEdgeHinted={isHorizontalEdgeHinted}
+        isVerticalEdgeHinted={isVerticalEdgeHinted}
+        onHorizontalEdgePress={onHorizontalEdgePress}
+        onVerticalEdgePress={onVerticalEdgePress}
+        isDisabled={isCompletionWaveActive}
+        isCompletionWaveActive={isCompletionWaveActive}
+        onAnimationComplete={onAnimationComplete}
+      />
 
       {variant === 'play' && (
         <View style={styles.actions}>
