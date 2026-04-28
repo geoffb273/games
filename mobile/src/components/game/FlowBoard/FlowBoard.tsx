@@ -93,7 +93,7 @@ export function FlowBoardSurface({
   const isPlayable = variant === 'playable';
 
   return (
-    <View style={styles.board}>
+    <View style={styles.board} collapsable={false}>
       {Array.from({ length: puzzle.height }, (_unusedRow, r) => (
         <View key={`row-${r}`} style={styles.row}>
           {Array.from({ length: puzzle.width }, (_unusedCol, c) => {
