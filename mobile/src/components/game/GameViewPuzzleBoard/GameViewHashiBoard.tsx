@@ -55,7 +55,7 @@ export function GameViewHashiBoard({ puzzle, onAnimationComplete }: GameViewHash
     });
 
     const updatedDailyChallenge = optimisticallyUpdateDailyChallenge({
-      id: puzzle.dailyChallengeId,
+      id: puzzle.dailyChallenge.id,
       update: (prev) => ({ ...prev, completedPuzzleCount: prev.completedPuzzleCount + 1 }),
     });
 
@@ -71,7 +71,7 @@ export function GameViewHashiBoard({ puzzle, onAnimationComplete }: GameViewHash
     } catch (error) {
       if (updatedDailyChallenge != null) {
         optimisticallyUpdateDailyChallenge({
-          id: puzzle.dailyChallengeId,
+          id: puzzle.dailyChallenge.id,
           update: (prev) => ({ ...prev, completedPuzzleCount: prev.completedPuzzleCount - 1 }),
         });
       }

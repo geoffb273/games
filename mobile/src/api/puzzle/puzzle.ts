@@ -75,13 +75,24 @@ gql`
   fragment PuzzleFragment on Puzzle {
     __typename
     id
-    dailyChallengeId
     name
     description
     attempt {
       startedAt
       completedAt
       durationMs
+    }
+    dailyChallenge {
+      __typename
+      ... on PuzzleDailyChallengeSuccess {
+        data {
+          id
+          date
+        }
+      }
+      ... on Error {
+        message
+      }
     }
     ... on HanjiPuzzle {
       ...HanjiPuzzleFragment
@@ -118,10 +129,13 @@ export type PuzzleAttempt = {
 
 export type PuzzleBase = {
   id: string;
-  dailyChallengeId: string;
   name: string;
   description: string | null;
   attempt: PuzzleAttempt | null;
+  dailyChallenge: {
+    id: string;
+    date: Date;
+  };
 };
 
 export type HanjiPuzzle = PuzzleBase & {
@@ -200,7 +214,7 @@ export type Puzzle = HanjiPuzzle | HashiPuzzle | MinesweeperPuzzle | Slitherlink
  */
 export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>): Puzzle {
   const puzzle = getFragmentData(PuzzleFragmentFragmentDoc, data);
-  const { id, dailyChallengeId, name, description, attempt: puzzleAttempt, __typename } = puzzle;
+  const { id, name, description, attempt: puzzleAttempt, __typename, dailyChallenge } = puzzle;
 
   const attempt: PuzzleAttempt | null =
     puzzleAttempt != null
@@ -213,7 +227,7 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
 
   const shared: PuzzleBase = {
     id,
-    dailyChallengeId,
+    dailyChallenge: mapToDailyChallenge(dailyChallenge),
     name,
     description: description ?? null,
     attempt,
@@ -294,6 +308,17 @@ export function mapToPuzzle(data: FragmentType<typeof PuzzleFragmentFragmentDoc>
   }
 }
 
+function mapToDailyChallenge(data: PuzzleFragmentFragment['dailyChallenge']): {
+  id: string;
+  date: Date;
+} {
+  if (data.__typename !== 'PuzzleDailyChallengeSuccess') {
+    throw new Error('Daily challenge not found');
+  }
+
+  return data.data;
+}
+
 /** Type for the puzzle `data` field in QueryPuzzleSuccess (used for cache updates). */
 type PuzzleQueryData = Extract<
   PuzzleQueryQuery['puzzle'],
@@ -356,10 +381,17 @@ export function mapToPuzzleFragment(puzzle: Puzzle): PuzzleQueryData {
 
   const base: PuzzleBaseFragmentData = {
     id: puzzle.id,
-    dailyChallengeId: puzzle.dailyChallengeId,
     name: puzzle.name,
     description: puzzle.description,
     attempt,
+    dailyChallenge: {
+      __typename: 'PuzzleDailyChallengeSuccess',
+      data: {
+        __typename: 'DailyChallenge',
+        id: puzzle.dailyChallenge.id,
+        date: puzzle.dailyChallenge.date,
+      },
+    },
   };
 
   switch (puzzle.type) {

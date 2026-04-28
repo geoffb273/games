@@ -3,6 +3,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
+import { SharePuzzleCard } from '@/components/game/share/SharePuzzleCard';
+import { ShareResultButton } from '@/components/game/share/ShareResultButton';
 import { PuzzleCard } from '@/components/PuzzleCard';
 import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
@@ -17,20 +19,20 @@ const PUZZLE_TYPE_LABELS: Record<Puzzle['type'], string> = {
 };
 
 type PuzzleCompletedViewProps = {
-  puzzleType: Puzzle['type'];
+  puzzle: Puzzle;
   solved: boolean;
   durationMs?: number | null;
   nextPuzzle: Puzzle | null;
 };
 
 export function PuzzleCompletedView({
-  puzzleType,
+  puzzle,
   solved,
   durationMs,
   nextPuzzle,
 }: PuzzleCompletedViewProps) {
   const theme = useTheme();
-  const typeLabel = PUZZLE_TYPE_LABELS[puzzleType];
+  const typeLabel = PUZZLE_TYPE_LABELS[puzzle.type];
 
   const formattedDuration = formatDuration(durationMs);
 
@@ -68,6 +70,15 @@ export function PuzzleCompletedView({
       <Text type="caption" color={solved ? 'success' : 'warning'} textAlign="center">
         {solved ? 'Marked as solved' : 'Marked as attempted'}
       </Text>
+
+      {solved && (
+        <View style={styles.shareContainer}>
+          <ShareResultButton>
+            <SharePuzzleCard puzzle={puzzle} durationMs={durationMs} />
+          </ShareResultButton>
+        </View>
+      )}
+
       {nextPuzzle != null && (
         <Animated.View style={styles.playNextButtonContainer}>
           <PuzzleCard puzzle={nextPuzzle} variant="small" />
@@ -80,7 +91,7 @@ export function PuzzleCompletedView({
 const styles = StyleSheet.create({
   card: {
     alignItems: 'center',
-    paddingVertical: Spacing.five,
+    paddingVertical: Spacing.four,
     paddingHorizontal: Spacing.five,
     borderRadius: Radii.lg,
     borderWidth: 1,
@@ -95,6 +106,9 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 1,
     marginVertical: Spacing.one,
+  },
+  shareContainer: {
+    marginTop: Spacing.two,
   },
   playNextButtonContainer: {
     position: 'absolute',

@@ -15,7 +15,10 @@ import { Shadows, Spacing } from '@/constants/token';
 
 const INSTRUCTIONS_FLOW_PUZZLE: FlowPuzzle = {
   id: 'flow-instructions-demo',
-  dailyChallengeId: 'flow-instructions-demo',
+  dailyChallenge: {
+    id: 'flow-instructions-demo',
+    date: new Date(),
+  },
   name: 'Example Flow board',
   description: null,
   attempt: null,

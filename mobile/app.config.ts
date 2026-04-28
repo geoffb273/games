@@ -24,6 +24,7 @@ export default (): ExpoConfig => ({
     ],
     'expo-secure-store',
     'expo-font',
+    'expo-sharing',
     [
       'expo-build-properties',
       {

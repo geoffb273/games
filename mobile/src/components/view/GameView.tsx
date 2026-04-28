@@ -31,7 +31,7 @@ export function GameView({ id }: { id: string }) {
   } = usePuzzleBoardTransition({ puzzle, puzzleId: id });
 
   const isPuzzleMissing = !isLoading && puzzle == null;
-  const challengeId = puzzle?.dailyChallengeId;
+  const challengeId = puzzle?.dailyChallenge.id;
   const { puzzles: challengePuzzles } = usePuzzlesQuery({
     dailyChallengeId: challengeId,
     enabled: challengeId != null,
@@ -65,7 +65,7 @@ export function GameView({ id }: { id: string }) {
       <VerticallyCenteredLayout>
         <View style={styles.completedContainer}>
           <PuzzleCompletedView
-            puzzleType={puzzle.type}
+            puzzle={puzzle}
             solved={puzzle.attempt.completedAt != null}
             durationMs={puzzle.attempt.durationMs}
             nextPuzzle={nextPuzzle}

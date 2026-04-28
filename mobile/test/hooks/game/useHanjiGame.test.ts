@@ -47,7 +47,10 @@ describe('useHanjiGame', () => {
   function createPuzzle(width: number, height: number): HanjiPuzzle {
     return {
       id: 'test-puzzle',
-      dailyChallengeId: 'test-daily-challenge',
+      dailyChallenge: {
+        id: 'test-daily-challenge',
+        date: new Date(),
+      },
       width,
       height,
       rowClues: Array.from({ length: height }, () => Array.from({ length: width }, () => 0)),
