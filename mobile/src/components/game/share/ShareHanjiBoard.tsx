@@ -9,19 +9,18 @@ import {
 import { Spacing } from '@/constants/token';
 import { type HanjiCellState } from '@/utils/hanji/lineValidation';
 
-import { SHARE_ASSET_CONTENT_TARGET_SIZE, ShareAssetCard } from './ShareAssetCard';
+import { SHARE_ASSET_CONTENT_TARGET_SIZE } from './ShareAssetCard';
 
 const MIN_SHARE_CELL_SIZE = 12;
 
 type ShareHanjiBoardProps = {
   puzzle: HanjiPuzzle;
-  durationMs: number | null | undefined;
 };
 
 /**
  * Static, non-interactive rendering of an unsolved Hanji board, sized for off-platform sharing.
  */
-export function ShareHanjiBoard({ puzzle, durationMs }: ShareHanjiBoardProps) {
+export function ShareHanjiBoard({ puzzle }: ShareHanjiBoardProps) {
   const { cellSize, rowClueWidth, colClueHeight, boardWidth, cells } = useMemo(() => {
     const maxRowClueLen = Math.max(0, ...puzzle.rowClues.map((r) => r.length));
     const maxColClueLen = Math.max(0, ...puzzle.colClues.map((c) => c.length));
@@ -49,20 +48,14 @@ export function ShareHanjiBoard({ puzzle, durationMs }: ShareHanjiBoardProps) {
   }, [puzzle.width, puzzle.height, puzzle.rowClues, puzzle.colClues]);
 
   return (
-    <ShareAssetCard
-      title={puzzle.name}
-      dailyChallengeDate={puzzle.dailyChallenge.date}
-      durationMs={durationMs}
-    >
-      <HanjiBoardSurface
-        variant="static"
-        puzzle={puzzle}
-        cellSize={cellSize}
-        rowClueWidth={rowClueWidth}
-        colClueHeight={colClueHeight}
-        boardWidth={boardWidth}
-        cells={cells}
-      />
-    </ShareAssetCard>
+    <HanjiBoardSurface
+      variant="static"
+      puzzle={puzzle}
+      cellSize={cellSize}
+      rowClueWidth={rowClueWidth}
+      colClueHeight={colClueHeight}
+      boardWidth={boardWidth}
+      cells={cells}
+    />
   );
 }

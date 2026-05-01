@@ -13,7 +13,7 @@ import {
 import { COLOR } from '@/constants/color';
 import { Shadows, Spacing } from '@/constants/token';
 
-const INSTRUCTIONS_SLITHERLINK_PUZZLE: SlitherlinkPuzzle = {
+export const INSTRUCTIONS_SLITHERLINK_PUZZLE: SlitherlinkPuzzle = {
   id: 'slitherlink-instructions-demo',
   dailyChallenge: {
     id: 'slitherlink-instructions-demo',

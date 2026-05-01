@@ -24,6 +24,8 @@ export const COLOR = {
   navy900: '#0F3447',
 
   indigo50: '#F0ECFF',
+  indigo200: '#C7D2FE',
+  indigo700: '#433B7A',
   indigo800: '#302964',
 
   violet500: '#8B5CF6',
@@ -39,24 +41,33 @@ export const COLOR = {
   red500: '#EF4444',
   red500Vivid: '#FF453A',
 
+  amber300: '#FCD34D',
   amber500: '#F59E0B',
+  amber600: '#D97706',
   amber700: '#8A5B2C',
+  amber800: '#6F4518',
 
   orange500: '#FF9F0A',
 
   yellow400: '#F2D45C',
 
   sand50: '#FFF4E0',
+  sand300: '#F4D08A',
+  sand800: '#6B4A1F',
 
   green400: '#30D158',
   green600: '#16A34A',
 
+  emerald700: '#15803D',
+
   sage600: '#47725B',
 
   mint100: '#D3F0D0',
+  mint300: '#86E3B4',
 
   forest900: '#0F3020',
 
+  teal300: '#5EEAD4',
   teal500: '#0D9488',
 
   brown500: '#8B7355',

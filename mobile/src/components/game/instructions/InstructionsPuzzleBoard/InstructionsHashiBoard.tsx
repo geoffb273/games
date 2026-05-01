@@ -13,7 +13,7 @@ import {
 import { COLOR } from '@/constants/color';
 import { Shadows, Spacing } from '@/constants/token';
 
-const INSTRUCTIONS_HASHI_PUZZLE: HashiPuzzle = {
+export const INSTRUCTIONS_HASHI_PUZZLE: HashiPuzzle = {
   id: 'hashi-instructions-demo',
   dailyChallenge: {
     id: 'hashi-instructions-demo',

@@ -14,7 +14,7 @@ import {
 import { COLOR } from '@/constants/color';
 import { Shadows, Spacing } from '@/constants/token';
 
-const INSTRUCTIONS_HANJI_PUZZLE: HanjiPuzzle = {
+export const INSTRUCTIONS_HANJI_PUZZLE: HanjiPuzzle = {
   id: 'hanji-instructions-demo',
   dailyChallenge: {
     id: 'hanji-instructions-demo',
