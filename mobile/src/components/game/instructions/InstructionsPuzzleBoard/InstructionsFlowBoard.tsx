@@ -13,7 +13,7 @@ import {
 import { COLOR } from '@/constants/color';
 import { Shadows, Spacing } from '@/constants/token';
 
-const INSTRUCTIONS_FLOW_PUZZLE: FlowPuzzle = {
+export const INSTRUCTIONS_FLOW_PUZZLE: FlowPuzzle = {
   id: 'flow-instructions-demo',
   dailyChallenge: {
     id: 'flow-instructions-demo',

@@ -14,7 +14,7 @@ import {
 import { COLOR } from '@/constants/color';
 import { Shadows, Spacing } from '@/constants/token';
 
-const INSTRUCTIONS_MINESWEEPER_PUZZLE: MinesweeperPuzzle = {
+export const INSTRUCTIONS_MINESWEEPER_PUZZLE: MinesweeperPuzzle = {
   id: 'minesweeper-instructions-demo',
   dailyChallenge: {
     id: 'minesweeper-instructions-demo',

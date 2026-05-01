@@ -7,19 +7,18 @@ import {
 } from '@/components/game/MinesweeperBoard/MinesweeperBoard';
 import { type MinesweeperGame } from '@/hooks/game/useMinesweeperGame';
 
-import { SHARE_ASSET_CONTENT_TARGET_SIZE, ShareAssetCard } from './ShareAssetCard';
+import { SHARE_ASSET_CONTENT_TARGET_SIZE } from './ShareAssetCard';
 
 const MIN_SHARE_CELL_SIZE = 18;
 
 type ShareMinesweeperBoardProps = {
   puzzle: MinesweeperPuzzle;
-  durationMs: number | null | undefined;
 };
 
 /**
  * Static, non-interactive rendering of an unsolved Minesweeper board, sized for off-platform sharing.
  */
-export function ShareMinesweeperBoard({ puzzle, durationMs }: ShareMinesweeperBoardProps) {
+export function ShareMinesweeperBoard({ puzzle }: ShareMinesweeperBoardProps) {
   const { cellSize, revealedMap, cells } = useMemo(() => {
     const fromW = Math.floor(
       (SHARE_ASSET_CONTENT_TARGET_SIZE - CELL_GAP * (puzzle.width - 1)) / puzzle.width,
@@ -42,19 +41,13 @@ export function ShareMinesweeperBoard({ puzzle, durationMs }: ShareMinesweeperBo
   }, [puzzle.width, puzzle.height, puzzle.revealedCells]);
 
   return (
-    <ShareAssetCard
-      title={puzzle.name}
-      dailyChallengeDate={puzzle.dailyChallenge.date}
-      durationMs={durationMs}
-    >
-      <MinesweeperBoardSurface
-        variant="static"
-        puzzle={puzzle}
-        cellSize={cellSize}
-        revealedMap={revealedMap}
-        cells={cells}
-        triggeredMineCell={null}
-      />
-    </ShareAssetCard>
+    <MinesweeperBoardSurface
+      variant="static"
+      puzzle={puzzle}
+      cellSize={cellSize}
+      revealedMap={revealedMap}
+      cells={cells}
+      triggeredMineCell={null}
+    />
   );
 }

@@ -7,19 +7,18 @@ import {
 } from '@/components/game/SlitherlinkBoard/SlitherlinkBoard';
 import { type SlitherlinkGame } from '@/hooks/game/useSlitherlinkGame';
 
-import { SHARE_ASSET_CONTENT_TARGET_SIZE, ShareAssetCard } from './ShareAssetCard';
+import { SHARE_ASSET_CONTENT_TARGET_SIZE } from './ShareAssetCard';
 
 const MIN_SHARE_CELL_SIZE = 24;
 
 type ShareSlitherlinkBoardProps = {
   puzzle: SlitherlinkPuzzle;
-  durationMs: number | null | undefined;
 };
 
 /**
  * Static, non-interactive rendering of an unsolved Slitherlink board, sized for off-platform sharing.
  */
-export function ShareSlitherlinkBoard({ puzzle, durationMs }: ShareSlitherlinkBoardProps) {
+export function ShareSlitherlinkBoard({ puzzle }: ShareSlitherlinkBoardProps) {
   const { cellSize, horizontal, vertical } = useMemo(() => {
     const fromW = Math.floor(
       (SHARE_ASSET_CONTENT_TARGET_SIZE - CELL_GAP * (puzzle.width - 1)) / puzzle.width,
@@ -40,18 +39,12 @@ export function ShareSlitherlinkBoard({ puzzle, durationMs }: ShareSlitherlinkBo
   }, [puzzle.width, puzzle.height]);
 
   return (
-    <ShareAssetCard
-      title={puzzle.name}
-      dailyChallengeDate={puzzle.dailyChallenge.date}
-      durationMs={durationMs}
-    >
-      <SlitherlinkBoardSurface
-        variant="static"
-        puzzle={puzzle}
-        cellSize={cellSize}
-        horizontal={horizontal}
-        vertical={vertical}
-      />
-    </ShareAssetCard>
+    <SlitherlinkBoardSurface
+      variant="static"
+      puzzle={puzzle}
+      cellSize={cellSize}
+      horizontal={horizontal}
+      vertical={vertical}
+    />
   );
 }

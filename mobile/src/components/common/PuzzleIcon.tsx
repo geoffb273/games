@@ -3,6 +3,7 @@ import { type StyleProp, StyleSheet, View, type ViewStyle } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
+import { type PuzzlePalette } from '@/constants/puzzleTheme';
 import { Radii } from '@/constants/token';
 import { usePuzzlePalette } from '@/hooks/usePuzzlePalette';
 import { useTheme } from '@/hooks/useTheme';
@@ -11,6 +12,7 @@ type PuzzleIconProps = {
   type: Puzzle['type'];
   size?: Size;
   style?: StyleProp<ViewStyle>;
+  color?: keyof PuzzlePalette;
 };
 
 const PUZZLE_TYPE_ICONS: Record<Puzzle['type'], keyof typeof MaterialCommunityIcons.glyphMap> = {
@@ -30,7 +32,7 @@ const SIZE: Record<Size, { iconSize: number; chipSize: number; borderRadius: num
   xl: { iconSize: 72, chipSize: 96, borderRadius: Radii.sm },
 };
 
-export function PuzzleIcon({ type, size = 'md', style }: PuzzleIconProps) {
+export function PuzzleIcon({ type, size = 'md', color = 'chip', style }: PuzzleIconProps) {
   const theme = useTheme();
   const palette = usePuzzlePalette(type);
   const { iconSize, chipSize, borderRadius } = SIZE[size];
@@ -39,7 +41,12 @@ export function PuzzleIcon({ type, size = 'md', style }: PuzzleIconProps) {
     <View
       style={[
         styles.chip,
-        { backgroundColor: palette.chip, width: chipSize, height: chipSize, borderRadius },
+        {
+          backgroundColor: palette[color],
+          width: chipSize,
+          height: chipSize,
+          borderRadius,
+        },
         style,
       ]}
     >

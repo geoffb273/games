@@ -4,19 +4,18 @@ import { type HashiPuzzle } from '@/api/puzzle/puzzle';
 import { CELL_GAP, HashiBoardSurface } from '@/components/game/HashiBoard/HashiBoard';
 import { findConnections } from '@/utils/hashi/connections';
 
-import { SHARE_ASSET_CONTENT_TARGET_SIZE, ShareAssetCard } from './ShareAssetCard';
+import { SHARE_ASSET_CONTENT_TARGET_SIZE } from './ShareAssetCard';
 
 const MIN_SHARE_CELL_SIZE = 18;
 
 type ShareHashiBoardProps = {
   puzzle: HashiPuzzle;
-  durationMs: number | null | undefined;
 };
 
 /**
  * Static, non-interactive rendering of an unsolved Hashi board, sized for off-platform sharing.
  */
-export function ShareHashiBoard({ puzzle, durationMs }: ShareHashiBoardProps) {
+export function ShareHashiBoard({ puzzle }: ShareHashiBoardProps) {
   const { cellSize, boardWidth, boardHeight } = useMemo(() => {
     const fromW = Math.floor(
       (SHARE_ASSET_CONTENT_TARGET_SIZE - CELL_GAP * (puzzle.width - 1)) / puzzle.width,
@@ -33,19 +32,13 @@ export function ShareHashiBoard({ puzzle, durationMs }: ShareHashiBoardProps) {
   const staticConnections = useMemo(() => findConnections(puzzle.islands), [puzzle.islands]);
 
   return (
-    <ShareAssetCard
-      title={puzzle.name}
-      dailyChallengeDate={puzzle.dailyChallenge.date}
-      durationMs={durationMs}
-    >
-      <HashiBoardSurface
-        variant="static"
-        puzzle={puzzle}
-        cellSize={cellSize}
-        boardWidth={boardWidth}
-        boardHeight={boardHeight}
-        connections={staticConnections}
-      />
-    </ShareAssetCard>
+    <HashiBoardSurface
+      variant="static"
+      puzzle={puzzle}
+      cellSize={cellSize}
+      boardWidth={boardWidth}
+      boardHeight={boardHeight}
+      connections={staticConnections}
+    />
   );
 }
