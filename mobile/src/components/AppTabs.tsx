@@ -16,14 +16,6 @@ function SettingsTabIcon({ color, size }: { color?: string; size?: number }) {
   return <FontAwesome name="cog" size={size ?? 24} color={color ?? theme.textSecondary} />;
 }
 
-function renderHomeTabIcon(props: { color?: string; size?: number }) {
-  return <HomeTabIcon {...props} />;
-}
-
-function renderSettingsTabIcon(props: { color?: string; size?: number }) {
-  return <SettingsTabIcon {...props} />;
-}
-
 export function AppTabs() {
   const theme = useTheme();
 
@@ -44,14 +36,14 @@ export function AppTabs() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: renderHomeTabIcon,
+          tabBarIcon: HomeTabIcon,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: renderSettingsTabIcon,
+          tabBarIcon: SettingsTabIcon,
         }}
       />
     </Tabs>
