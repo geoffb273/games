@@ -28,7 +28,7 @@ export function GameView({ id }: { id: string }) {
     boardExitAnimation,
     markBoardShown,
     onBoardAnimationComplete,
-  } = usePuzzleBoardTransition({ puzzle, puzzleId: id });
+  } = usePuzzleBoardTransition({ puzzle });
 
   const isPuzzleMissing = !isLoading && puzzle == null;
   const challengeId = puzzle?.dailyChallenge.id;
@@ -146,27 +146,13 @@ type UsePuzzleBoardTransitionResult = {
  */
 function usePuzzleBoardTransition({
   puzzle,
-  puzzleId,
 }: {
   puzzle: Puzzle | null;
-  puzzleId: string;
 }): UsePuzzleBoardTransitionResult {
   const [phase, setPhase] = useState<TransitionPhase | null>(null);
   const [showBoardForExit, setShowBoardForExit] = useState(false);
   const [animationCompleteFired, setAnimationCompleteFired] = useState(false);
   const hasShownBoardRef = useRef(false);
-  const prevPuzzleIdRef = useRef<string | null>(null);
-
-  // Reset transition state when puzzle ID changes (navigated to different puzzle)
-  useEffect(() => {
-    if (prevPuzzleIdRef.current !== puzzleId) {
-      prevPuzzleIdRef.current = puzzleId;
-      setPhase(null);
-      setShowBoardForExit(false);
-      setAnimationCompleteFired(false);
-      hasShownBoardRef.current = false;
-    }
-  }, [puzzleId]);
 
   // When we have puzzle with no attempt, we're playing (for transition detection)
   useEffect(() => {
