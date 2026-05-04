@@ -224,9 +224,9 @@ function usePuzzleBoardTransition({
     setAnimationCompleteFired(true);
   }, []);
 
-  const markBoardShown = () => {
+  const markBoardShown = useCallback(() => {
     hasShownBoardRef.current = true;
-  };
+  }, []);
 
   return {
     shouldShowCompleted,
