@@ -30,7 +30,7 @@ import { useTheme } from '@/hooks/useTheme';
 
 import { MinesweeperColors } from './minesweeperColor';
 
-export const LOSS_REVEAL_DURATION_MS = 2_000;
+export const LOSS_REVEAL_DURATION_MS = 1_500;
 const LOSS_REVEAL_PULSE_COUNT = 1;
 
 type CellProps = {
