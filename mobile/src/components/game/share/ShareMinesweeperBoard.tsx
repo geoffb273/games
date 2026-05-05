@@ -48,6 +48,7 @@ export function ShareMinesweeperBoard({ puzzle }: ShareMinesweeperBoardProps) {
       revealedMap={revealedMap}
       cells={cells}
       triggeredMineCell={null}
+      shouldRevealAllCells={false}
     />
   );
 }
