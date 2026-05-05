@@ -2,11 +2,14 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 import { StyleSheet, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
+  cancelAnimation,
   Easing,
   FadeIn,
   runOnJS,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
+  withRepeat,
   withSequence,
   withSpring,
   withTiming,
@@ -27,7 +30,8 @@ import { useTheme } from '@/hooks/useTheme';
 
 import { MinesweeperColors } from './minesweeperColor';
 
-const LOSS_EXPLOSION_DELAY_MS = 300;
+export const LOSS_REVEAL_DURATION_MS = 1_500;
+const LOSS_REVEAL_PULSE_COUNT = 1;
 
 type CellProps = {
   row: number;
@@ -37,11 +41,13 @@ type CellProps = {
   isFlagged: boolean;
   isHintedFlag?: boolean;
   value: number | null;
+  isMine: boolean;
   isTriggeredMine: boolean;
   onTap: (row: number, col: number) => void;
   onLongPress: (row: number, col: number) => void;
   isCompletionAnimationActive?: boolean;
   completionAnimationType?: 'wave' | 'explosion';
+  isLossRevealActive?: boolean;
   /** Whether this cell is the last in the completion wave. */
   isLastInWave?: boolean;
   /** Called when the completion wave finishes (only triggered from the last cell). */
@@ -57,11 +63,13 @@ export const MinesweeperCell = memo(function MinesweeperCell({
   isFlagged,
   isHintedFlag = false,
   value,
+  isMine,
   isTriggeredMine,
   onTap,
   onLongPress,
   isCompletionAnimationActive = false,
   completionAnimationType = 'explosion',
+  isLossRevealActive = false,
   isLastInWave = false,
   onWaveComplete,
   isDisabled = false,
@@ -112,7 +120,7 @@ export const MinesweeperCell = memo(function MinesweeperCell({
       );
     } else {
       translate.value = withSequence(
-        withTiming(0, { duration: LOSS_EXPLOSION_DELAY_MS }, () => {
+        withTiming(0, { duration: LOSS_REVEAL_DURATION_MS }, () => {
           'worklet';
           opacity.value = 0;
         }),
@@ -130,6 +138,36 @@ export const MinesweeperCell = memo(function MinesweeperCell({
     stableOnWaveComplete,
     translate,
   ]);
+
+  useEffect(() => {
+    if (!isLossRevealActive || !isTriggeredMine) return;
+
+    // If the mine was just tapped, a gesture spring may still be running on scale.
+    cancelAnimation(scale);
+
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.2, {
+          duration: LOSS_REVEAL_DURATION_MS / (4 * LOSS_REVEAL_PULSE_COUNT),
+          easing: Easing.inOut(Easing.quad),
+        }),
+        withTiming(0.98, {
+          duration: LOSS_REVEAL_DURATION_MS / (4 * LOSS_REVEAL_PULSE_COUNT),
+          easing: Easing.inOut(Easing.quad),
+        }),
+        withTiming(1.08, {
+          duration: LOSS_REVEAL_DURATION_MS / (4 * LOSS_REVEAL_PULSE_COUNT),
+          easing: Easing.inOut(Easing.quad),
+        }),
+        withTiming(1, {
+          duration: LOSS_REVEAL_DURATION_MS / (4 * LOSS_REVEAL_PULSE_COUNT),
+          easing: Easing.inOut(Easing.quad),
+        }),
+      ),
+      LOSS_REVEAL_PULSE_COUNT,
+      false,
+    );
+  }, [isLossRevealActive, isTriggeredMine, scale]);
 
   const tap = Gesture.Tap()
     .withTestId('minesweeper-cell-tap')
@@ -171,10 +209,6 @@ export const MinesweeperCell = memo(function MinesweeperCell({
     opacity: isTriggeredMine ? opacity.value : 1,
   }));
 
-  const innerAnimatedStyle = useAnimatedStyle(() => ({
-    transform: isCompletionAnimationActive ? [{ scale: scale.value }] : [{ scale: 1 }],
-  }));
-
   const bg =
     isRevealed || isTriggeredMine
       ? theme.background
@@ -197,52 +231,111 @@ export const MinesweeperCell = memo(function MinesweeperCell({
           animatedStyle,
         ]}
       >
-        {isTriggeredMine ? (
-          <Animated.View entering={ZoomIn.duration(120)}>
-            <Animated.View style={innerAnimatedStyle}>
-              <Text color="error" size="lg">
-                💣
-              </Text>
-            </Animated.View>
-          </Animated.View>
-        ) : isRevealed && value != null && value > 0 ? (
-          <Animated.View
-            entering={FadeIn.duration(200).delay(Math.min(20 * (row + col), 600))}
-            style={innerAnimatedStyle}
-          >
-            <Text
-              _colorOverride={
-                (value != null
-                  ? MinesweeperColors.numbers[value as keyof typeof MinesweeperColors.numbers]
-                  : undefined) ?? theme.text
-              }
-              size="lg"
-            >
-              {value}
-            </Text>
-          </Animated.View>
-        ) : (
-          isFlagged && (
-            <Animated.View entering={ZoomIn.duration(200)}>
-              <Animated.View style={innerAnimatedStyle}>
-                {isHintedFlag ? (
-                  <FontAwesome
-                    name="lock"
-                    size={18}
-                    color={MinesweeperColors.flag}
-                    testID="minesweeper-hinted-flag-icon"
-                  />
-                ) : (
-                  <Text color="error" size="lg">
-                    ▲
-                  </Text>
-                )}
-              </Animated.View>
-            </Animated.View>
-          )
-        )}
+        <MinesweeperCellContent
+          row={row}
+          col={col}
+          scale={scale}
+          isCompletionAnimationActive={isCompletionAnimationActive}
+          isTriggeredMine={isTriggeredMine}
+          isRevealed={isRevealed}
+          isMine={isMine}
+          value={value}
+          isFlagged={isFlagged}
+          isHintedFlag={isHintedFlag}
+        />
       </Animated.View>
     </GestureDetector>
+  );
+});
+
+type MinesweeperCellContentProps = {
+  row: number;
+  col: number;
+  scale: SharedValue<number>;
+  isCompletionAnimationActive: boolean;
+  isTriggeredMine: boolean;
+  isRevealed: boolean;
+  isMine: boolean;
+  value: number | null;
+  isFlagged: boolean;
+  isHintedFlag: boolean;
+};
+
+const MinesweeperCellContent = memo(function MinesweeperCellContent({
+  row,
+  col,
+  scale,
+  isCompletionAnimationActive,
+  isTriggeredMine,
+  isRevealed,
+  isMine,
+  value,
+  isFlagged,
+  isHintedFlag,
+}: MinesweeperCellContentProps) {
+  const theme = useTheme();
+  const innerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: isCompletionAnimationActive ? [{ scale: scale.value }] : [{ scale: 1 }],
+  }));
+
+  const shouldShowMine = isTriggeredMine || (isRevealed && isMine);
+  const shouldShowValue = isRevealed && value != null && value > 0;
+
+  const valueEnteringAnimation = useMemo(() => {
+    return FadeIn.duration(200).delay(Math.min(20 * (row + col), 600));
+  }, [row, col]);
+
+  if (shouldShowMine) {
+    return (
+      <Animated.View entering={isRevealed ? undefined : ZoomIn.duration(120)}>
+        <Animated.View style={innerAnimatedStyle}>
+          <Text color="error" size="lg">
+            💣
+          </Text>
+        </Animated.View>
+      </Animated.View>
+    );
+  }
+
+  if (shouldShowValue) {
+    return (
+      <Animated.View
+        entering={isRevealed ? undefined : valueEnteringAnimation}
+        style={innerAnimatedStyle}
+      >
+        <Text
+          _colorOverride={
+            (value != null
+              ? MinesweeperColors.numbers[value as keyof typeof MinesweeperColors.numbers]
+              : undefined) ?? theme.text
+          }
+          size="lg"
+        >
+          {value}
+        </Text>
+      </Animated.View>
+    );
+  }
+
+  if (!isFlagged) return null;
+
+  return (
+    <Animated.View entering={isRevealed ? undefined : ZoomIn.duration(200)}>
+      <Animated.View style={innerAnimatedStyle}>
+        {isHintedFlag ? (
+          <FontAwesome
+            name="lock"
+            size={18}
+            color={MinesweeperColors.flag}
+            testID="minesweeper-hinted-flag-icon"
+          />
+        ) : (
+          <Text color="error" size="lg">
+            ▲
+          </Text>
+        )}
+      </Animated.View>
+    </Animated.View>
   );
 });
 

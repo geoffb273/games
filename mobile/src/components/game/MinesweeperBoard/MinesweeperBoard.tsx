@@ -14,11 +14,12 @@ import {
 } from '@/hooks/game/useMinesweeperGame';
 import { useTheme } from '@/hooks/useTheme';
 
-import { MinesweeperCell } from './MinesweeperCell';
+import { LOSS_REVEAL_DURATION_MS, MinesweeperCell } from './MinesweeperCell';
 
 export const CELL_GAP = 2;
 export const MAX_CELL_SIZE = 44;
 export const AVAILABLE_HEIGHT_RATIO = 0.6;
+type CompletionAnimationPhase = 'idle' | 'winWave' | 'lossReveal' | 'lossExplosion';
 
 type MinesweeperBoardProps = {
   puzzle: MinesweeperPuzzle;
@@ -34,6 +35,7 @@ type MinesweeperBoardSurfaceBaseProps = {
   revealedMap: Map<string, number>;
   cells: MinesweeperGame['cells'];
   triggeredMineCell: { row: number; col: number } | null;
+  shouldRevealAllCells: boolean;
 };
 
 type StaticMinesweeperBoardSurfaceProps = MinesweeperBoardSurfaceBaseProps & {
@@ -44,6 +46,7 @@ type StaticMinesweeperBoardSurfaceProps = MinesweeperBoardSurfaceBaseProps & {
   isDisabled?: never;
   isCompletionAnimationActive?: never;
   completionAnimationType?: never;
+  isLossRevealActive?: never;
   onAnimationComplete?: never;
 };
 
@@ -55,6 +58,7 @@ type PlayableMinesweeperBoardSurfaceProps = MinesweeperBoardSurfaceBaseProps & {
   isDisabled: boolean;
   isCompletionAnimationActive: boolean;
   completionAnimationType: 'wave' | 'explosion';
+  isLossRevealActive: boolean;
   onAnimationComplete?: () => void;
 };
 
@@ -69,12 +73,14 @@ export function MinesweeperBoardSurface({
   revealedMap,
   cells,
   triggeredMineCell,
+  shouldRevealAllCells,
   isHinted,
   onCellTap,
   onCellLongPress,
   isDisabled,
   isCompletionAnimationActive,
   completionAnimationType,
+  isLossRevealActive,
   onAnimationComplete,
 }: MinesweeperBoardSurfaceProps) {
   const isPlayable = variant === 'playable';
@@ -86,9 +92,14 @@ export function MinesweeperBoardSurface({
           {Array.from({ length: puzzle.width }, (__, col) => {
             const key = `${row},${col}`;
             const revealedValue = revealedMap.get(key);
-            const isRevealed = revealedValue !== undefined;
+            const isMine = puzzle.mineField[row][col] === 'MINE';
+            const isRevealed = revealedValue !== undefined || shouldRevealAllCells;
             const isFlagged = !isRevealed && cells[row][col] === 'flagged';
             const isHintedFlag = isPlayable && isFlagged && isHinted(row, col);
+            const mineFieldValue = puzzle.mineField[row][col];
+            const cellValue =
+              revealedValue ??
+              (shouldRevealAllCells && mineFieldValue !== 'MINE' ? mineFieldValue : null);
 
             return (
               <MinesweeperCell
@@ -99,12 +110,14 @@ export function MinesweeperBoardSurface({
                 isRevealed={isRevealed}
                 isFlagged={isFlagged}
                 isHintedFlag={isHintedFlag}
-                value={revealedValue ?? null}
+                value={cellValue}
+                isMine={isMine}
                 isTriggeredMine={triggeredMineCell?.row === row && triggeredMineCell?.col === col}
                 onTap={(r, c) => onCellTap?.(r, c)}
                 onLongPress={(r, c) => onCellLongPress?.(r, c)}
                 completionAnimationType={completionAnimationType ?? 'wave'}
                 isCompletionAnimationActive={isCompletionAnimationActive ?? false}
+                isLossRevealActive={isLossRevealActive ?? false}
                 isLastInWave={row === puzzle.height - 1 && col === puzzle.width - 1}
                 onWaveComplete={isPlayable ? onAnimationComplete : undefined}
                 isDisabled={!isPlayable || isDisabled}
@@ -146,7 +159,8 @@ export function MinesweeperBoard({
     enabled: variant === 'play',
   });
 
-  const [isCompletionAnimationActive, setIsCompletionAnimationActive] = useState(false);
+  const [completionAnimationPhase, setCompletionAnimationPhase] =
+    useState<CompletionAnimationPhase>('idle');
   const hasTriggeredCompletionAnimationRef = useRef(false);
 
   useEffect(() => {
@@ -154,8 +168,22 @@ export function MinesweeperBoard({
       return;
 
     hasTriggeredCompletionAnimationRef.current = true;
-    setIsCompletionAnimationActive(true);
+    if (isLoss) {
+      setCompletionAnimationPhase('lossReveal');
+      const timeoutId = setTimeout(() => {
+        setCompletionAnimationPhase('lossExplosion');
+      }, LOSS_REVEAL_DURATION_MS);
+
+      return () => clearTimeout(timeoutId);
+    }
+
+    setCompletionAnimationPhase('winWave');
   }, [isLoss, isWin, variant]);
+
+  const isCompletionAnimationActive =
+    completionAnimationPhase === 'winWave' || completionAnimationPhase === 'lossExplosion';
+  const shouldRevealAllCells =
+    completionAnimationPhase === 'lossReveal' || completionAnimationPhase === 'lossExplosion';
 
   return (
     <View style={styles.container}>
@@ -190,12 +218,14 @@ export function MinesweeperBoard({
         revealedMap={revealedMap}
         cells={cells}
         triggeredMineCell={triggeredMineCell}
+        shouldRevealAllCells={shouldRevealAllCells}
         isHinted={isHinted}
         onCellTap={onCellTap}
         onCellLongPress={onCellLongPress}
         isDisabled={isCompletionAnimationActive || isWin || isLoss}
         completionAnimationType={isLoss ? 'explosion' : 'wave'}
         isCompletionAnimationActive={isCompletionAnimationActive}
+        isLossRevealActive={completionAnimationPhase === 'lossReveal'}
         onAnimationComplete={onAnimationComplete}
       />
       {variant === 'play' && (

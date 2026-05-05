@@ -28,6 +28,7 @@ const defaultProps = {
   isRevealed: false,
   isFlagged: false,
   value: null as number | null,
+  isMine: false,
   isTriggeredMine: false,
   onTap: jest.fn(),
   onLongPress: jest.fn(),
