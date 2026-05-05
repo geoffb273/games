@@ -2,7 +2,10 @@ import { act, renderHook } from '@testing-library/react-native';
 
 import { type MinesweeperPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
-import { buildMinesweeperSolution, useMinesweeperGame } from '@/hooks/game/useMinesweeperGame';
+import {
+  buildMinesweeperSolution,
+  useMinesweeperGame,
+} from '@/hooks/game/minesweeper/useMinesweeperGame';
 import { getCellsToReveal } from '@/utils/minesweeper/reveal';
 
 jest.mock('@/context/PlaytimeClockContext', () => {

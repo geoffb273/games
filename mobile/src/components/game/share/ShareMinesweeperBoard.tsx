@@ -5,7 +5,7 @@ import {
   CELL_GAP,
   MinesweeperBoardSurface,
 } from '@/components/game/MinesweeperBoard/MinesweeperBoard';
-import { type MinesweeperGame } from '@/hooks/game/useMinesweeperGame';
+import { type MinesweeperGame } from '@/hooks/game/minesweeper/useMinesweeperGame';
 
 import { SHARE_ASSET_CONTENT_TARGET_SIZE } from './ShareAssetCard';
 
