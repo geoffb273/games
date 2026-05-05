@@ -13,7 +13,7 @@ import {
   MinesweeperBoard,
 } from '@/components/game/MinesweeperBoard/MinesweeperBoard';
 import { Spacing } from '@/constants/token';
-import { type MinesweeperOnSolveInput } from '@/hooks/game/useMinesweeperGame';
+import { type MinesweeperOnSolveInput } from '@/hooks/game/minesweeper/useMinesweeperGame';
 import { useStableCallback } from '@/hooks/useStableCallback';
 
 type GameViewMinesweeperBoardProps = {
