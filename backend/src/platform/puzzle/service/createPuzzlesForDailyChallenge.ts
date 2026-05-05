@@ -18,32 +18,32 @@ const PUZZLE_CONFIGS: {
 }[] = [
   // Monday (easiest) → Sunday (hardest). Row index = (getUTCDay() + 6) % 7
   {
-    flow: { width: 6, height: 6 },
-    hanji: { width: 6, height: 6, fillProbability: 0.45 },
-    hashi: { width: 8, height: 8, islandCount: 14 },
-    minesweeper: { width: 8, height: 8, mineCount: 15 },
-    slitherlink: { width: 5, height: 6 },
+    flow: { width: 7, height: 7 },
+    hanji: { width: 7, height: 7, fillProbability: 0.45 },
+    hashi: { width: 8, height: 8, islandCount: 16 },
+    minesweeper: { width: 8, height: 8, mineCount: 16 },
+    slitherlink: { width: 6, height: 6 },
   },
   // Tuesday
   {
-    flow: { width: 6, height: 7 },
-    hanji: { width: 6, height: 7, fillProbability: 0.475 },
-    hashi: { width: 8, height: 8, islandCount: 15 },
-    minesweeper: { width: 8, height: 9, mineCount: 17 },
-    slitherlink: { width: 6, height: 6 },
+    flow: { width: 7, height: 7 },
+    hanji: { width: 7, height: 7, fillProbability: 0.475 },
+    hashi: { width: 8, height: 8, islandCount: 17 },
+    minesweeper: { width: 8, height: 9, mineCount: 18 },
+    slitherlink: { width: 6, height: 7 },
   },
   // Wednesday
   {
     flow: { width: 7, height: 8 },
     hanji: { width: 7, height: 7, fillProbability: 0.5 },
-    hashi: { width: 8, height: 8, islandCount: 16 },
+    hashi: { width: 8, height: 8, islandCount: 18 },
     minesweeper: { width: 9, height: 9, mineCount: 21 },
     slitherlink: { width: 6, height: 7 },
   },
   // Thursday
   {
     flow: { width: 8, height: 8 },
-    hanji: { width: 7, height: 7, fillProbability: 0.5 },
+    hanji: { width: 7, height: 7, fillProbability: 0.525 },
     hashi: { width: 9, height: 9, islandCount: 18 },
     minesweeper: { width: 10, height: 10, mineCount: 25 },
     slitherlink: { width: 7, height: 7 },
