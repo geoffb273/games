@@ -3,6 +3,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
+import { ShareDailyChallengeCard } from '@/components/game/share/ShareDailyChallengeCard';
 import { SharePuzzleCard } from '@/components/game/share/SharePuzzleCard';
 import { ShareResultButton } from '@/components/game/share/ShareResultButton';
 import { PuzzleCard } from '@/components/PuzzleCard';
@@ -23,6 +24,7 @@ type PuzzleCompletedViewProps = {
   solved: boolean;
   durationMs?: number | null;
   nextPuzzle: Puzzle | null;
+  dailyChallengePuzzles: Puzzle[] | null;
 };
 
 export function PuzzleCompletedView({
@@ -30,9 +32,14 @@ export function PuzzleCompletedView({
   solved,
   durationMs,
   nextPuzzle,
+  dailyChallengePuzzles,
 }: PuzzleCompletedViewProps) {
   const theme = useTheme();
   const typeLabel = PUZZLE_TYPE_LABELS[puzzle.type];
+  const isDailyChallengeComplete =
+    dailyChallengePuzzles != null &&
+    dailyChallengePuzzles.length > 0 &&
+    dailyChallengePuzzles.every((dailyPuzzle) => dailyPuzzle.attempt != null);
 
   const formattedDuration = formatDuration(durationMs);
 
@@ -75,6 +82,14 @@ export function PuzzleCompletedView({
         <View style={styles.shareContainer}>
           <ShareResultButton>
             <SharePuzzleCard puzzle={puzzle} durationMs={durationMs} />
+          </ShareResultButton>
+        </View>
+      )}
+
+      {isDailyChallengeComplete && (
+        <View style={styles.shareContainer}>
+          <ShareResultButton label="Share Daily Challenge">
+            <ShareDailyChallengeCard puzzles={dailyChallengePuzzles} />
           </ShareResultButton>
         </View>
       )}

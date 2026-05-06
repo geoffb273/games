@@ -36,12 +36,17 @@ export function GameView({ id }: { id: string }) {
     dailyChallengeId: challengeId,
     enabled: challengeId != null,
   });
+  const dailyChallengePuzzles = useMemo(() => {
+    if (challengePuzzles == null || puzzle == null) return challengePuzzles;
+    return challengePuzzles.map((candidate) => (candidate.id === puzzle.id ? puzzle : candidate));
+  }, [challengePuzzles, puzzle]);
   const nextPuzzle = useMemo(() => {
-    if (challengePuzzles == null) return null;
+    if (dailyChallengePuzzles == null) return null;
     return (
-      challengePuzzles.find((candidate) => candidate.id !== id && candidate.attempt == null) ?? null
+      dailyChallengePuzzles.find((candidate) => candidate.id !== id && candidate.attempt == null) ??
+      null
     );
-  }, [challengePuzzles, id]);
+  }, [dailyChallengePuzzles, id]);
 
   if (isNotFound && !isLoading) {
     return (
@@ -69,6 +74,7 @@ export function GameView({ id }: { id: string }) {
             solved={puzzle.attempt.completedAt != null}
             durationMs={puzzle.attempt.durationMs}
             nextPuzzle={nextPuzzle}
+            dailyChallengePuzzles={dailyChallengePuzzles}
           />
         </View>
       </VerticallyCenteredLayout>

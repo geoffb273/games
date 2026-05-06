@@ -10,6 +10,7 @@ import { useTheme } from '@/hooks/useTheme';
 type ShareResultButtonProps = {
   /** The fully-rendered share card to capture as an image. */
   children: ReactElement;
+  label?: string;
 };
 
 /**
@@ -19,7 +20,7 @@ type ShareResultButtonProps = {
  * The hidden card is rendered off-screen but laid out and on-window so
  * `react-native-view-shot` can capture it without flashing visible content.
  */
-export function ShareResultButton({ children }: ShareResultButtonProps) {
+export function ShareResultButton({ children, label = 'Share Result' }: ShareResultButtonProps) {
   const theme = useTheme();
   const { captureRef, share, isSharing, isUnavailable } = useCaptureAndShare();
 
@@ -37,7 +38,7 @@ export function ShareResultButton({ children }: ShareResultButtonProps) {
           <FontAwesome6 name="arrow-up-from-bracket" size={20} color={theme.text} solid />
         }
       >
-        Share Result
+        {label}
       </Button>
       <View pointerEvents="none" collapsable={false} style={styles.offscreen}>
         <View ref={captureRef} collapsable={false}>
