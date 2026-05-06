@@ -5,8 +5,8 @@ import { useDailyChallengesQuery } from '@/api/dailyChallenge/dailyChallengesQue
 import { usePuzzlesQuery } from '@/api/puzzle/puzzlesQuery';
 import { ErrorView } from '@/components/common/ErrorView';
 import { HomeHeader } from '@/components/home/HomeHeader/HomeHeader';
-import { FlatListLayout } from '@/components/layout/FlatListLayout';
-import { PuzzleCard, PuzzleListEmptyState } from '@/components/PuzzleCard';
+import { ScrollViewLayout } from '@/components/layout/ScrollViewLayout';
+import { PuzzleList } from '@/components/PuzzleList';
 import { Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -48,7 +48,7 @@ export function HomeView() {
   }
 
   return (
-    <FlatListLayout
+    <ScrollViewLayout
       header={
         <HomeHeader
           dailyChallenges={dailyChallenges}
@@ -58,28 +58,21 @@ export function HomeView() {
           onEndReached={fetchMore}
         />
       }
-      data={puzzles ?? []}
-      renderItem={({ item }) => <PuzzleCard puzzle={item} />}
-      contentContainerStyle={styles.puzzleList}
       edges={['top']}
-      ListEmptyComponent={
-        <PuzzleListEmptyState
-          isLoading={isPuzzlesLoading}
-          isError={isPuzzlesError}
-          onRetry={refetchPuzzles}
-          error={errorPuzzles}
-        />
-      }
-    />
+    >
+      <PuzzleList
+        dailyChallengeId={activeChallengeId}
+        puzzles={puzzles ?? []}
+        isLoading={isPuzzlesLoading}
+        isError={isPuzzlesError}
+        onRetry={refetchPuzzles}
+        error={errorPuzzles}
+      />
+    </ScrollViewLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  puzzleList: {
-    paddingHorizontal: Spacing.three,
-    rowGap: Spacing.one,
-    paddingBottom: Spacing.five,
-  },
   centered: {
     flex: 1,
     alignItems: 'center',

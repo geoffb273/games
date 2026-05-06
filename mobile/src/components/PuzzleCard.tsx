@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -13,7 +13,7 @@ import { usePuzzlePalette } from '@/hooks/usePuzzlePalette';
 import { useTheme } from '@/hooks/useTheme';
 import { getColorWithOpacity } from '@/utils/colorUtils';
 
-import { ErrorView } from './common/ErrorView';
+export const PUZZLE_CARD_NORMAL_HEIGHT = 106;
 
 const PUZZLE_TYPE_DESCRIPTIONS: Record<Puzzle['type'], string> = {
   FLOW: 'Connect matching colors without crossing paths.',
@@ -26,9 +26,10 @@ const PUZZLE_TYPE_DESCRIPTIONS: Record<Puzzle['type'], string> = {
 type PuzzleCardProps = {
   puzzle: Puzzle;
   variant?: 'normal' | 'small';
+  disabled?: boolean;
 };
 
-export function PuzzleCard({ puzzle, variant = 'normal' }: PuzzleCardProps) {
+export function PuzzleCard({ puzzle, variant = 'normal', disabled = false }: PuzzleCardProps) {
   const theme = useTheme();
   const isCompleted = puzzle.attempt != null;
   const isSolved = isCompleted && puzzle.attempt?.completedAt != null;
@@ -47,7 +48,9 @@ export function PuzzleCard({ puzzle, variant = 'normal' }: PuzzleCardProps) {
 
   return (
     <Pressable
+      disabled={disabled}
       onPress={() => {
+        if (disabled) return;
         if (isNormalVariant) {
           router.push({ pathname: '/game/[id]', params: { id: puzzle.id } });
         } else {
@@ -132,49 +135,21 @@ function PuzzleStatusIcon({ status }: { status: PuzzleStatus }) {
   );
 }
 
-export function PuzzleListEmptyState({
-  isLoading,
-  isError,
-  onRetry,
-  error,
-}: {
-  isLoading?: boolean;
-  isError?: boolean;
-  onRetry?: () => void;
-  error?: unknown;
-}) {
-  const theme = useTheme();
-
-  return (
-    <View style={styles.emptyState}>
-      {isLoading ? (
-        <ActivityIndicator size="small" color={theme.text} />
-      ) : isError ? (
-        <ErrorView title="Unable to load puzzles" message={null} onRetry={onRetry} error={error} />
-      ) : (
-        <Text type="body" color="textSecondary" textAlign="center">
-          No puzzles available
-        </Text>
-      )}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   puzzleCard: {
     borderRadius: Radii.md,
     padding: Spacing.three,
     borderWidth: 1,
-    marginHorizontal: Spacing.one,
-    marginVertical: Spacing.one,
   },
   smallVariant: {},
   normalVariant: {
+    height: PUZZLE_CARD_NORMAL_HEIGHT,
     flex: 1,
   },
   puzzleCardContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    height: '100%',
   },
   smallVariantCardContent: {
     gap: Spacing.two,
@@ -194,10 +169,5 @@ const styles = StyleSheet.create({
     height: 20,
     width: 20,
     borderWidth: 1,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.six,
   },
 });

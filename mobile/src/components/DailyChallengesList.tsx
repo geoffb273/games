@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
   container: {
     gap: Spacing.one,
     paddingBottom: Spacing.three,
-    paddingHorizontal: Spacing.four,
+    paddingHorizontal: Spacing.three,
   },
   challengeChip: {
     paddingHorizontal: Spacing.three,

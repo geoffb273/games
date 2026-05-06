@@ -7,7 +7,7 @@ import { type Puzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { usePuzzleQuery } from '@/api/puzzle/puzzleQuery';
 import { Button as MockButton } from '@/components/common/Button';
 import { Text as MockText } from '@/components/common/Text';
-import { PuzzleCard, PuzzleListEmptyState } from '@/components/PuzzleCard';
+import { PuzzleCard } from '@/components/PuzzleCard';
 
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
@@ -191,30 +191,5 @@ describe('PuzzleCard', () => {
       expect(screen.getByText(`${PuzzleType.Flow}-sm`)).toBeOnTheScreen();
       expect(screen.queryByText('check')).toBeNull();
     });
-  });
-});
-
-describe('PuzzleListEmptyState', () => {
-  it('shows loading indicator when loading', () => {
-    render(<PuzzleListEmptyState isLoading />);
-
-    expect(screen.queryByText('No puzzles available')).toBeNull();
-  });
-
-  it('shows generic empty message when not loading or error', () => {
-    render(<PuzzleListEmptyState />);
-
-    expect(screen.getByText('No puzzles available')).toBeOnTheScreen();
-  });
-
-  it('renders error view and calls onRetry', async () => {
-    const user = userEvent.setup();
-    const onRetry = jest.fn();
-
-    render(<PuzzleListEmptyState isError onRetry={onRetry} />);
-
-    await user.press(screen.getByRole('button', { name: 'Retry' }));
-
-    expect(onRetry).toHaveBeenCalledTimes(1);
   });
 });
