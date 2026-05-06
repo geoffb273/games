@@ -1,11 +1,12 @@
-import type { ReactNode } from 'react';
 import { Pressable, type PressableProps, StyleSheet, View, type ViewStyle } from 'react-native';
+
+import { FontAwesome } from '@expo/vector-icons';
 
 import { Text, type TextColor } from '@/components/common/Text';
 import { Radii, Spacing } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
 
 type Align = 'left' | 'center' | 'right';
 
@@ -16,8 +17,8 @@ type ButtonProps = NativePressableProps & {
   children?: string;
   onPress: () => void | Promise<void>;
   disabled?: boolean;
-  leadingIcon?: ReactNode;
-  trailingIcon?: ReactNode;
+  leadingIcon?: keyof typeof FontAwesome.glyphMap;
+  trailingIcon?: keyof typeof FontAwesome.glyphMap;
   align?: Align;
   fullWidth?: boolean;
 };
@@ -125,15 +126,31 @@ export function Button({
           fullWidth && styles.contentStretch,
         ]}
       >
-        {leadingIcon != null && <View style={styles.icon}>{leadingIcon}</View>}
+        {leadingIcon != null && <ButtonIcon icon={leadingIcon} color={textColor} />}
         {children != null && (
           <Text type="emphasized_body" color={textColor}>
             {children}
           </Text>
         )}
-        {trailingIcon != null && <View style={styles.icon}>{trailingIcon}</View>}
+        {trailingIcon != null && <ButtonIcon icon={trailingIcon} color={textColor} />}
       </View>
     </Pressable>
+  );
+}
+
+function ButtonIcon({
+  icon,
+  color,
+}: {
+  icon: keyof typeof FontAwesome.glyphMap;
+  color: TextColor;
+}) {
+  const theme = useTheme();
+
+  return (
+    <View style={styles.icon}>
+      <FontAwesome name={icon} size={20} color={theme[color]} solid />
+    </View>
   );
 }
 

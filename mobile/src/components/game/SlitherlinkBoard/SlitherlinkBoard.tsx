@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { FontAwesome } from '@expo/vector-icons';
-
 import { PuzzleType, type SlitherlinkPuzzle } from '@/api/puzzle/puzzle';
 import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
@@ -11,7 +9,6 @@ import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { type SlitherlinkOnSolveInput, useSlitherlinkGame } from '@/hooks/game/useSlitherlinkGame';
-import { useTheme } from '@/hooks/useTheme';
 
 import { SlitherlinkCell } from './SlitherlinkCell';
 
@@ -151,7 +148,6 @@ export function SlitherlinkBoard({
 
   const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
   const hasEndGameAnimationTriggered = useRef(false);
-  const theme = useTheme();
 
   useEffect(() => {
     if (!isComplete || variant !== 'play' || hasEndGameAnimationTriggered.current) return;
@@ -188,7 +184,7 @@ export function SlitherlinkBoard({
             variant="outline"
             onPress={onUndoPress}
             disabled={isCompletionWaveActive || isComplete || !isUndoEnabled}
-            leadingIcon={<FontAwesome name="undo" size={24} color={theme.text} />}
+            leadingIcon="undo"
           />
           <HintButton
             puzzleType={PuzzleType.Slitherlink}
@@ -200,7 +196,7 @@ export function SlitherlinkBoard({
             variant="outline"
             onPress={onClearPress}
             disabled={isCompletionWaveActive || isComplete}
-            leadingIcon={<FontAwesome name="trash-o" size={24} color={theme.text} />}
+            leadingIcon="trash-o"
           />
         </View>
       )}

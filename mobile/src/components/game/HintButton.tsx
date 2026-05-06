@@ -1,8 +1,6 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { FontAwesome } from '@expo/vector-icons';
-
 import { type PuzzleType } from '@/api/puzzle/puzzle';
 import { type PuzzleHint } from '@/api/puzzle/puzzleHint';
 import {
@@ -15,14 +13,12 @@ import { Spacing } from '@/constants/token';
 import { usePlaytimeClockContext } from '@/context/PlaytimeClockContext';
 import { useTriggerAd } from '@/hooks/ads/useTriggerAd';
 import { useStableCallback } from '@/hooks/useStableCallback';
-import { useTheme } from '@/hooks/useTheme';
 
 type HintButtonProps<T extends PuzzleType> = Extract<RequestPuzzleHintInput, { puzzleType: T }> & {
   onHint: (hint: Extract<PuzzleHint, { puzzleType: T }>) => void;
 };
 
 export function HintButton<T extends PuzzleType>({ onHint, ...input }: HintButtonProps<T>) {
-  const theme = useTheme();
   const { pause, resume } = usePlaytimeClockContext();
   const { requestPuzzleHint, isLoading, isError } = useRequestPuzzleHint();
   const onFullscreenPresentedChange = useStableCallback((isPresented: boolean) => {
@@ -56,7 +52,7 @@ export function HintButton<T extends PuzzleType>({ onHint, ...input }: HintButto
         variant="secondary"
         onPress={onPressShowAd}
         disabled={isLoading || isError || isDisabled}
-        leadingIcon={<FontAwesome name="lightbulb-o" size={28} color={theme.accentInk} />}
+        leadingIcon="lightbulb-o"
       >
         Hint
       </Button>

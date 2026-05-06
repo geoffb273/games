@@ -1,7 +1,11 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
 
 import { Button } from '@/components/common/Button';
-import { Text } from '@/components/common/Text';
+import { Text as MockText } from '@/components/common/Text';
+
+jest.mock('@expo/vector-icons', () => ({
+  FontAwesome: jest.fn(({ name }: { name: string }) => <MockText>{name}</MockText>),
+}));
 
 jest.mock('@/hooks/useTheme', () => ({
   useTheme: () => ({
@@ -38,35 +42,33 @@ describe('Button', () => {
   });
 
   it('renders leading icon when provided', () => {
-    const Leading = () => <Text>leading</Text>;
     render(
-      <Button onPress={() => {}} leadingIcon={<Leading />}>
+      <Button onPress={() => {}} leadingIcon="arrow-left">
         With icon
       </Button>,
     );
-    expect(screen.getByText('leading')).toBeOnTheScreen();
+    expect(screen.getByText('arrow-left')).toBeOnTheScreen();
     expect(screen.getByText('With icon')).toBeOnTheScreen();
   });
 
   it('renders trailing icon when provided', () => {
-    const Trailing = () => <Text>trailing</Text>;
     render(
-      <Button onPress={() => {}} trailingIcon={<Trailing />}>
+      <Button onPress={() => {}} trailingIcon="arrow-right">
         With icon
       </Button>,
     );
-    expect(screen.getByText('trailing')).toBeOnTheScreen();
+    expect(screen.getByText('arrow-right')).toBeOnTheScreen();
     expect(screen.getByText('With icon')).toBeOnTheScreen();
   });
 
   it('can render with both leading and trailing icons', () => {
     render(
-      <Button onPress={() => {}} leadingIcon={<Text>L</Text>} trailingIcon={<Text>R</Text>}>
+      <Button onPress={() => {}} leadingIcon="arrow-left" trailingIcon="arrow-right">
         Both
       </Button>,
     );
-    expect(screen.getByText('L')).toBeOnTheScreen();
-    expect(screen.getByText('R')).toBeOnTheScreen();
+    expect(screen.getByText('arrow-left')).toBeOnTheScreen();
+    expect(screen.getByText('arrow-right')).toBeOnTheScreen();
     expect(screen.getByText('Both')).toBeOnTheScreen();
   });
 
