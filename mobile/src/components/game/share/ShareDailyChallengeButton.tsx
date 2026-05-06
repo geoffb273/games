@@ -62,7 +62,7 @@ function ShareDailyChallengeButtonTrigger() {
           Today complete
         </Text>
         <Text type="caption" color="textSecondary" numberOfLines={2}>
-          Share your results with friends
+          Share today&apos;s results with your friends or on social media
         </Text>
       </View>
     </View>
@@ -74,6 +74,8 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
     paddingHorizontal: Spacing.two,
     maxWidth: '100%',
+    flex: 1,
+    flexShrink: 1,
   },
   completeChallengeViewContainer: {
     gap: Spacing.three,
