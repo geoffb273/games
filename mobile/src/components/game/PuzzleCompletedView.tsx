@@ -80,7 +80,7 @@ export function PuzzleCompletedView({
       )}
 
       {nextPuzzle == null && (
-        <View style={styles.playNextButtonContainer}>
+        <View style={styles.shareDailyChallengeButtonContainer}>
           <ShareDailyChallengeButton dailyChallengeId={puzzle.dailyChallenge.id} />
         </View>
       )}
@@ -119,6 +119,11 @@ const styles = StyleSheet.create({
   playNextButtonContainer: {
     position: 'absolute',
     bottom: -Spacing.two,
+    transform: [{ translateY: '100%' }],
+  },
+  shareDailyChallengeButtonContainer: {
+    position: 'absolute',
+    bottom: -Spacing.three,
     transform: [{ translateY: '100%' }],
   },
 });
