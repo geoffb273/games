@@ -1,14 +1,16 @@
 import { type ReactElement } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Button, type ButtonVariant } from '@/components/common/Button';
+import { Button, type ButtonSize, type ButtonVariant } from '@/components/common/Button';
 import { useCaptureAndShare } from '@/hooks/useCaptureAndShare';
 
 type ShareResultButtonProps = {
   /** The fully-rendered share card to capture as an image. */
   children: ReactElement;
-  label: string;
+  /** The label to display on the button */
+  label?: string;
   variant?: ButtonVariant;
+  size?: ButtonSize;
 };
 
 /**
@@ -18,7 +20,12 @@ type ShareResultButtonProps = {
  * The hidden card is rendered off-screen but laid out and on-window so
  * `react-native-view-shot` can capture it without flashing visible content.
  */
-export function ShareResultButton({ children, label, variant = 'ghost' }: ShareResultButtonProps) {
+export function ShareResultButton({
+  children,
+  label,
+  variant = 'ghost',
+  size = 'md',
+}: ShareResultButtonProps) {
   const { captureRef, share, isSharing, isUnavailable } = useCaptureAndShare();
 
   if (isUnavailable) {
@@ -27,7 +34,13 @@ export function ShareResultButton({ children, label, variant = 'ghost' }: ShareR
 
   return (
     <>
-      <Button variant={variant} onPress={share} disabled={isSharing} leadingIcon="upload">
+      <Button
+        variant={variant}
+        onPress={share}
+        disabled={isSharing}
+        leadingIcon="upload"
+        size={size}
+      >
         {label}
       </Button>
       <View pointerEvents="none" collapsable={false} style={styles.offscreen}>

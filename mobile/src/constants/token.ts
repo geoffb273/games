@@ -17,6 +17,7 @@ export const Radii = {
   lg: 18,
   pill: 999,
 } as const;
+export type Radii = keyof typeof Radii;
 
 export const Shadows = {
   subtle: {

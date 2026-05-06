@@ -7,9 +7,9 @@ import { Fonts } from '@/constants/token';
 import { useTheme } from '@/hooks/useTheme';
 
 type FontWeight = 'bold' | 'semibold' | 'medium' | 'regular';
-type Size = '3xl' | '2xl' | 'xl' | 'lg' | 'md' | 'sm' | 'xs';
+export type TextSize = '3xl' | '2xl' | 'xl' | 'lg' | 'md' | 'sm' | 'xs';
 
-type SemanticType = 'body' | 'emphasized_body' | 'caption' | 'h1' | 'h2' | 'h3' | 'lead';
+export type SemanticType = 'body' | 'emphasized_body' | 'caption' | 'h1' | 'h2' | 'h3' | 'lead';
 
 type LineHeight = 'tight' | 'normal' | 'relaxed';
 type FontFamily = 'sans' | 'serif';
@@ -17,7 +17,7 @@ type FontFamily = 'sans' | 'serif';
 type TextStyleProps =
   | {
       fontWeight?: FontWeight;
-      size?: Size;
+      size?: TextSize;
       lineHeight?: LineHeight;
       fontFamily?: FontFamily;
       type?: never;
@@ -69,7 +69,7 @@ export function Text({
   const theme = useTheme();
 
   let fontWeight: FontWeight = passedFontWeight ?? 'regular';
-  let size: Size = passedSize ?? 'md';
+  let size: TextSize = passedSize ?? 'md';
   let lineHeight: LineHeight = passedLineHeight ?? 'normal';
   let fontFamily: FontFamily =
     passedFontFamily ?? (type != null ? semanticStyles[type].fontFamily : 'sans');
@@ -107,7 +107,7 @@ const semanticStyles: Record<
   SemanticType,
   {
     fontWeight: FontWeight;
-    size: Size;
+    size: TextSize;
     lineHeight: LineHeight;
     fontFamily: FontFamily;
   }

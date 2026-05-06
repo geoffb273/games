@@ -19,6 +19,7 @@ export function GameInstructionsButton({ puzzleType }: { puzzleType: PuzzleType 
         })
       }
       leadingIcon="question-circle-o"
+      size="lg"
     />
   );
 }
