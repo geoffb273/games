@@ -3,7 +3,7 @@ import { type ExpoConfig } from 'expo/config';
 export default (): ExpoConfig => ({
   name: 'Game Brain',
   slug: 'game-brain',
-  version: '1.1.5',
+  version: '1.1.6',
   orientation: 'portrait',
   scheme: 'games-brain',
   userInterfaceStyle: 'automatic',
