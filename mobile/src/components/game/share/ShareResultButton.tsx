@@ -1,16 +1,42 @@
-import { type ReactElement } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { type ReactElement, type Ref, useImperativeHandle } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Button, type ButtonSize, type ButtonVariant } from '@/components/common/Button';
+import {
+  Button,
+  type ButtonAlign,
+  type ButtonSize,
+  type ButtonVariant,
+} from '@/components/common/Button';
 import { useCaptureAndShare } from '@/hooks/useCaptureAndShare';
 
-type ShareResultButtonProps = {
+type BaseShareResultButtonProps = {
+  ref?: Ref<ShareResultButtonRef>;
   /** The fully-rendered share card to capture as an image. */
   children: ReactElement;
-  /** The label to display on the button */
-  label?: string;
-  variant?: ButtonVariant;
-  size?: ButtonSize;
+};
+
+type ShareResultButtonProps = BaseShareResultButtonProps &
+  (
+    | {
+        type: 'button';
+        label?: string;
+        variant?: ButtonVariant;
+        size?: ButtonSize;
+        align?: ButtonAlign;
+        trigger?: never;
+      }
+    | {
+        type: 'custom';
+        trigger: ReactElement;
+        label?: never;
+        variant?: never;
+        size?: never;
+        align?: never;
+      }
+  );
+
+export type ShareResultButtonRef = {
+  share: () => void;
 };
 
 /**
@@ -21,12 +47,18 @@ type ShareResultButtonProps = {
  * `react-native-view-shot` can capture it without flashing visible content.
  */
 export function ShareResultButton({
+  ref,
   children,
   label,
-  variant = 'ghost',
-  size = 'md',
+  type,
+  trigger,
+  ...buttonProps
 }: ShareResultButtonProps) {
   const { captureRef, share, isSharing, isUnavailable } = useCaptureAndShare();
+
+  useImperativeHandle(ref, () => ({
+    share,
+  }));
 
   if (isUnavailable) {
     return null;
@@ -34,15 +66,22 @@ export function ShareResultButton({
 
   return (
     <>
-      <Button
-        variant={variant}
-        onPress={share}
-        disabled={isSharing}
-        leadingIcon="upload"
-        size={size}
-      >
-        {label}
-      </Button>
+      {type === 'button' && (
+        <Button onPress={share} disabled={isSharing} leadingIcon="upload" {...buttonProps}>
+          {label}
+        </Button>
+      )}
+      {type === 'custom' && (
+        <Pressable
+          onPress={() => {
+            if (isSharing) return;
+            share();
+          }}
+          disabled={isSharing}
+        >
+          {trigger}
+        </Pressable>
+      )}
       <View pointerEvents="none" collapsable={false} style={styles.offscreen}>
         <View ref={captureRef} collapsable={false}>
           {children}

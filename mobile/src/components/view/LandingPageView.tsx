@@ -134,7 +134,6 @@ type PuzzleDecorationProps = {
 function PuzzleDecoration({
   iconType,
   iconSize,
-  iconStyle,
   previewSize,
   style,
   children,
@@ -149,12 +148,7 @@ function PuzzleDecoration({
       <PuzzlePreview size={previewSize} style={styles.previewBehindIcon}>
         {children}
       </PuzzlePreview>
-      <PuzzleIcon
-        type={iconType}
-        size={iconSize}
-        color="middle"
-        style={[styles.foregroundIcon, iconStyle]}
-      />
+      <PuzzleIcon type={iconType} size={iconSize} color="middle" />
     </View>
   );
 }
@@ -262,10 +256,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     opacity: 0.58,
     zIndex: 0,
-  },
-  foregroundIcon: {
-    ...Shadows.medium,
-    zIndex: 1,
   },
   cornerDecoration: {
     position: 'absolute',

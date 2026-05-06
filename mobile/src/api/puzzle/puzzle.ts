@@ -209,6 +209,11 @@ export type FlowPuzzle = PuzzleBase & {
 
 export type Puzzle = HanjiPuzzle | HashiPuzzle | MinesweeperPuzzle | SlitherlinkPuzzle | FlowPuzzle;
 
+/** True when the daily has at least one puzzle and every puzzle has been attempted. */
+export function areAllDailyPuzzlesAttempted(puzzles: Puzzle[] | null): boolean {
+  return puzzles != null && puzzles.length > 0 && puzzles.every((p) => p.attempt != null);
+}
+
 /**
  * Maps the graphql puzzle fragment type to the expected {@link Puzzle} type
  */

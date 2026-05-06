@@ -64,6 +64,7 @@ const styles = StyleSheet.create({
   header: {
     gap: Spacing.half,
     paddingBottom: Spacing.two,
+    paddingHorizontal: Spacing.three,
   },
   headerTitleBadge: {
     borderRadius: Radii.lg,

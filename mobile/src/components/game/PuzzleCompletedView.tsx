@@ -3,7 +3,6 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { type Puzzle } from '@/api/puzzle/puzzle';
 import { Text } from '@/components/common/Text';
-import { ShareDailyChallengeButton } from '@/components/game/share/ShareDailyChallengeButton';
 import { SharePuzzleCard } from '@/components/game/share/SharePuzzleCard';
 import { ShareResultButton } from '@/components/game/share/ShareResultButton';
 import { PuzzleCard } from '@/components/PuzzleCard';
@@ -73,15 +72,9 @@ export function PuzzleCompletedView({
 
       {solved && (
         <View style={styles.shareContainer}>
-          <ShareResultButton label="Share result">
+          <ShareResultButton label="Share result" type="button" variant="ghost">
             <SharePuzzleCard puzzle={puzzle} durationMs={durationMs} />
           </ShareResultButton>
-        </View>
-      )}
-
-      {nextPuzzle == null && (
-        <View style={styles.shareDailyChallengeButtonContainer}>
-          <ShareDailyChallengeButton dailyChallengeId={puzzle.dailyChallenge.id} />
         </View>
       )}
 
@@ -119,11 +112,6 @@ const styles = StyleSheet.create({
   playNextButtonContainer: {
     position: 'absolute',
     bottom: -Spacing.two,
-    transform: [{ translateY: '100%' }],
-  },
-  shareDailyChallengeButtonContainer: {
-    position: 'absolute',
-    bottom: -Spacing.three,
     transform: [{ translateY: '100%' }],
   },
 });

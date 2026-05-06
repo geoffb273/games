@@ -9,7 +9,7 @@ import { useTheme } from '@/hooks/useTheme';
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-type Align = 'left' | 'center' | 'right';
+export type ButtonAlign = 'left' | 'center' | 'right';
 
 type NativePressableProps = Omit<PressableProps, 'style' | 'children' | 'onPress'>;
 
@@ -21,7 +21,7 @@ type ButtonProps = NativePressableProps & {
   disabled?: boolean;
   leadingIcon?: keyof typeof FontAwesome.glyphMap;
   trailingIcon?: keyof typeof FontAwesome.glyphMap;
-  align?: Align;
+  align?: ButtonAlign;
   fullWidth?: boolean;
 };
 
@@ -35,19 +35,15 @@ type VariantStyles = {
 function getVariantStyles(
   theme: ReturnType<typeof useTheme>,
   variant: ButtonVariant,
-  disabled: boolean,
 ): VariantStyles {
   if (variant === 'primary') {
-    return {
-      backgroundColor: disabled ? theme.borderSubtle : theme.accentInk,
-      textColor: disabled ? 'textSecondary' : 'background',
-    };
+    return { backgroundColor: theme.accentInk, textColor: 'background' };
   }
 
   if (variant === 'secondary') {
     return {
-      backgroundColor: disabled ? theme.borderSubtle : theme.backgroundElement,
-      textColor: disabled ? 'textSecondary' : 'text',
+      backgroundColor: theme.backgroundElement,
+      textColor: 'text',
     };
   }
 
@@ -56,18 +52,18 @@ function getVariantStyles(
       backgroundColor: 'transparent',
       borderColor: theme.borderSubtle,
       borderWidth: 1,
-      textColor: disabled ? 'textSecondary' : 'text',
+      textColor: 'text',
     };
   }
 
   // ghost
   return {
     backgroundColor: 'transparent',
-    textColor: disabled ? 'textSecondary' : 'text',
+    textColor: 'text',
   };
 }
 
-const ALIGN_TO_JUSTIFY_CONTENT: Record<Align, ViewStyle['justifyContent']> = {
+const ALIGN_TO_JUSTIFY_CONTENT: Record<ButtonAlign, ViewStyle['justifyContent']> = {
   left: 'flex-start',
   right: 'flex-end',
   center: 'center',
@@ -116,17 +112,14 @@ export function Button({
 }: ButtonProps) {
   const theme = useTheme();
   const { padding, iconSize, textSize, borderRadius } = SIZE_MAPPING[size];
-  const { backgroundColor, borderColor, borderWidth, textColor } = getVariantStyles(
-    theme,
-    variant,
-    disabled,
-  );
+  const { backgroundColor, borderColor, borderWidth, textColor } = getVariantStyles(theme, variant);
 
   const containerStyle: ViewStyle = {
     backgroundColor,
     borderColor,
     borderWidth,
     borderRadius: Radii[borderRadius],
+    justifyContent: ALIGN_TO_JUSTIFY_CONTENT[align],
   };
 
   return (
@@ -144,6 +137,7 @@ export function Button({
         containerStyle,
         fullWidth && styles.fullWidth,
         pressed && !disabled && styles.pressed,
+        disabled && styles.disabled,
       ]}
     >
       <View
@@ -209,5 +203,8 @@ const styles = StyleSheet.create({
   icon: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  disabled: {
+    opacity: 0.6,
   },
 });
