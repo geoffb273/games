@@ -30,12 +30,16 @@ gql`
 export function usePuzzlesQuery({
   dailyChallengeId,
   enabled = true,
+  cacheOnly = false,
 }: {
   enabled?: boolean;
   dailyChallengeId: string | null | undefined;
+  cacheOnly?: boolean;
 }) {
   const { data, loading, error, refetch } = useQuery(PuzzlesDocument, {
     variables: { input: { dailyChallengeId } },
+    fetchPolicy: cacheOnly ? 'cache-only' : undefined,
+    nextFetchPolicy: cacheOnly ? 'cache-only' : undefined,
     skip: !enabled,
   });
 

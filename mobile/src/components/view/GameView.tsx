@@ -36,6 +36,7 @@ export function GameView({ id }: { id: string }) {
     dailyChallengeId: challengeId,
     enabled: challengeId != null,
   });
+
   const nextPuzzle = useMemo(() => {
     if (challengePuzzles == null) return null;
     return (

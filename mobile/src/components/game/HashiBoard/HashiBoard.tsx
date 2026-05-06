@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { FontAwesome } from '@expo/vector-icons';
-
 import { type HashiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
@@ -11,7 +9,6 @@ import { HintButton } from '@/components/game/HintButton';
 import { Spacing } from '@/constants/token';
 import { useInitialOpenInstructionsEffect } from '@/hooks/game/instructions/useInitialOpenInstructions.ts';
 import { type HashiOnSolve, useHashiGame } from '@/hooks/game/useHashiGame';
-import { useTheme } from '@/hooks/useTheme';
 import { type HashiConnection } from '@/utils/hashi/connections';
 
 import { HashiBridge } from './HashiBridge';
@@ -181,7 +178,6 @@ export function HashiBoard({
   } = useHashiGame({ puzzle, onSolve });
   const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
   const hasEndGameAnimationTriggered = useRef(false);
-  const theme = useTheme();
 
   useEffect(() => {
     if (!isComplete || variant !== 'play' || hasEndGameAnimationTriggered.current) return;
@@ -217,7 +213,7 @@ export function HashiBoard({
           <Button
             variant="outline"
             onPress={onUndoPress}
-            leadingIcon={<FontAwesome name="undo" size={24} color={theme.text} />}
+            leadingIcon="undo"
             disabled={isDisabled || isCompletionWaveActive || isComplete || !isUndoEnabled}
           />
           <HintButton
@@ -230,7 +226,7 @@ export function HashiBoard({
             variant="outline"
             onPress={onClearPress}
             disabled={isDisabled || isCompletionWaveActive || isComplete}
-            leadingIcon={<FontAwesome name="trash-o" size={24} color={theme.text} />}
+            leadingIcon="trash-o"
           />
         </View>
       )}

@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { FontAwesome } from '@expo/vector-icons';
-
 import { type HanjiPuzzle, PuzzleType } from '@/api/puzzle/puzzle';
 import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
@@ -192,7 +190,6 @@ export function HanjiBoard({
   const [isCompletionWaveActive, setIsCompletionWaveActive] = useState(false);
   const hasTriggeredShimmerRef = useRef(false);
 
-  const theme = useTheme();
   const {
     cells,
     isHinted,
@@ -244,7 +241,7 @@ export function HanjiBoard({
           <Button
             variant="outline"
             onPress={onUndoPress}
-            leadingIcon={<FontAwesome name="undo" size={24} color={theme.text} />}
+            leadingIcon="undo"
             disabled={isDisabled || isCompletionWaveActive || isComplete || !isUndoEnabled}
           />
           <HintButton
@@ -256,7 +253,7 @@ export function HanjiBoard({
           <Button
             variant="outline"
             onPress={onClearPress}
-            leadingIcon={<FontAwesome name="trash-o" size={24} color={theme.text} />}
+            leadingIcon="trash-o"
             disabled={isDisabled || isCompletionWaveActive || isComplete}
           />
         </View>
