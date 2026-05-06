@@ -22,7 +22,7 @@ export function ShareDailyChallengeButton({ dailyChallengeId }: ShareDailyChalle
   }
 
   return (
-    <ShareResultButton label="Share daily challenge" variant="primary">
+    <ShareResultButton label="Share complete day" variant="primary" size="lg">
       <ShareDailyChallengeCard puzzles={puzzles} />
     </ShareResultButton>
   );
