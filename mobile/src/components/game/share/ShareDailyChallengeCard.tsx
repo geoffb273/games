@@ -59,7 +59,7 @@ function ShareDailyChallengePuzzleRow({ puzzle }: ShareDailyChallengePuzzleRowPr
             {puzzle.name}
           </Text>
         </View>
-        <Text type="emphasized_body" color={isSolved ? 'success' : 'warning'} textAlign="right">
+        <Text type="emphasized_body" color={isSolved ? 'text' : 'warning'} textAlign="right">
           {isSolved ? (formattedDuration ?? 'Solved') : 'Failed'}
         </Text>
       </View>
