@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { useFocusEffect } from 'expo-router';
 
 import { areAllDailyPuzzlesAttempted, type Puzzle } from '@/api/puzzle/puzzle';
 
@@ -17,6 +19,7 @@ export function usePuzzleListExpandedState({
   const hasFirstLandingFired = useRef(false);
   const firstDailyChallengeId = useRef<string>(dailyChallengeId);
   const allPuzzlesSolved = useMemo(() => areAllDailyPuzzlesAttempted(puzzles), [puzzles]);
+  const allPuzzlesSolvedRef = useRef(allPuzzlesSolved);
   const [isExpanded, setIsExpandedState] = useState(true);
 
   const setIsExpanded = useStableCallback((expanded: boolean) => {
@@ -44,10 +47,24 @@ export function usePuzzleListExpandedState({
       }
 
       hasFirstLandingFired.current = true;
-      setIsExpanded(!allPuzzlesSolved);
+      setIsExpanded(!allPuzzlesSolvedRef.current);
     },
-    [allPuzzlesSolved, setIsExpanded],
+    [setIsExpanded],
     300,
+  );
+
+  // On transition from not all puzzles solved to all puzzles solved, collapse the list
+  useFocusEffect(
+    useCallback(() => {
+      const savedAllPuzzlesSolved = allPuzzlesSolvedRef.current;
+      allPuzzlesSolvedRef.current = allPuzzlesSolved;
+
+      if (!allPuzzlesSolved || allPuzzlesSolved === savedAllPuzzlesSolved) {
+        return;
+      }
+
+      setIsExpanded(false);
+    }, [allPuzzlesSolved, setIsExpanded]),
   );
 
   return { isExpanded, setIsExpanded, shouldShowCompleteChallengeButton: allPuzzlesSolved };
