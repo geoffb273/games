@@ -4,13 +4,14 @@
 
 ### Architecture
 
-This is a monorepo with two independent packages (no pnpm workspaces):
+This is a pnpm workspace monorepo with three packages:
 
 - **backend/** — Node/Express + Apollo Server + Pothos GraphQL + Prisma (PostgreSQL) + Redis
+- **backend/deployment/** — deployment-focused backend package
 - **mobile/** — Expo (React Native) + Apollo Client + Valtio
 - **shared/** — `schema.graphql` consumed by both backend and mobile codegen
 
-Each package has its own `pnpm-lock.yaml` and must be installed separately.
+Workspace packages are declared in `pnpm-workspace.yaml` (`backend`, `backend/deployment`, and `mobile`) and use a single root `pnpm-lock.yaml`.
 
 ### Infrastructure (Docker)
 
@@ -29,23 +30,22 @@ The backend validates all env vars at startup via Zod in `src/constants.ts`. A `
 
 | Task | Command |
 |---|---|
-| Install deps (root) | `cd /workspace && pnpm install` |
-| Install deps (backend) | `cd /workspace/backend && pnpm install` |
-| Install deps (mobile) | `cd /workspace/mobile && pnpm install` |
-| Generate Prisma client | `cd /workspace/backend && pnpm generate` |
-| Run migrations | `cd /workspace/backend && pnpm migrate:deploy` |
-| Start backend (dev) | `cd /workspace/backend && pnpm dev` |
-| Backend lint | `cd /workspace/backend && pnpm lint` |
-| Backend type-check | `cd /workspace/backend && pnpm tsc` |
-| Backend tests | `cd /workspace/backend && CI=true pnpm test` |
-| Check schema freshness | `cd /workspace/backend && pnpm check:schema` |
-| Mobile lint | `cd /workspace/mobile && pnpm lint` |
-| Mobile codegen | `cd /workspace/mobile && pnpm generate` |
+| Install deps (workspace) | `cd /workspace && pnpm install` |
+| Install deps (single package, optional) | `cd /workspace && pnpm --filter backend install` |
+| Generate Prisma client | `cd /workspace && pnpm --filter backend generate` |
+| Run migrations | `cd /workspace && pnpm --filter backend migrate:deploy` |
+| Start backend (dev) | `cd /workspace && pnpm --filter backend dev` |
+| Backend lint | `cd /workspace && pnpm --filter backend lint` |
+| Backend type-check | `cd /workspace && pnpm --filter backend tsc` |
+| Backend tests | `cd /workspace && CI=true pnpm --filter backend test` |
+| Check schema freshness | `cd /workspace && pnpm --filter backend check:schema` |
+| Mobile lint | `cd /workspace && pnpm --filter game-brain-mobile lint` |
+| Mobile codegen | `cd /workspace && pnpm --filter game-brain-mobile generate` |
 
 ### Gotchas
 
 - **Tests must use `CI=true`**: The Vitest global setup (`test/globalSetup.ts`) runs `prisma migrate reset --force` by default, which Prisma blocks when invoked by Cursor AI agents. Setting `CI=true` makes it use `prisma migrate deploy` instead, which works correctly.
 - **pnpm build scripts are ignored**: Backend install shows warnings about ignored build scripts (prisma, esbuild, etc.). `pnpm generate` handles Prisma client generation separately; the engines download happens automatically.
-- **Mobile postinstall runs codegen**: `pnpm install` in mobile automatically triggers `pnpm generate` (graphql-codegen) via the `postinstall` script.
-- **No pnpm workspaces**: Despite the monorepo structure, there is no `pnpm-workspace.yaml`. Install deps in each directory independently.
+- **Mobile postinstall runs codegen**: `pnpm install` at the workspace root can trigger mobile codegen through the mobile `postinstall` script.
+- **Use workspace filters from root**: Prefer `pnpm --filter <package> <command>` from repo root instead of changing directories.
 - **Backend dev server**: Runs on port 8080 with endpoints `/graphql`, `/hello`, and `/ad-mob-verification`.
