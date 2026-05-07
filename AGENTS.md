@@ -49,3 +49,5 @@ The backend validates all env vars at startup via Zod in `src/constants.ts`. A `
 - **Mobile postinstall runs codegen**: `pnpm install` at the workspace root can trigger mobile codegen through the mobile `postinstall` script.
 - **Use workspace filters from root**: Prefer `pnpm --filter <package> <command>` from repo root instead of changing directories.
 - **Backend dev server**: Runs on port 8080 with endpoints `/graphql`, `/hello`, and `/ad-mob-verification`.
+- **Docker required**: Docker must be installed and running before `docker compose up -d`. In Cloud Agent VMs, use `fuse-overlayfs` storage driver and `iptables-legacy` (see system instructions). Start `dockerd` in a tmux session before starting containers.
+- **Backend `.env` file**: Must exist at `backend/.env` before starting the dev server or running tests. See "Environment variables" section above for required values.
