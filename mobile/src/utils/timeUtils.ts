@@ -7,19 +7,22 @@ const MS_PER_YEAR = 31_536_000_000;
 
 /**
  * Formats a duration in milliseconds as a coarse human-readable string (years down to seconds).
- * Returns null if durationMs is null, undefined, or <= 0.
+ * Returns null if durationMs is null or undefined. Negative values are treated as 0.
  *
  * Examples:
  * - 45000 → "45s"
  * - 125000 → "2m 5s"
  * - 3725000 → "1h 2m 5s"
  */
+export function formatDuration(durationMs: number | null | undefined): string | null;
+export function formatDuration(durationMs: number): string;
 export function formatDuration(durationMs: number | null | undefined): string | null {
-  if (durationMs == null || durationMs <= 0) {
+  if (durationMs == null) {
     return null;
   }
+  const nonZeroDurationMs = durationMs > 0 ? durationMs : 0;
 
-  let remainder = durationMs;
+  let remainder = nonZeroDurationMs;
   const years = Math.floor(remainder / MS_PER_YEAR);
   remainder %= MS_PER_YEAR;
   const weeks = Math.floor(remainder / MS_PER_WEEK);
