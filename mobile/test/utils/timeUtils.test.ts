@@ -10,13 +10,13 @@ describe('formatDuration', () => {
       expect(formatDuration(undefined)).toBeNull();
     });
 
-    it('returns null for zero', () => {
-      expect(formatDuration(0)).toBeNull();
+    it('returns 0 for zero', () => {
+      expect(formatDuration(0)).toBe('0s');
     });
 
-    it('returns null for negative values', () => {
-      expect(formatDuration(-1)).toBeNull();
-      expect(formatDuration(-1000)).toBeNull();
+    it('returns 0 for negative values', () => {
+      expect(formatDuration(-1)).toBe('0s');
+      expect(formatDuration(-1000)).toBe('0s');
     });
   });
 
