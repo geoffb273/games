@@ -1,9 +1,12 @@
 const MS_PER_SECOND = 1000;
-const SECONDS_PER_MINUTE = 60;
-const MINUTES_PER_HOUR = 60;
+const MS_PER_MINUTE = 60_000;
+const MS_PER_HOUR = 3_600_000;
+const MS_PER_DAY = 86_400_000;
+const MS_PER_WEEK = 604_800_000;
+const MS_PER_YEAR = 31_536_000_000;
 
 /**
- * Formats a duration in milliseconds as a string with seconds at minimum and hours at most.
+ * Formats a duration in milliseconds as a coarse human-readable string (years down to seconds).
  * Returns null if durationMs is null, undefined, or <= 0.
  *
  * Examples:
@@ -16,21 +19,45 @@ export function formatDuration(durationMs: number | null | undefined): string | 
     return null;
   }
 
-  const totalSeconds = Math.floor(durationMs / MS_PER_SECOND);
-  const hours = Math.floor(totalSeconds / (SECONDS_PER_MINUTE * MINUTES_PER_HOUR));
-  const minutes = Math.floor(
-    (totalSeconds % (SECONDS_PER_MINUTE * MINUTES_PER_HOUR)) / SECONDS_PER_MINUTE,
-  );
-  const seconds = totalSeconds % SECONDS_PER_MINUTE;
+  let remainder = durationMs;
+  const years = Math.floor(remainder / MS_PER_YEAR);
+  remainder %= MS_PER_YEAR;
+  const weeks = Math.floor(remainder / MS_PER_WEEK);
+  remainder %= MS_PER_WEEK;
+  const days = Math.floor(remainder / MS_PER_DAY);
+  remainder %= MS_PER_DAY;
+  const hours = Math.floor(remainder / MS_PER_HOUR);
+  remainder %= MS_PER_HOUR;
+  const minutes = Math.floor(remainder / MS_PER_MINUTE);
+  remainder %= MS_PER_MINUTE;
+  const seconds = Math.floor(remainder / MS_PER_SECOND);
+
+  const showSeconds = years === 0 && weeks === 0 && days === 0 && hours < 10;
+  const showMinutes = years === 0 && weeks === 0 && days < 2 && minutes > 0;
+  const showHours = years === 0 && weeks === 0 && hours > 0;
+  const showDays = years === 0 && weeks === 0 && days > 0;
+  const showWeeks = years === 0 && weeks > 0;
+  const showYears = years > 0;
 
   const parts: string[] = [];
-  if (hours > 0) {
+  if (showYears) {
+    parts.push(`${years}y`);
+  }
+  if (showWeeks) {
+    parts.push(`${weeks}w`);
+  }
+  if (showDays) {
+    parts.push(`${days}d`);
+  }
+  if (showHours) {
     parts.push(`${hours}h`);
   }
-  if (minutes > 0) {
+  if (showMinutes) {
     parts.push(`${minutes}m`);
   }
-  parts.push(`${seconds}s`);
+  if (showSeconds) {
+    parts.push(`${seconds}s`);
+  }
 
   return parts.join(' ');
 }

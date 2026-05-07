@@ -56,4 +56,17 @@ describe('formatDuration', () => {
       expect(formatDuration(3_661_000)).toBe('1h 1m 1s');
     });
   });
+
+  describe('remainder chaining (years → … → seconds)', () => {
+    const MS_PER_DAY = 86_400_000;
+    const MS_PER_WEEK = 604_800_000;
+
+    it('counts days only after full weeks are removed', () => {
+      expect(formatDuration(5 * MS_PER_DAY)).toBe('5d');
+    });
+
+    it('shows weeks without inflating hidden day remainder (e.g. 2w + 3d → "2w")', () => {
+      expect(formatDuration(2 * MS_PER_WEEK + 3 * MS_PER_DAY)).toBe('2w');
+    });
+  });
 });
