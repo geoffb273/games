@@ -70,15 +70,16 @@ export function PuzzleList({
   );
 }
 
-const COLLAPSED_CARD_HEIGHT = 10;
-const CARD_EXPAND_COLLAPSE_MS = 300;
+const COLLAPSED_CARD_HEIGHT = 12;
+const CARD_EXPAND_MS = 300;
+const CARD_COLLAPSE_MS = 400;
 
 function PuzzleListItemWrapper({ children, open }: { children: ReactNode; open: boolean }) {
   const animatedHeight = useSharedValue(open ? PUZZLE_CARD_NORMAL_HEIGHT : COLLAPSED_CARD_HEIGHT);
 
   useEffect(() => {
     animatedHeight.value = withTiming(open ? PUZZLE_CARD_NORMAL_HEIGHT : COLLAPSED_CARD_HEIGHT, {
-      duration: CARD_EXPAND_COLLAPSE_MS,
+      duration: open ? CARD_EXPAND_MS : CARD_COLLAPSE_MS,
     });
   }, [animatedHeight, open]);
 
