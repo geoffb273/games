@@ -69,4 +69,29 @@ describe('formatDuration', () => {
       expect(formatDuration(2 * MS_PER_WEEK + 3 * MS_PER_DAY)).toBe('2w');
     });
   });
+
+  describe('years (coarse formatting)', () => {
+    const MS_PER_YEAR = 31_536_000_000;
+    const MS_PER_DAY = 86_400_000;
+
+    it('shows only whole years when sub-year remainder exists', () => {
+      expect(formatDuration(MS_PER_YEAR + MS_PER_DAY)).toBe('1y');
+    });
+
+    it('formats multi-year durations', () => {
+      expect(formatDuration(2 * MS_PER_YEAR)).toBe('2y');
+    });
+  });
+
+  describe('hours threshold for showing seconds', () => {
+    const MS_PER_HOUR = 3_600_000;
+
+    it('omits seconds once hours reach 10', () => {
+      expect(formatDuration(10 * MS_PER_HOUR)).toBe('10h');
+    });
+
+    it('still shows seconds below 10 hours', () => {
+      expect(formatDuration(9 * MS_PER_HOUR)).toBe('9h 0s');
+    });
+  });
 });
