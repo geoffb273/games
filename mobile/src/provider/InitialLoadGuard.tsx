@@ -9,6 +9,9 @@ import { useAuthFetchContext } from '@/context/AuthFetchContext';
 import { useTimeoutEffect } from '@/hooks/useTimeoutEffect';
 
 const MIN_LOADING_VIEW_MS = 500;
+const MAX_INITIAL_LOADING_VIEW_MS = 6000;
+const AUTH_LOADING_TIMEOUT_MESSAGE =
+  'The app is taking longer than expected to sign in. Please check your connection and try again.';
 
 /**
  * Shows the initial app loading view until the app is fully loaded
@@ -31,6 +34,7 @@ export function InitialLoadGuard({ children }: { children: ReactNode }) {
   const [showLoadingView, setShowLoadingView] = useState(true);
   const [hasRequestedHide, setHasRequestedHide] = useState(false);
   const [hasMinDurationElapsed, setHasMinDurationElapsed] = useState(false);
+  const [hasExceededMaxInitialWait, setHasExceededMaxInitialWait] = useState(false);
 
   useTimeoutEffect(
     () => {
@@ -40,15 +44,25 @@ export function InitialLoadGuard({ children }: { children: ReactNode }) {
     MIN_LOADING_VIEW_MS,
   );
 
+  useTimeoutEffect(
+    () => {
+      setHasExceededMaxInitialWait(true);
+    },
+    [],
+    MAX_INITIAL_LOADING_VIEW_MS,
+  );
+
   useEffect(() => {
     if (hasRequestedHide && hasMinDurationElapsed) {
       setShowLoadingView(false);
     }
   }, [hasRequestedHide, hasMinDurationElapsed]);
 
-  const isLoading = status === 'loading' || isLoadingDailyChallenges || isLoadingPuzzles;
+  const isAuthLoading = status === 'loading';
+  const isNonAuthLoading = isLoadingDailyChallenges || isLoadingPuzzles;
+  const isLoading = isAuthLoading || isNonAuthLoading;
 
-  if (isLoading || showLoadingView) {
+  if (!hasExceededMaxInitialWait && (isLoading || showLoadingView)) {
     return (
       <AppLoadingView
         isLoading={isLoading}
@@ -56,6 +70,16 @@ export function InitialLoadGuard({ children }: { children: ReactNode }) {
           setHasRequestedHide(true);
         }}
       />
+    );
+  }
+
+  // This is only shown if the max initial wait has been exceeded
+  // and the auth is still loading
+  if (hasExceededMaxInitialWait && isAuthLoading) {
+    return (
+      <View style={styles.errorContainer}>
+        <ErrorView title="Error" message={AUTH_LOADING_TIMEOUT_MESSAGE} />
+      </View>
     );
   }
 
