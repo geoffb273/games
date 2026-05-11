@@ -18,8 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN || github.token }}
 
     steps:
       - name: Checkout
@@ -27,6 +25,21 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ inputs.commit != '' && inputs.commit || github.ref }}
+
+      # Write PAT into GITHUB_ENV so both GH_TOKEN and GITHUB_TOKEN match (gh may read either).
+      - name: Configure GitHub CLI token
+        env:
+          RELEASE_PAT: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+          ACTIONS_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ -n "${RELEASE_PAT:-}" ]; then
+            echo "GH_TOKEN=${RELEASE_PAT}" >> "${GITHUB_ENV}"
+            echo "GITHUB_TOKEN=${RELEASE_PAT}" >> "${GITHUB_ENV}"
+          else
+            echo "GH_TOKEN=${ACTIONS_TOKEN}" >> "${GITHUB_ENV}"
+            echo "GITHUB_TOKEN=${ACTIONS_TOKEN}" >> "${GITHUB_ENV}"
+          fi
 
       - name: Resolve release target SHA
         id: release_target
@@ -71,7 +84,7 @@ jobs:
           TAG: ${{ steps.version.outputs.tag }}
         run: |
           set -euo pipefail
-          if gh release view "$TAG" >/dev/null 2>&1; then
+          if gh release view "$TAG" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
             echo "Release $TAG already exists." >&2
             exit 1
           fi
@@ -84,7 +97,7 @@ jobs:
         id: previous
         run: |
           set -euo pipefail
-          PREVIOUS_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // ""')
+          PREVIOUS_TAG=$(gh release list --repo "${GITHUB_REPOSITORY}" --limit 1 --json tagName --jq '.[0].tagName // ""')
           echo "previous_tag=$PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
           if [ -n "$PREVIOUS_TAG" ]; then
             echo "Previous release tag: $PREVIOUS_TAG"
@@ -102,6 +115,7 @@ jobs:
         run: |
           set -euo pipefail
           ARGS=(release create "$TAG"
+            --repo "${GITHUB_REPOSITORY}"
             --title "$TITLE"
             --generate-notes)
           if [ "$USE_TARGET" = "1" ]; then
