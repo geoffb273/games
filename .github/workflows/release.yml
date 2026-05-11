@@ -7,6 +7,10 @@ on:
         description: "Version to release (e.g. 1.1.5). Leave empty to use the version from mobile/app.config.ts."
         required: false
         type: string
+      commit:
+        description: "Optional full commit SHA to release (e.g. 4a7bded7c5fc894e250ab0a9d74db3a449453121). Leave empty to use the HEAD of the branch selected below."
+        required: false
+        type: string
 
 jobs:
   release:
@@ -20,6 +24,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ inputs.commit != '' && inputs.commit || github.ref }}
+
+      - name: Resolve release target SHA
+        id: release_target
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Resolve version
         id: version
@@ -79,7 +88,7 @@ jobs:
           TAG: ${{ steps.version.outputs.tag }}
           TITLE: ${{ steps.version.outputs.title }}
           PREVIOUS_TAG: ${{ steps.previous.outputs.previous_tag }}
-          TARGET_SHA: ${{ github.sha }}
+          TARGET_SHA: ${{ steps.release_target.outputs.sha }}
         run: |
           set -euo pipefail
           ARGS=(release create "$TAG"
