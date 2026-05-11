@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client/react';
 
+import { usePrefetchQuery } from '@/api/prefetch';
 import { PuzzlesDocument } from '@/generated/gql/graphql';
 
 import { mapToPuzzles } from './puzzle';
@@ -58,4 +59,21 @@ export function usePuzzlesQuery({
     error,
     refetch,
   };
+}
+
+/**
+ * Warms the Apollo cache for a daily challenge’s puzzles
+ */
+export function usePrefetchPuzzlesQuery({
+  dailyChallengeId,
+  enabled = true,
+}: {
+  dailyChallengeId: string | null | undefined;
+  enabled?: boolean;
+}) {
+  const variables = useMemo(
+    () => !!dailyChallengeId && { input: { dailyChallengeId } },
+    [dailyChallengeId],
+  );
+  usePrefetchQuery(PuzzlesDocument, { variables, enabled });
 }
