@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release (e.g. 1.1.5). Leave empty to use the version from mobile/app.config.ts."
+        description: 'Version to release (e.g. 1.1.5). Leave empty to use the version from mobile/app.config.ts.'
         required: false
         type: string
       commit:
-        description: "Optional full commit SHA to release (e.g. 4a7bded7c5fc894e250ab0a9d74db3a449453121). Leave empty to use the HEAD of the branch selected below."
+        description: 'Optional full commit SHA to release (e.g. 4a7bded7c5fc894e250ab0a9d74db3a449453121). Leave empty to use the HEAD of the branch selected below.'
         required: false
         type: string
 
@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      GH_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN || github.token }}
 
     steps:
       - name: Checkout
@@ -29,6 +31,17 @@ jobs:
       - name: Resolve release target SHA
         id: release_target
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve whether release needs explicit --target
+        id: release_target_flag
+        run: |
+          set -euo pipefail
+          default_ref="refs/heads/${{ github.event.repository.default_branch }}"
+          if [ -n "${{ inputs.commit }}" ] || [ "${{ github.ref }}" != "$default_ref" ]; then
+            echo "use_target=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "use_target=0" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Resolve version
         id: version
@@ -55,7 +68,6 @@ jobs:
 
       - name: Ensure tag does not already exist
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.version.outputs.tag }}
         run: |
           set -euo pipefail
@@ -70,8 +82,6 @@ jobs:
 
       - name: Find previous release tag
         id: previous
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           PREVIOUS_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // ""')
@@ -84,17 +94,19 @@ jobs:
 
       - name: Create release
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.version.outputs.tag }}
           TITLE: ${{ steps.version.outputs.title }}
           PREVIOUS_TAG: ${{ steps.previous.outputs.previous_tag }}
           TARGET_SHA: ${{ steps.release_target.outputs.sha }}
+          USE_TARGET: ${{ steps.release_target_flag.outputs.use_target }}
         run: |
           set -euo pipefail
           ARGS=(release create "$TAG"
             --title "$TITLE"
-            --target "$TARGET_SHA"
             --generate-notes)
+          if [ "$USE_TARGET" = "1" ]; then
+            ARGS+=(--target "$TARGET_SHA")
+          fi
           if [ -n "$PREVIOUS_TAG" ]; then
             ARGS+=(--notes-start-tag "$PREVIOUS_TAG")
           fi
