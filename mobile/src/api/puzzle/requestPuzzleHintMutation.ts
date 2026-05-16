@@ -3,6 +3,8 @@ import { useCallback } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 
+import { enqueueRequestPuzzleHint } from '@/client/mutationQueue/mutationQueue';
+import { isOnline } from '@/client/networkState';
 import { logError } from '@/client/newRelic';
 import { EVENT } from '@/constants/event';
 import { RequestPuzzleHintMutationDocument } from '@/generated/gql/graphql';
@@ -82,7 +84,13 @@ gql`
 `;
 
 export type UseRequestPuzzleHintResult = {
-  requestPuzzleHint: (input: RequestPuzzleHintInput & { uniqueKey: string }) => Promise<PuzzleHint>;
+  requestPuzzleHint: (input: RequestPuzzleHintInput & { uniqueKey: string }) => Promise<
+    | {
+        status: 'completed';
+        hint: PuzzleHint;
+      }
+    | { status: 'queued' }
+  >;
   isLoading: boolean;
   isError: boolean;
 };
@@ -91,7 +99,14 @@ export function useRequestPuzzleHint(): UseRequestPuzzleHintResult {
   const [mutate, { loading, error }] = useMutation(RequestPuzzleHintMutationDocument);
 
   const requestPuzzleHint = useCallback(
-    async (input: RequestPuzzleHintInput): Promise<PuzzleHint> => {
+    async (
+      input: RequestPuzzleHintInput & { uniqueKey: string },
+    ): ReturnType<UseRequestPuzzleHintResult['requestPuzzleHint']> => {
+      if (!isOnline()) {
+        enqueueRequestPuzzleHint(input);
+        return { status: 'queued' };
+      }
+
       const { data } = await mutate({
         variables: {
           input,
@@ -106,7 +121,7 @@ export function useRequestPuzzleHint(): UseRequestPuzzleHintResult {
         throw new Error(data?.requestPuzzleHint?.message ?? 'Unknown error');
       }
 
-      return mapToPuzzleHint(data.requestPuzzleHint.data);
+      return { status: 'completed', hint: mapToPuzzleHint(data.requestPuzzleHint.data) };
     },
     [mutate],
   );

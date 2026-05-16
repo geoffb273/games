@@ -33,6 +33,11 @@ jest.mock('@/api/puzzle/requestPuzzleHintMutation', () => ({
   useRequestPuzzleHint: () => mockUseRequestPuzzleHint(),
 }));
 
+const mockUsePendingPuzzleHint = jest.fn();
+jest.mock('@/client/mutationQueue/pendingHints', () => ({
+  usePendingPuzzleHint: () => mockUsePendingPuzzleHint(),
+}));
+
 const mockUseTriggerAd = jest.fn();
 jest.mock('@/hooks/ads/useTriggerAd', () => ({
   useTriggerAd: () => mockUseTriggerAd(),
@@ -58,8 +63,10 @@ function setupMocks(overrides?: {
   isDisabled?: boolean;
   isEarnedReward?: boolean;
   onPressShowAd?: jest.Mock;
+  pendingHint?: typeof hanjiHint | null;
 }) {
-  const requestPuzzleHint = overrides?.requestPuzzleHint ?? jest.fn().mockResolvedValue(hanjiHint);
+  const requestPuzzleHint =
+    overrides?.requestPuzzleHint ?? jest.fn().mockResolvedValue({ status: 'completed', hint: hanjiHint });
 
   mockUseRequestPuzzleHint.mockReturnValue({
     requestPuzzleHint,
@@ -75,6 +82,8 @@ function setupMocks(overrides?: {
     isShowing: false,
     onPressShowAd: overrides?.onPressShowAd ?? jest.fn().mockResolvedValue(undefined),
   });
+
+  mockUsePendingPuzzleHint.mockReturnValue(overrides?.pendingHint ?? null);
 
   return { requestPuzzleHint };
 }
@@ -135,8 +144,34 @@ describe('HintButton', () => {
     render(<HintButton {...defaultHintInput} onHint={onHint} />);
 
     await waitFor(() => {
-      expect(requestPuzzleHint).toHaveBeenCalledWith(defaultHintInput);
+      expect(requestPuzzleHint).toHaveBeenCalledWith({ ...defaultHintInput, uniqueKey: UNIQUE_KEY });
     });
+    await waitFor(() => {
+      expect(onHint).toHaveBeenCalledWith(hanjiHint);
+    });
+  });
+
+  it('shows queued copy without applying a fake hint when the hint is queued offline', async () => {
+    const onHint = jest.fn();
+    setupMocks({
+      isEarnedReward: true,
+      requestPuzzleHint: jest.fn().mockResolvedValue({ status: 'queued' }),
+    });
+
+    render(<HintButton {...defaultHintInput} onHint={onHint} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Hint queued until you are back online')).toBeOnTheScreen();
+    });
+    expect(onHint).not.toHaveBeenCalled();
+  });
+
+  it('applies a pending replayed hint once it is available', async () => {
+    const onHint = jest.fn();
+    setupMocks({ pendingHint: hanjiHint });
+
+    render(<HintButton {...defaultHintInput} onHint={onHint} />);
+
     await waitFor(() => {
       expect(onHint).toHaveBeenCalledWith(hanjiHint);
     });

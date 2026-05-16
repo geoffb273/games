@@ -3,6 +3,8 @@ import { useCallback } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 
+import { enqueueSolvePuzzle } from '@/client/mutationQueue/mutationQueue';
+import { isOnline } from '@/client/networkState';
 import { SolvePuzzleMutationDocument } from '@/generated/gql/graphql';
 
 import { type PuzzleAttempt, type PuzzleType } from './puzzle';
@@ -97,6 +99,15 @@ export function useSolvePuzzle() {
 
   const solvePuzzle = useCallback(
     async (input: SolvePuzzleInput): Promise<PuzzleAttempt> => {
+      if (!isOnline()) {
+        enqueueSolvePuzzle(input);
+        return {
+          startedAt: input.startedAt,
+          completedAt: input.completedAt,
+          durationMs: input.durationMs,
+        };
+      }
+
       const { data } = await mutate({
         variables: {
           input,

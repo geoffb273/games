@@ -3,6 +3,8 @@ import { useCallback } from 'react';
 import { gql } from '@apollo/client';
 import { useMutation } from '@apollo/client/react';
 
+import { enqueueDeleteProgress } from '@/client/mutationQueue/mutationQueue';
+import { isOnline } from '@/client/networkState';
 import { logError } from '@/client/newRelic';
 import { EVENT } from '@/constants/event';
 import { DeleteProgressMutationDocument } from '@/generated/gql/graphql';
@@ -21,10 +23,17 @@ gql`
   }
 `;
 
+export type DeleteProgressResult = { status: 'completed'; data: boolean } | { status: 'queued' };
+
 export function useDeleteProgress() {
   const [mutate, { loading, error }] = useMutation(DeleteProgressMutationDocument);
 
-  const deleteProgress = useCallback(async (): Promise<boolean> => {
+  const deleteProgress = useCallback(async (): Promise<DeleteProgressResult> => {
+    if (!isOnline()) {
+      enqueueDeleteProgress();
+      return { status: 'queued' };
+    }
+
     const { data } = await mutate();
 
     if (data?.deleteProgress.__typename !== 'MutationDeleteProgressSuccess') {
@@ -35,7 +44,7 @@ export function useDeleteProgress() {
       throw new Error(data?.deleteProgress.message ?? 'Unknown error');
     }
 
-    return data.deleteProgress.data;
+    return { status: 'completed', data: data.deleteProgress.data };
   }, [mutate]);
 
   return {

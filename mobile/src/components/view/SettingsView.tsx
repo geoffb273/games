@@ -38,9 +38,20 @@ export function SettingsView() {
           onPress: () => {
             void (async () => {
               try {
-                await deleteProgress();
-                await clearToken();
-                await client.clearStore();
+                const result = await deleteProgress();
+
+                if (result.status === 'queued') {
+                  Alert.alert(
+                    'Delete queued',
+                    'Your progress will be deleted once your connection is restored.',
+                  );
+                  return;
+                }
+
+                if (result.data) {
+                  await clearToken();
+                  await client.clearStore();
+                }
               } catch {
                 Alert.alert(
                   'Unable to delete progress',
