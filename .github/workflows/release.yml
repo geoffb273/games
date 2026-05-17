@@ -20,6 +20,16 @@ jobs:
       contents: write
 
     steps:
+      - name: Validate release inputs
+        env:
+          COMMIT_INPUT: ${{ inputs.commit }}
+        run: |
+          set -euo pipefail
+          if [ -n "$COMMIT_INPUT" ] && [[ ! "$COMMIT_INPUT" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "The commit input must be a full 40-character SHA." >&2
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -47,10 +57,14 @@ jobs:
 
       - name: Resolve whether release needs explicit --target
         id: release_target_flag
+        env:
+          COMMIT_INPUT: ${{ inputs.commit }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          WORKFLOW_REF: ${{ github.ref }}
         run: |
           set -euo pipefail
-          default_ref="refs/heads/${{ github.event.repository.default_branch }}"
-          if [ -n "${{ inputs.commit }}" ] || [ "${{ github.ref }}" != "$default_ref" ]; then
+          default_ref="refs/heads/${DEFAULT_BRANCH}"
+          if [ -n "$COMMIT_INPUT" ] || [ "$WORKFLOW_REF" != "$default_ref" ]; then
             echo "use_target=1" >> "$GITHUB_OUTPUT"
           else
             echo "use_target=0" >> "$GITHUB_OUTPUT"
