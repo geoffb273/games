@@ -11,6 +11,7 @@ import { ThemeColor } from '@/constants/theme';
 import { AdConsentProvider } from './AdConsentProvider';
 import { AuthFetchProvider } from './AuthFetchProvider';
 import { InitialLoadGuard } from './InitialLoadGuard';
+import { MutationQueueProvider } from './MutationQueueProvider';
 
 import '@/client/newRelic';
 
@@ -35,11 +36,13 @@ export function MainProvider({ children }: { children: ReactNode }) {
         }}
       >
         <ApolloProvider client={apollo}>
-          <AuthFetchProvider>
-            <AdConsentProvider>
-              <InitialLoadGuard>{children}</InitialLoadGuard>
-            </AdConsentProvider>
-          </AuthFetchProvider>
+          <MutationQueueProvider>
+            <AuthFetchProvider>
+              <AdConsentProvider>
+                <InitialLoadGuard>{children}</InitialLoadGuard>
+              </AdConsentProvider>
+            </AuthFetchProvider>
+          </MutationQueueProvider>
         </ApolloProvider>
       </ThemeProvider>
     </GestureHandlerRootView>

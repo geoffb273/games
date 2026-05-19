@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { type PuzzleType } from '@/api/puzzle/puzzle';
@@ -7,6 +7,7 @@ import {
   type RequestPuzzleHintInput,
   useRequestPuzzleHint,
 } from '@/api/puzzle/requestPuzzleHintMutation';
+import { usePendingPuzzleHint } from '@/client/mutationQueue/pendingHints';
 import { Button } from '@/components/common/Button';
 import { Text } from '@/components/common/Text';
 import { Spacing } from '@/constants/token';
@@ -19,8 +20,10 @@ type HintButtonProps<T extends PuzzleType> = Extract<RequestPuzzleHintInput, { p
 };
 
 export function HintButton<T extends PuzzleType>({ onHint, ...input }: HintButtonProps<T>) {
+  const [isHintQueued, setIsHintQueued] = useState(false);
   const { pause, resume } = usePlaytimeClockContext();
   const { requestPuzzleHint, isLoading, isError } = useRequestPuzzleHint();
+  const pendingHint = usePendingPuzzleHint(input.puzzleId);
   const onFullscreenPresentedChange = useStableCallback((isPresented: boolean) => {
     if (isPresented) {
       pause();
@@ -35,10 +38,23 @@ export function HintButton<T extends PuzzleType>({ onHint, ...input }: HintButto
     });
 
   const onHintPress = useStableCallback(async () => {
-    const hint = await requestPuzzleHint({ ...input, uniqueKey });
-    onHint(hint as Extract<PuzzleHint, { puzzleType: T }>);
+    const result = await requestPuzzleHint({ ...input, uniqueKey });
+    if (result.status === 'queued') {
+      setIsHintQueued(true);
+      return;
+    }
+
+    setIsHintQueued(false);
+    onHint(result.hint as Extract<PuzzleHint, { puzzleType: T }>);
     generateNewUniqueKey();
   });
+
+  useEffect(() => {
+    if (pendingHint == null || pendingHint.puzzleType !== input.puzzleType) return;
+
+    setIsHintQueued(false);
+    onHint(pendingHint as Extract<PuzzleHint, { puzzleType: T }>);
+  }, [input.puzzleType, onHint, pendingHint]);
 
   useEffect(() => {
     if (isEarnedReward) {
@@ -56,7 +72,9 @@ export function HintButton<T extends PuzzleType>({ onHint, ...input }: HintButto
       >
         Hint
       </Button>
-      <Text type="caption">Watch an ad to get a hint</Text>
+      <Text type="caption">
+        {isHintQueued ? 'Hint queued until you are back online' : 'Watch an ad to get a hint'}
+      </Text>
     </View>
   );
 }
